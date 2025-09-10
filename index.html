@@ -315,8 +315,9 @@
                     appointmentListEl.innerHTML = '<p class="p-4 text-sm text-gray-500">Select a client to see appointments.</p>';
                     return;
                 }
-                if (client.appointments.length === 0) {
+                if (!client.appointments || client.appointments.length === 0) {
                     appointmentListEl.innerHTML = '<p class="p-4 text-sm text-gray-500">No appointments yet.</p>';
+                    return;
                 }
 
                 client.appointments.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -359,12 +360,12 @@
                 addAppointmentBtn.disabled = !client;
 
                 // Populate data
-                persistentNotesEl.value = client ? client.persistentNotes : '';
-                sessionInfoEl.value = appointment ? appointment.sessionInfo : '';
-                soapSEl.value = appointment ? appointment.soap.s : '';
-                soapOEl.value = appointment ? appointment.soap.o : '';
-                soapAEl.value = appointment ? appointment.soap.a : '';
-                soapPEl.value = appointment ? appointment.soap.p : '';
+                persistentNotesEl.value = client ? (client.persistentNotes || '') : '';
+                sessionInfoEl.value = appointment ? (appointment.sessionInfo || '') : '';
+                soapSEl.value = appointment ? (appointment.soap?.s || '') : '';
+                soapOEl.value = appointment ? (appointment.soap?.o || '') : '';
+                soapAEl.value = appointment ? (appointment.soap?.a || '') : '';
+                soapPEl.value = appointment ? (appointment.soap?.p || '') : '';
             };
 
             const renderDeletedLists = () => {
@@ -434,11 +435,13 @@
             const selectClient = (id) => {
                 selectedClientId = id;
                 selectedAppointmentId = null; // Deselect appointment when changing client
+                markDirty(); // Save selection
                 fullRender();
             };
 
             const selectAppointment = (id) => {
                 selectedAppointmentId = id;
+                markDirty(); // Save selection
                 fullRender();
             };
             
@@ -458,9 +461,11 @@
             };
             
             const removeClient = (id) => {
-                const client = findClient(id);
-                if (!client) return;
+                const clientIndex = data.clients.findIndex(c => c.id === id);
+                if (clientIndex === -1) return;
 
+                const [client] = data.clients.splice(clientIndex, 1);
+                
                 // Also move associated appointments to deleted
                 if (client.appointments) {
                     client.appointments.forEach(appt => {
@@ -469,7 +474,6 @@
                 }
 
                 deletedItems.clients.push(client);
-                data.clients = data.clients.filter(c => c.id !== id);
 
                 if (selectedClientId === id) {
                     selectedClientId = null;
@@ -480,8 +484,10 @@
             };
 
             const restoreClient = (id) => {
-                const client = deletedItems.clients.find(c => c.id === id);
-                if (!client) return;
+                const clientIndex = deletedItems.clients.findIndex(c => c.id === id);
+                if (clientIndex === -1) return;
+
+                const [client] = deletedItems.clients.splice(clientIndex, 1);
 
                 // Restore appointments that belong to this client and are in the deleted list
                 const appointmentsToRestore = deletedItems.appointments.filter(a => a.clientId === id);
@@ -490,7 +496,6 @@
                 deletedItems.appointments = deletedItems.appointments.filter(a => a.clientId !== id);
 
                 data.clients.push(client);
-                deletedItems.clients = deletedItems.clients.filter(c => c.id !== id);
                 
                 fullRender();
                 markDirty();
@@ -501,6 +506,7 @@
                 if (clientIndex === -1) return;
 
                 const [client] = data.clients.splice(clientIndex, 1);
+                if (!data.archivedClients) data.archivedClients = [];
                 data.archivedClients.push(client);
 
                 if (selectedClientId === id) {
@@ -512,6 +518,7 @@
             };
 
             const unarchiveClient = (id) => {
+                if (!data.archivedClients) return;
                 const clientIndex = data.archivedClients.findIndex(c => c.id === id);
                 if (clientIndex === -1) return;
 
@@ -524,14 +531,18 @@
 
             const addAppointment = () => {
                 const client = findClient(selectedClientId);
-                if (!client) return;
+                if (!client || !appointmentDateEl.value) {
+                    alert('Please select a client and a date to add an appointment.');
+                    return;
+                }
 
                 const newAppointment = {
                     id: crypto.randomUUID(),
-                    date: new Date().toISOString(),
+                    date: new Date(appointmentDateEl.value).toISOString(),
                     sessionInfo: '',
                     soap: { s: '• ', o: '• ', a: '• ', p: '• ' }
                 };
+                if (!client.appointments) client.appointments = [];
                 client.appointments.push(newAppointment);
                 selectAppointment(newAppointment.id);
                 markDirty();
@@ -539,13 +550,38 @@
             
             const removeAppointment = (id) => {
                 const client = findClient(selectedClientId);
-                if (!client) return;
-                client.appointments = client.appointments.filter(a => a.id !== id);
+                if (!client || !client.appointments) return;
+                
+                const apptIndex = client.appointments.findIndex(a => a.id === id);
+                if (apptIndex === -1) return;
+
+                const [appt] = client.appointments.splice(apptIndex, 1);
+                deletedItems.appointments.push({ ...appt, clientId: client.id });
+
                  if (selectedAppointmentId === id) {
                     selectedAppointmentId = null;
                 }
                 fullRender();
                 markDirty();
+            };
+
+            const restoreAppointment = (id) => {
+                const apptIndex = deletedItems.appointments.findIndex(a => a.id === id);
+                if (apptIndex === -1) return;
+
+                const [appt] = deletedItems.appointments.splice(apptIndex, 1);
+                const client = findClient(appt.clientId);
+                
+                if (client) {
+                    if (!client.appointments) client.appointments = [];
+                    client.appointments.push(appt);
+                    fullRender();
+                    markDirty();
+                } else {
+                    // Put it back if client not found
+                    deletedItems.appointments.push(appt);
+                    alert('Cannot restore appointment because its client could not be found. Restore the client first.');
+                }
             };
             
             // Auto-bulleting for SOAP notes
@@ -558,6 +594,7 @@
                     const text = target.value;
                     target.value = text.substring(0, start) + '\n• ' + text.substring(end);
                     target.selectionStart = target.selectionEnd = start + 3;
+                    markDirty();
                 }
             };
 
@@ -567,15 +604,24 @@
 
             // --- Data Persistence (Save/Load/AutoSave) ---
 
-            const updateSaveStatus = (message, isGood = true) => {
+            const updateSaveStatus = (message, isGood = true, duration = 0) => {
                 autoSaveIndicator.classList.remove('hidden');
                 saveStatus.textContent = message;
                 saveStatus.style.color = isGood ? 'green' : 'red';
+                if (duration > 0) {
+                    setTimeout(() => {
+                         if (saveStatus.textContent === message) {
+                            autoSaveIndicator.classList.add('hidden');
+                         }
+                    }, duration);
+                }
             }
 
             const markDirty = () => {
-                isDirty = true;
-                updateSaveStatus('Unsaved changes...', false);
+                if (!isDirty) {
+                    isDirty = true;
+                    updateSaveStatus('Unsaved changes...', false);
+                }
                 debouncedAutoSave();
             };
             
@@ -583,9 +629,10 @@
                 try {
                     const state = { data, deletedItems, selectedClientId, selectedAppointmentId };
                     document.cookie = `clientData=${encodeURIComponent(JSON.stringify(state))};path=/;max-age=31536000;samesite=strict`;
+                    isDirty = false;
                 } catch (e) {
                     console.error("Failed to save to cookie", e);
-                    updateSaveStatus('Cookie save failed!', false);
+                    updateSaveStatus('Cookie save failed!', false, 3000);
                 }
             };
 
@@ -595,7 +642,7 @@
                     try {
                         const state = JSON.parse(decodeURIComponent(cookie.split('=')[1]));
                         data = state.data || getInitialData();
-                        // Ensure archivedClients exists for older data structures
+                        // Ensure data structures exist for older cookies
                         if (!data.archivedClients) data.archivedClients = [];
                         deletedItems = state.deletedItems || { clients: [], appointments: [] };
                         selectedClientId = state.selectedClientId || null;
@@ -614,13 +661,11 @@
                     if (!isDirty) return;
                     updateSaveStatus('Saving...', true);
                     saveDataToCookie();
-                    isDirty = false;
                     setTimeout(() => {
-                        // Hide indicator if no longer dirty
-                        if (!isDirty && !autoSaveIndicator.classList.contains('hidden')) {
-                             autoSaveIndicator.classList.add('hidden');
+                        if (!isDirty) {
+                           updateSaveStatus('Auto-saved', true, 2000);
                         }
-                    }, 1000);
+                    }, 500);
                     return;
                 }
 
@@ -666,7 +711,6 @@
                     deletedItems = state.deletedItems || { clients: [], appointments: [] };
                     selectedClientId = null;
                     selectedAppointmentId = null;
-                    isDirty = false;
                     updateSaveStatus(`Loaded ${file.name}`, true, 3000);
                     fullRender();
                     markDirty(); // Save imported data to cookie
@@ -693,6 +737,7 @@
                     // Clear persisted data
                     document.cookie = 'clientData=;path=/;max-age=0';
                     localStorage.removeItem('columnSizes');
+                    localStorage.removeItem('rowSizes');
 
                     autoSaveIndicator.classList.add('hidden');
                     
@@ -758,6 +803,7 @@
                     const appointment = findAppointment(client, selectedAppointmentId);
                     if (appointment) {
                         const key = el.id.slice(-1).toLowerCase();
+                        if (!appointment.soap) appointment.soap = {};
                         appointment.soap[key] = el.value;
                         markDirty();
                     }
@@ -769,23 +815,17 @@
                 button.addEventListener('click', () => {
                     const targetId = button.dataset.target;
                     const textarea = document.getElementById(targetId);
+                    if (textarea.disabled) return;
                     
-                    // Create a temporary textarea to copy from
-                    const tempTextarea = document.createElement('textarea');
-                    tempTextarea.value = textarea.value;
-                    document.body.appendChild(tempTextarea);
-                    tempTextarea.select();
-                    try {
-                        document.execCommand('copy');
+                    navigator.clipboard.writeText(textarea.value).then(() => {
                         const messageBox = document.getElementById('messageBox');
                         messageBox.classList.remove('opacity-0');
                         setTimeout(() => {
                             messageBox.classList.add('opacity-0');
                         }, 2000);
-                    } catch (err) {
+                    }).catch(err => {
                         console.error('Failed to copy text: ', err);
-                    }
-                    document.body.removeChild(tempTextarea);
+                    });
                 });
             });
 
@@ -812,8 +852,10 @@
                 }
                 const rowSizes = JSON.parse(localStorage.getItem('rowSizes'));
                 if (rowSizes) {
-                    document.getElementById('sessionInfoWrapper').style.flexBasis = rowSizes.sessionInfoHeight;
-                    document.getElementById('notesWrapper').style.flexBasis = rowSizes.notesHeight;
+                    const sessionWrapper = document.getElementById('sessionInfoWrapper');
+                    const notesWrapper = document.getElementById('notesWrapper');
+                    if (sessionWrapper) sessionWrapper.style.flexBasis = rowSizes.sessionInfoHeight;
+                    if (notesWrapper) notesWrapper.style.flexBasis = rowSizes.notesHeight;
                 }
             }
 
@@ -821,6 +863,7 @@
                 if (!resizer || !prev || !next) return;
                 let isResizing = false;
                 resizer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
                     isResizing = true;
                     
                     const cursor = direction === 'x' ? 'col-resize' : 'row-resize';
