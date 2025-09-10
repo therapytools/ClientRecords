@@ -34,6 +34,7 @@
             display: flex;
             flex-direction: column;
             height: calc(100vh - 8rem);
+            min-width: 150px; /* Prevent panels from becoming too small */
         }
         .list-item {
             cursor: pointer;
@@ -88,9 +89,9 @@
         <header class="flex flex-wrap items-center justify-between mb-6 pb-4 border-b">
             <h1 class="text-3xl font-bold text-gray-800">Client Data Organizer</h1>
             <div class="flex items-center space-x-2 mt-4 sm:mt-0">
-                <button id="newBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">New</button>
-                <button id="saveBtn" class="btn btn-primary font-semibold py-2 px-4 rounded-lg shadow-sm">Save</button>
-                <button id="loadBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Load</button>
+                <button id="eraseAllBtn" class="btn btn-danger font-semibold py-2 px-4 rounded-lg shadow-sm">Erase All Data</button>
+                <button id="saveBtn" class="btn btn-primary font-semibold py-2 px-4 rounded-lg shadow-sm">Export</button>
+                <button id="loadBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Import</button>
                 <div id="autoSaveIndicator" class="text-sm text-gray-500 ml-4 hidden">
                     <span id="saveStatus"></span>
                 </div>
@@ -98,38 +99,70 @@
         </header>
 
         <!-- Main Content Grid -->
-        <main class="grid grid-cols-12 gap-6 flex-grow">
+        <main class="flex flex-col md:flex-row flex-grow gap-6" id="mainGrid">
             <!-- Panel 1: Clients -->
-            <div class="col-span-12 md:col-span-2 panel">
+            <div class="panel flex flex-col" id="panelClients" style="flex-basis: 16.66%;">
                 <h2 class="text-xl font-semibold text-gray-700 p-4 border-b">Clients</h2>
                 <div id="clientList" class="flex-grow overflow-y-auto"></div>
                 <div class="p-4 border-t">
                     <input type="text" id="newClientInput" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="New client name...">
                     <button id="addClientBtn" class="w-full btn btn-primary font-semibold py-2 rounded-lg">Add Client</button>
                 </div>
+                <div class="p-4 border-t">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-semibold text-gray-600">Recently Deleted</h3>
+                        <button id="clearDeletedClientsBtn" class="btn btn-danger text-xs px-2 py-1 rounded-md">Clear</button>
+                    </div>
+                    <div id="deletedClientsList" class="text-sm text-gray-500 max-h-24 overflow-y-auto"></div>
+                </div>
+                <div class="p-4 border-t">
+                    <h3 class="font-semibold text-gray-600 mb-2">Archived Clients</h3>
+                    <div id="archivedClientsList" class="text-sm text-gray-500 max-h-24 overflow-y-auto"></div>
+                </div>
             </div>
 
-            <!-- Panel 2: Appointments & Persistent Notes -->
-            <div class="col-span-12 md:col-span-2 panel">
+            <div class="resizer" id="resizer1"></div>
+
+            <!-- Panel 2: Appointments -->
+            <div class="panel flex flex-col" id="panelAppointments" style="flex-basis: 16.66%;">
                 <h2 class="text-xl font-semibold text-gray-700 p-4 border-b">Appointments</h2>
                 <div id="appointmentList" class="flex-grow overflow-y-auto"></div>
                 <div class="p-4 border-t">
+                    <label for="appointmentDate" class="font-semibold text-gray-600 text-sm mb-1">Appointment Date</label>
+                    <input type="date" id="appointmentDate" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-sky-400">
                     <button id="addAppointmentBtn" class="w-full btn btn-primary font-semibold py-2 rounded-lg mb-4" disabled>Add Appointment</button>
-                    <h3 class="font-semibold text-gray-600 mb-2">Persistent Notes</h3>
-                    <textarea id="persistentNotes" class="w-full h-32 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="Notes to reference across multiple sessions..." disabled></textarea>
+                    <div class="flex justify-between items-center mb-2 mt-4">
+                        <h3 class="font-semibold text-gray-600">Recently Deleted</h3>
+                        <button id="clearDeletedAppointmentsBtn" class="btn btn-danger text-xs px-2 py-1 rounded-md">Clear</button>
+                    </div>
+                    <div id="deletedAppointmentsList" class="text-sm text-gray-500 max-h-24 overflow-y-auto"></div>
                 </div>
             </div>
 
-            <!-- Panel 3: Session Information -->
-            <div class="col-span-12 md:col-span-4 panel">
-                <h2 class="text-xl font-semibold text-gray-700 p-4 border-b">Session Information</h2>
-                <div class="p-4 flex-grow">
-                    <textarea id="sessionInfo" class="w-full h-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="Enter session details here..." disabled></textarea>
+            <div class="resizer" id="resizer2"></div>
+
+            <!-- Panel 3: Session Information & Notes -->
+            <div class="panel flex flex-col" id="panelSession" style="flex-basis: 33.33%;">
+                <div class="flex flex-col h-full">
+                    <div id="sessionInfoWrapper" class="flex flex-col" style="flex-basis: 50%;">
+                        <h2 class="text-xl font-semibold text-gray-700 p-4 border-b">Session Information</h2>
+                        <div class="p-4 flex-grow">
+                            <textarea id="sessionInfo" class="w-full h-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="Enter session details here..." disabled style="resize: vertical;"></textarea>
+                        </div>
+                    </div>
+                    <div id="notesWrapper" class="flex flex-col" style="flex-basis: 50%;">
+                         <h2 class="text-xl font-semibold text-gray-700 p-4 border-b border-t">Persistent Notes</h2>
+                        <div class="p-4 flex-grow">
+                            <textarea id="persistentNotes" class="w-full h-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="Notes to reference across multiple sessions..." disabled style="resize: vertical;"></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <div class="resizer" id="resizer3"></div>
 
             <!-- Panel 4: SOAP Note -->
-            <div class="col-span-12 md:col-span-4 panel">
+            <div class="panel flex flex-col" id="panelSoap" style="flex-basis: 33.33%;">
                 <h2 class="text-xl font-semibold text-gray-700 p-4 border-b">SOAP Note</h2>
                 <div class="p-4 flex-grow overflow-y-auto space-y-4">
                     <!-- Subjective -->
@@ -182,6 +215,12 @@
             const addClientBtn = document.getElementById('addClientBtn');
             const appointmentListEl = document.getElementById('appointmentList');
             const addAppointmentBtn = document.getElementById('addAppointmentBtn');
+            const appointmentDateEl = document.getElementById('appointmentDate');
+            const deletedClientsListEl = document.getElementById('deletedClientsList');
+            const clearDeletedClientsBtn = document.getElementById('clearDeletedClientsBtn');
+            const archivedClientsListEl = document.getElementById('archivedClientsList');
+            const deletedAppointmentsListEl = document.getElementById('deletedAppointmentsList');
+            const clearDeletedAppointmentsBtn = document.getElementById('clearDeletedAppointmentsBtn');
             const persistentNotesEl = document.getElementById('persistentNotes');
             const sessionInfoEl = document.getElementById('sessionInfo');
             const soapSEl = document.getElementById('soapS');
@@ -190,50 +229,67 @@
             const soapPEl = document.getElementById('soapP');
             const saveBtn = document.getElementById('saveBtn');
             const loadBtn = document.getElementById('loadBtn');
-            const newBtn = document.getElementById('newBtn');
+            const eraseAllBtn = document.getElementById('eraseAllBtn');
             const autoSaveIndicator = document.getElementById('autoSaveIndicator');
             const saveStatus = document.getElementById('saveStatus');
 
             // App State
-            let data = { clients: [] };
+            let data = { clients: [], archivedClients: [] };
+            let deletedItems = { clients: [], appointments: [] };
             let selectedClientId = null;
             let selectedAppointmentId = null;
-            let fileHandle = null;
             let isDirty = false; // Flag to check if there are unsaved changes
 
-            const getInitialData = () => ({ clients: [] });
+            const getInitialData = () => ({ clients: [], archivedClients: [] });
 
             // --- Data Management ---
-            const findClient = id => data.clients.find(c => c.id === id);
+            const findClient = id => data.clients.find(c => c.id === id) || data.archivedClients.find(c => c.id === id);
             const findAppointment = (client, id) => client?.appointments.find(a => a.id === id);
 
             // --- UI Rendering ---
             const renderClients = () => {
                 clientListEl.innerHTML = '';
                 if (data.clients.length === 0) {
-                     clientListEl.innerHTML = '<p class="p-4 text-sm text-gray-500">No clients yet. Add one below.</p>';
+                     clientListEl.innerHTML = '<p class="p-4 text-sm text-gray-500">No active clients.</p>';
                 }
+                // Sort clients alphabetically
+                data.clients.sort((a, b) => a.name.localeCompare(b.name));
                 data.clients.forEach(client => {
                     const div = document.createElement('div');
                     div.className = `list-item flex justify-between items-center p-3 border-b ${client.id === selectedClientId ? 'selected' : ''}`;
                     div.dataset.id = client.id;
                     
-                    const span = document.createElement('span');
-                    span.textContent = client.name;
-                    span.className = 'truncate';
-                    div.appendChild(span);
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = client.name;
+                    nameSpan.className = 'truncate flex-grow cursor-pointer';
+                    div.appendChild(nameSpan);
+
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'flex items-center space-x-2 ml-2';
+
+                    const archiveBtn = document.createElement('button');
+                    archiveBtn.textContent = 'Archive';
+                    archiveBtn.title = 'Archive Client';
+                    archiveBtn.className = 'btn btn-secondary text-xs px-2 py-1 rounded-md';
+                    archiveBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        archiveClient(client.id);
+                    };
+                    btnGroup.appendChild(archiveBtn);
 
                     const removeBtn = document.createElement('button');
                     removeBtn.innerHTML = '&times;';
-                    removeBtn.className = 'font-bold text-red-500 hover:text-red-700 text-xl px-2';
+                    removeBtn.title = 'Delete Client';
+                    removeBtn.className = 'font-bold text-red-500 hover:text-red-700 text-xl px-1 rounded-full w-6 h-6 flex items-center justify-center';
                     removeBtn.onclick = (e) => {
                         e.stopPropagation();
-                        if (confirm(`Are you sure you want to delete ${client.name} and all their data?`)) {
+                        if (confirm(`Are you sure you want to delete ${client.name}? You can restore this client later.`)) {
                             removeClient(client.id);
                         }
                     };
-                    div.appendChild(removeBtn);
+                    btnGroup.appendChild(removeBtn);
                     
+                    div.appendChild(btnGroup);
                     div.onclick = () => selectClient(client.id);
                     clientListEl.appendChild(div);
                 });
@@ -259,14 +315,16 @@
 
                     const span = document.createElement('span');
                     span.textContent = new Date(appt.date).toLocaleDateString();
+                    span.className = 'flex-grow cursor-pointer';
                     div.appendChild(span);
 
                     const removeBtn = document.createElement('button');
                     removeBtn.innerHTML = '&times;';
-                    removeBtn.className = 'font-bold text-red-500 hover:text-red-700 text-xl px-2';
+                    removeBtn.title = 'Delete Appointment';
+                    removeBtn.className = 'font-bold text-red-500 hover:text-red-700 text-xl px-1 rounded-full w-6 h-6 flex items-center justify-center';
                     removeBtn.onclick = (e) => {
                         e.stopPropagation();
-                         if (confirm(`Are you sure you want to delete the appointment on ${new Date(appt.date).toLocaleDateString()}?`)) {
+                         if (confirm(`Are you sure you want to delete the appointment on ${new Date(appt.date).toLocaleDateString()}? You can restore it later.`)) {
                             removeAppointment(appt.id);
                         }
                     };
@@ -296,10 +354,67 @@
                 soapPEl.value = appointment ? appointment.soap.p : '';
             };
 
+            const renderDeletedLists = () => {
+                deletedClientsListEl.innerHTML = '';
+                if (deletedItems.clients.length === 0) {
+                    deletedClientsListEl.innerHTML = '<p class="text-xs text-gray-400">None</p>';
+                }
+                deletedItems.clients.forEach(client => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center text-xs py-1';
+                    div.innerHTML = `<span>${client.name}</span>`;
+                    const btn = document.createElement('button');
+                    btn.textContent = 'Restore';
+                    btn.className = 'btn btn-secondary text-xs px-1 py-0.5 rounded';
+                    btn.onclick = () => restoreClient(client.id);
+                    div.appendChild(btn);
+                    deletedClientsListEl.appendChild(div);
+                });
+
+                deletedAppointmentsListEl.innerHTML = '';
+                if (deletedItems.appointments.length === 0) {
+                    deletedAppointmentsListEl.innerHTML = '<p class="text-xs text-gray-400">None</p>';
+                }
+                deletedItems.appointments.forEach(appt => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center text-xs py-1';
+                    const clientName = findClient(appt.clientId)?.name || 'Unknown';
+                    div.innerHTML = `<span>${new Date(appt.date).toLocaleDateString()} (${clientName})</span>`;
+                    const btn = document.createElement('button');
+                    btn.textContent = 'Restore';
+                    btn.className = 'btn btn-secondary text-xs px-1 py-0.5 rounded';
+                    btn.onclick = () => restoreAppointment(appt.id);
+                    div.appendChild(btn);
+                    deletedAppointmentsListEl.appendChild(div);
+                });
+            };
+
+            const renderArchivedClients = () => {
+                archivedClientsListEl.innerHTML = '';
+                if (!data.archivedClients || data.archivedClients.length === 0) {
+                    archivedClientsListEl.innerHTML = '<p class="text-xs text-gray-400">None</p>';
+                    return;
+                }
+                data.archivedClients.sort((a, b) => a.name.localeCompare(b.name));
+                data.archivedClients.forEach(client => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center text-xs py-1';
+                    div.innerHTML = `<span>${client.name}</span>`;
+                    const btn = document.createElement('button');
+                    btn.textContent = 'Unarchive';
+                    btn.className = 'btn btn-secondary text-xs px-1 py-0.5 rounded';
+                    btn.onclick = () => unarchiveClient(client.id);
+                    div.appendChild(btn);
+                    archivedClientsListEl.appendChild(div);
+                });
+            };
+
             const fullRender = () => {
                 renderClients();
                 renderAppointments();
                 renderDetails();
+                renderDeletedLists();
+                renderArchivedClients();
             };
 
             // --- Event Handlers & Actions ---
@@ -330,11 +445,66 @@
             };
             
             const removeClient = (id) => {
+                const client = findClient(id);
+                if (!client) return;
+
+                // Also move associated appointments to deleted
+                if (client.appointments) {
+                    client.appointments.forEach(appt => {
+                        deletedItems.appointments.push({ ...appt, clientId: client.id });
+                    });
+                }
+
+                deletedItems.clients.push(client);
                 data.clients = data.clients.filter(c => c.id !== id);
+
                 if (selectedClientId === id) {
                     selectedClientId = null;
                     selectedAppointmentId = null;
                 }
+                fullRender();
+                markDirty();
+            };
+
+            const restoreClient = (id) => {
+                const client = deletedItems.clients.find(c => c.id === id);
+                if (!client) return;
+
+                // Restore appointments that belong to this client and are in the deleted list
+                const appointmentsToRestore = deletedItems.appointments.filter(a => a.clientId === id);
+                client.appointments = client.appointments || [];
+                client.appointments.push(...appointmentsToRestore);
+                deletedItems.appointments = deletedItems.appointments.filter(a => a.clientId !== id);
+
+                data.clients.push(client);
+                deletedItems.clients = deletedItems.clients.filter(c => c.id !== id);
+                
+                fullRender();
+                markDirty();
+            };
+
+            const archiveClient = (id) => {
+                const clientIndex = data.clients.findIndex(c => c.id === id);
+                if (clientIndex === -1) return;
+
+                const [client] = data.clients.splice(clientIndex, 1);
+                data.archivedClients.push(client);
+
+                if (selectedClientId === id) {
+                    selectedClientId = null;
+                    selectedAppointmentId = null;
+                }
+                fullRender();
+                markDirty();
+            };
+
+            const unarchiveClient = (id) => {
+                const clientIndex = data.archivedClients.findIndex(c => c.id === id);
+                if (clientIndex === -1) return;
+
+                const [client] = data.archivedClients.splice(clientIndex, 1);
+                data.clients.push(client);
+
                 fullRender();
                 markDirty();
             };
@@ -396,43 +566,76 @@
                 debouncedAutoSave();
             };
             
-            const saveFile = async (isAutoSave = false) => {
-                if (!isDirty && isAutoSave) return; // Don't auto-save if nothing changed
-                 if (!fileHandle && !isAutoSave) {
+            const saveDataToCookie = () => {
+                try {
+                    const state = { data, deletedItems, selectedClientId, selectedAppointmentId };
+                    document.cookie = `clientData=${encodeURIComponent(JSON.stringify(state))};path=/;max-age=31536000;samesite=strict`;
+                } catch (e) {
+                    console.error("Failed to save to cookie", e);
+                    updateSaveStatus('Cookie save failed!', false);
+                }
+            };
+
+            const loadDataFromCookie = () => {
+                const cookie = document.cookie.split('; ').find(row => row.startsWith('clientData='));
+                if (cookie) {
                     try {
-                        fileHandle = await window.showSaveFilePicker({
-                            types: [{
-                                description: 'JSON Files',
-                                accept: { 'application/json': ['.json'] }
-                            }]
-                        });
-                        localStorage.setItem('fileHandle', fileHandle); // This won't work directly, just conceptually storing
-                    } catch (err) {
-                        console.error('Save cancelled by user.', err);
-                        return;
+                        const state = JSON.parse(decodeURIComponent(cookie.split('=')[1]));
+                        data = state.data || getInitialData();
+                        // Ensure archivedClients exists for older data structures
+                        if (!data.archivedClients) data.archivedClients = [];
+                        deletedItems = state.deletedItems || { clients: [], appointments: [] };
+                        selectedClientId = state.selectedClientId || null;
+                        selectedAppointmentId = state.selectedAppointmentId || null;
+                        updateSaveStatus('Loaded from cookie', true, 2000);
+                    } catch (e) {
+                        console.error("Failed to load from cookie", e);
+                        data = getInitialData();
+                        deletedItems = { clients: [], appointments: [] };
                     }
                 }
-
-                if (!fileHandle) {
-                    if (!isAutoSave) alert('Could not save. Please use the "Save" button first to select a file location.');
+            };
+            
+            const saveFile = async (isAutoSave = false) => {
+                if (isAutoSave) {
+                    if (!isDirty) return;
+                    updateSaveStatus('Saving...', true);
+                    saveDataToCookie();
+                    isDirty = false;
+                    setTimeout(() => {
+                        // Hide indicator if no longer dirty
+                        if (!isDirty && !autoSaveIndicator.classList.contains('hidden')) {
+                             autoSaveIndicator.classList.add('hidden');
+                        }
+                    }, 1000);
                     return;
                 }
 
+                // Manual save is now export
                 try {
-                    updateSaveStatus('Saving...');
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(JSON.stringify(data, null, 2));
+                    const state = { data, deletedItems };
+                    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: 'client-data.json',
+                        types: [{
+                            description: 'JSON Files',
+                            accept: { 'application/json': ['.json'] }
+                        }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(blob);
                     await writable.close();
-                    isDirty = false;
-                    setTimeout(() => updateSaveStatus(`Saved at ${new Date().toLocaleTimeString()}`), 500);
+                    updateSaveStatus('Exported successfully!', true, 3000);
                 } catch (err) {
-                    console.error('Failed to save file:', err);
-                    updateSaveStatus('Save failed!', false);
+                    if (err.name !== 'AbortError') {
+                        console.error('Failed to export file:', err);
+                        updateSaveStatus('Export failed!', false, 3000);
+                    }
                 }
             };
             
             const loadFile = async () => {
-                 if (isDirty && !confirm('You have unsaved changes. Are you sure you want to load a new file?')) {
+                 if (isDirty && !confirm('You have unsaved changes that will be lost. Are you sure you want to import a new file?')) {
                     return;
                 }
                 try {
@@ -444,29 +647,48 @@
                     });
                     const file = await handle.getFile();
                     const contents = await file.text();
-                    data = JSON.parse(contents);
-                    fileHandle = handle;
+                    const state = JSON.parse(contents);
+                    data = state.data || getInitialData();
+                    if (!data.archivedClients) data.archivedClients = [];
+                    deletedItems = state.deletedItems || { clients: [], appointments: [] };
                     selectedClientId = null;
                     selectedAppointmentId = null;
                     isDirty = false;
-                    updateSaveStatus(`Loaded ${file.name}`);
+                    updateSaveStatus(`Loaded ${file.name}`, true, 3000);
                     fullRender();
+                    markDirty(); // Save imported data to cookie
                 } catch (err) {
-                    console.error('Failed to load file:', err);
+                    if (err.name !== 'AbortError') {
+                        console.error('Failed to load file:', err);
+                        updateSaveStatus('Import failed!', false, 3000);
+                    }
                 }
             };
 
-            const newFile = () => {
-                if (isDirty && !confirm('You have unsaved changes. Are you sure you want to create a new file?')) {
-                    return;
+            const eraseAllData = () => {
+                const confirmationText = "DELETE ALL DATA";
+                const userInput = prompt(`This action will permanently erase all client data from this browser. This cannot be undone.\n\nTo confirm, please type "${confirmationText}" in the box below.`);
+
+                if (userInput === confirmationText) {
+                    // Clear data state
+                    data = getInitialData();
+                    deletedItems = { clients: [], appointments: [] };
+                    selectedClientId = null;
+                    selectedAppointmentId = null;
+                    isDirty = false;
+
+                    // Clear persisted data
+                    document.cookie = 'clientData=;path=/;max-age=0';
+                    localStorage.removeItem('columnSizes');
+
+                    autoSaveIndicator.classList.add('hidden');
+                    
+                    alert('All data has been permanently erased. The page will now reload.');
+                    // Reload to ensure a clean state and reset column sizes visually
+                    window.location.reload();
+                } else if (userInput !== null) { // User typed something, but it was incorrect
+                    alert('The text you entered did not match. No data has been erased.');
                 }
-                data = getInitialData();
-                selectedClientId = null;
-                selectedAppointmentId = null;
-                fileHandle = null;
-                isDirty = false;
-                autoSaveIndicator.classList.add('hidden');
-                fullRender();
             };
 
             // Debounce function to prevent saving on every keystroke
@@ -484,7 +706,22 @@
             addAppointmentBtn.addEventListener('click', addAppointment);
             saveBtn.addEventListener('click', () => saveFile(false));
             loadBtn.addEventListener('click', loadFile);
-            newBtn.addEventListener('click', newFile);
+            eraseAllBtn.addEventListener('click', eraseAllData);
+
+            clearDeletedClientsBtn.addEventListener('click', () => {
+                if (deletedItems.clients.length > 0 && confirm('Are you sure you want to permanently delete all recently deleted clients? This cannot be undone.')) {
+                    deletedItems.clients = [];
+                    fullRender();
+                    markDirty();
+                }
+            });
+            clearDeletedAppointmentsBtn.addEventListener('click', () => {
+                if (deletedItems.appointments.length > 0 && confirm('Are you sure you want to permanently delete all recently deleted appointments? This cannot be undone.')) {
+                    deletedItems.appointments = [];
+                    fullRender();
+                    markDirty();
+                }
+            });
 
             // Update data model on input change
             persistentNotesEl.addEventListener('input', () => {
@@ -540,7 +777,72 @@
             });
 
 
-            // Initial Render
+            // --- Resizable Panels ---
+            const panels = ['panelClients', 'panelAppointments', 'panelSession', 'panelSoap'];
+            function saveColumnSizes() {
+                const sizes = panels.map(id => document.getElementById(id).style.flexBasis);
+                localStorage.setItem('columnSizes', JSON.stringify(sizes));
+            }
+
+            function loadColumnSizes() {
+                const sizes = JSON.parse(localStorage.getItem('columnSizes'));
+                if (sizes && sizes.length === panels.length) {
+                    panels.forEach((id, index) => {
+                        const panel = document.getElementById(id);
+                        if (panel) {
+                            panel.style.flexBasis = sizes[index];
+                        }
+                    });
+                }
+            }
+
+            function makeResizable(resizer, prev, next) {
+                if (!resizer || !prev || !next) return;
+                let isResizing = false;
+                resizer.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+
+                    const mousemove = (e) => {
+                        if (!isResizing) return;
+                        
+                        const prevRect = prev.getBoundingClientRect();
+                        const newPrevWidth = e.clientX - prevRect.left;
+                        const newNextWidth = prevRect.right - e.clientX + (next.getBoundingClientRect().right - prevRect.right);
+
+                        const minWidth = 150; // Minimum width in pixels
+
+                        if (newPrevWidth > minWidth && newNextWidth > minWidth) {
+                            prev.style.flexBasis = `${newPrevWidth}px`;
+                            next.style.flexBasis = `${newNextWidth}px`;
+                        }
+                    };
+
+                    const mouseup = () => {
+                        isResizing = false;
+                        window.removeEventListener('mousemove', mousemove);
+                        window.removeEventListener('mouseup', mouseup);
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                        saveColumnSizes();
+                    };
+
+                    window.addEventListener('mousemove', mousemove);
+                    window.addEventListener('mouseup', mouseup);
+                });
+            }
+
+            makeResizable(document.getElementById('resizer1'), document.getElementById('panelClients'), document.getElementById('panelAppointments'));
+            makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'));
+            makeResizable(document.getElementById('resizer3'), document.getElementById('panelSession'), document.getElementById('panelSoap'));
+
+
+            // Initial Load & Render
+            loadDataFromCookie();
+            loadColumnSizes();
+            appointmentDateEl.value = new Date().toISOString().split('T')[0]; // Set default date
             fullRender();
         });
     </script>
