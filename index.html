@@ -80,6 +80,18 @@
             background-color: #fecaca;
             color: #dc2626;
         }
+        .resizer {
+            background: #e5e7eb;
+            cursor: col-resize;
+            width: 6px;
+            z-index: 10;
+        }
+        .resizer-y {
+            background: #e5e7eb;
+            cursor: row-resize;
+            height: 6px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body class="p-4 md:p-6 lg:p-8">
@@ -150,6 +162,7 @@
                             <textarea id="sessionInfo" class="w-full h-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="Enter session details here..." disabled style="resize: vertical;"></textarea>
                         </div>
                     </div>
+                    <div class="resizer-y" id="resizer-session-notes"></div>
                     <div id="notesWrapper" class="flex flex-col" style="flex-basis: 50%;">
                          <h2 class="text-xl font-semibold text-gray-700 p-4 border-b border-t">Persistent Notes</h2>
                         <div class="p-4 flex-grow">
@@ -782,6 +795,9 @@
             function saveColumnSizes() {
                 const sizes = panels.map(id => document.getElementById(id).style.flexBasis);
                 localStorage.setItem('columnSizes', JSON.stringify(sizes));
+                const sessionInfoHeight = document.getElementById('sessionInfoWrapper').style.flexBasis;
+                const notesHeight = document.getElementById('notesWrapper').style.flexBasis;
+                localStorage.setItem('rowSizes', JSON.stringify({ sessionInfoHeight, notesHeight }));
             }
 
             function loadColumnSizes() {
@@ -794,29 +810,45 @@
                         }
                     });
                 }
+                const rowSizes = JSON.parse(localStorage.getItem('rowSizes'));
+                if (rowSizes) {
+                    document.getElementById('sessionInfoWrapper').style.flexBasis = rowSizes.sessionInfoHeight;
+                    document.getElementById('notesWrapper').style.flexBasis = rowSizes.notesHeight;
+                }
             }
 
-            function makeResizable(resizer, prev, next) {
+            function makeResizable(resizer, prev, next, direction = 'x') {
                 if (!resizer || !prev || !next) return;
                 let isResizing = false;
                 resizer.addEventListener('mousedown', (e) => {
                     isResizing = true;
                     
-                    document.body.style.cursor = 'col-resize';
+                    const cursor = direction === 'x' ? 'col-resize' : 'row-resize';
+                    document.body.style.cursor = cursor;
                     document.body.style.userSelect = 'none';
 
                     const mousemove = (e) => {
                         if (!isResizing) return;
                         
                         const prevRect = prev.getBoundingClientRect();
-                        const newPrevWidth = e.clientX - prevRect.left;
-                        const newNextWidth = prevRect.right - e.clientX + (next.getBoundingClientRect().right - prevRect.right);
+                        const nextRect = next.getBoundingClientRect();
 
-                        const minWidth = 150; // Minimum width in pixels
-
-                        if (newPrevWidth > minWidth && newNextWidth > minWidth) {
-                            prev.style.flexBasis = `${newPrevWidth}px`;
-                            next.style.flexBasis = `${newNextWidth}px`;
+                        if (direction === 'x') {
+                            const newPrevWidth = e.clientX - prevRect.left;
+                            const newNextWidth = nextRect.right - e.clientX;
+                            const minWidth = 150;
+                            if (newPrevWidth > minWidth && newNextWidth > minWidth) {
+                                prev.style.flexBasis = `${newPrevWidth}px`;
+                                next.style.flexBasis = `${newNextWidth}px`;
+                            }
+                        } else {
+                            const newPrevHeight = e.clientY - prevRect.top;
+                            const newNextHeight = nextRect.bottom - e.clientY;
+                            const minHeight = 100;
+                            if (newPrevHeight > minHeight && newNextHeight > minHeight) {
+                                prev.style.flexBasis = `${newPrevHeight}px`;
+                                next.style.flexBasis = `${newNextHeight}px`;
+                            }
                         }
                     };
 
@@ -834,9 +866,10 @@
                 });
             }
 
-            makeResizable(document.getElementById('resizer1'), document.getElementById('panelClients'), document.getElementById('panelAppointments'));
-            makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'));
-            makeResizable(document.getElementById('resizer3'), document.getElementById('panelSession'), document.getElementById('panelSoap'));
+            makeResizable(document.getElementById('resizer1'), document.getElementById('panelClients'), document.getElementById('panelAppointments'), 'x');
+            makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'), 'x');
+            makeResizable(document.getElementById('resizer3'), document.getElementById('panelSession'), document.getElementById('panelSoap'), 'x');
+            makeResizable(document.getElementById('resizer-session-notes'), document.getElementById('sessionInfoWrapper'), document.getElementById('notesWrapper'), 'y');
 
 
             // Initial Load & Render
