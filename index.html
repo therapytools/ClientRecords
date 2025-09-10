@@ -671,10 +671,20 @@
 
                 // Manual save is now export
                 try {
-                    const state = { data, deletedItems };
-                    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+                    // First, ensure the latest state is saved to the cookie
+                    saveDataToCookie(); 
+                    
+                    // Read the complete state from the cookie to ensure export matches saved state
+                    const cookie = document.cookie.split('; ').find(row => row.startsWith('clientData='));
+                    if (!cookie) {
+                        updateSaveStatus('Nothing to export!', false, 3000);
+                        return;
+                    }
+                    const stateJSON = decodeURIComponent(cookie.split('=')[1]);
+                    
+                    const blob = new Blob([stateJSON], { type: 'application/json' });
                     const handle = await window.showSaveFilePicker({
-                        suggestedName: 'client-data.json',
+                        suggestedName: `client-data-${new Date().toISOString().split('T')[0]}.json`,
                         types: [{
                             description: 'JSON Files',
                             accept: { 'application/json': ['.json'] }
@@ -705,19 +715,22 @@
                     });
                     const file = await handle.getFile();
                     const contents = await file.text();
-                    const state = JSON.parse(contents);
-                    data = state.data || getInitialData();
-                    if (!data.archivedClients) data.archivedClients = [];
-                    deletedItems = state.deletedItems || { clients: [], appointments: [] };
-                    selectedClientId = null;
-                    selectedAppointmentId = null;
-                    updateSaveStatus(`Loaded ${file.name}`, true, 3000);
-                    fullRender();
-                    markDirty(); // Save imported data to cookie
+                    
+                    // Validate and set cookie
+                    JSON.parse(contents); // Will throw an error if invalid JSON
+                    document.cookie = `clientData=${encodeURIComponent(contents)};path=/;max-age=31536000;samesite=strict`;
+
+                    updateSaveStatus(`Imported ${file.name}. Reloading...`, true, 3000);
+                    
+                    // Reload to apply the new state from the cookie
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+
                 } catch (err) {
                     if (err.name !== 'AbortError') {
                         console.error('Failed to load file:', err);
-                        updateSaveStatus('Import failed!', false, 3000);
+                        updateSaveStatus('Import failed! Invalid file.', false, 3000);
                     }
                 }
             };
