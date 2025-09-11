@@ -272,6 +272,7 @@
         .soap-textarea {
             border-radius: 0 0 6px 6px; border-top: none;
             flex-grow: 1;
+            overflow-y: hidden; /* Hide vertical scrollbar */
         }
 
         .no-selection {
@@ -611,6 +612,9 @@
                         <div class="soap-header"><span>Plan</span><button class="copy-btn" data-target="soapP">Copy</button></div>
                         <textarea id="soapP" class="soap-textarea" placeholder="• ">${soapData.p || ''}</textarea>
                     </div>`;
+                
+                // After rendering, resize all textareas
+                soapContentEl.querySelectorAll('.soap-textarea').forEach(autoResizeTextarea);
             };
 
             const renderDeletedLists = () => {
@@ -841,11 +845,20 @@
                  generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
             });
             
+            const autoResizeTextarea = (el) => {
+                el.style.height = 'auto';
+                el.style.height = el.scrollHeight + 'px';
+            };
+
             // Auto-bulleting for SOAP notes
             const handleSoapInput = (e) => {
                 if (!e.target.matches('.soap-textarea')) return;
 
                 const textarea = e.target;
+                
+                // Auto-resize
+                autoResizeTextarea(textarea);
+
                 const originalValue = textarea.value;
                 const originalCursor = textarea.selectionStart;
 
@@ -935,6 +948,7 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework assignments, referrals, and any modifications to the treatment plan.
 
 **CRITICAL INSTRUCTIONS:**
+- **REFERRALS:** The client should always be referred to as "Ct." The therapist (the user inputting the notes) should always be referred to in the first person as "Writer."
 - **DO NOT INVENT:** Your response must ONLY contain information found in the "Session Information" text. Do not add any details, assumptions, or statements that are not explicitly provided.
 - **DO NOT INTERPRET BEYOND CATEGORIZATION:** Your job is to sort the provided information, not to add clinical interpretation or make assumptions about progress, affect, or presentation unless it is explicitly stated in the source text. For example, do not write "client appeared tired" unless the source text says "client appeared tired."
 
@@ -942,7 +956,7 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 Your entire response must be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences or add any explanatory text. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.
 
 **Example of PERFECT Output:**
-{"s":"• Client stated they felt better this week.","o":"• Client was on time and casually dressed.","a":"• Client shows good progress toward treatment goals.","p":"• Continue with current treatment plan.\\n• Assign mindfulness worksheet for homework."}`;
+{"s":"• Ct. stated they felt better this week.","o":"• Ct. was on time and casually dressed. Writer observed that Ct's affect was bright.","a":"• Ct. shows good progress toward treatment goals.","p":"• Continue with current treatment plan.\\n• Writer will assign mindfulness worksheet for homework."}`;
 
             const generateSoapNote = async () => {
                 if (!selectedModel) {
