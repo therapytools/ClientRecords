@@ -188,6 +188,10 @@
             font-weight: bold;
         }
         
+        .client-item.dragging {
+            opacity: 0.5;
+        }
+        
         .action-buttons {
             position: absolute;
             top: 5px; right: 5px;
@@ -355,7 +359,10 @@
             <div class="panel clients-panel" id="panelClients">
                 <div class="panel-header">
                     <span>Clients</span>
-                    <button id="addClientBtn" class="add-btn">+</button>
+                    <div style="display: flex; align-items: center;">
+                        <button id="sortClientsBtn" title="Sort A-Z" class="btn" style="padding: 2px 6px; font-size: 12px; margin-right: 8px;">A-Z</button>
+                        <button id="addClientBtn" class="add-btn">+</button>
+                    </div>
                 </div>
                 <div class="panel-content" id="clientList">
                     <div class="no-selection">Click + to add a client</div>
@@ -406,6 +413,13 @@
                     </div>
                     <div class="panel-content">
                          <textarea id="sessionInfo" placeholder="Select an appointment to enter session details..." disabled></textarea>
+                    </div>
+                    <div class="panel-footer" id="sessionTimerWrapper" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                            <button id="startTimerBtn" class="btn" style="flex-grow: 1;">Start</button>
+                            <button id="stopTimerBtn" class="btn" style="flex-grow: 1;">Stop</button>
+                            <div id="sessionDuration" style="font-weight: 600; white-space: nowrap;">00:00</div>
+                        </div>
                     </div>
                 </div>
                 <div class="resizer-y" id="resizer-session-notes"></div>
@@ -483,6 +497,7 @@
             // DOM Elements
             const clientListEl = document.getElementById('clientList');
             const addClientBtn = document.getElementById('addClientBtn');
+            const sortClientsBtn = document.getElementById('sortClientsBtn');
             const appointmentListEl = document.getElementById('appointmentList');
             const addAppointmentBtn = document.getElementById('addAppointmentBtn');
             const appointmentDateInput = document.getElementById('appointmentDateInput');
@@ -496,6 +511,11 @@
             const soapContentEl = document.getElementById('soapContent');
             const autoSaveIndicator = document.getElementById('autoSaveIndicator');
             const saveStatus = document.getElementById('saveStatus');
+            // Session Timer Elements
+            const sessionTimerWrapper = document.getElementById('sessionTimerWrapper');
+            const startTimerBtn = document.getElementById('startTimerBtn');
+            const stopTimerBtn = document.getElementById('stopTimerBtn');
+            const sessionDurationEl = document.getElementById('sessionDuration');
             // Settings and Modal Elements
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsModal = document.getElementById('settingsModal');
@@ -522,6 +542,7 @@
             let serverAddress = null;
             let apiKey = null;
             let selectedModel = null;
+            let sessionTimerInterval = null;
             const getInitialData = () => ({ clients: [], archivedClients: [] });
 
             // --- Data Management ---
@@ -530,13 +551,15 @@
             
             // --- UI Rendering ---
             const renderClients = () => {
-                const clients = data.clients.sort((a, b) => a.name.localeCompare(b.name));
+                // Note: Drag and drop reordering means we can't sort here anymore.
+                // The array order is now the source of truth for display order.
+                const clients = data.clients; 
                 if (clients.length === 0) {
                     clientListEl.innerHTML = '<div class="no-selection">Click + to add a client</div>';
                     return;
                 }
                 clientListEl.innerHTML = clients.map(client => `
-                    <div class="client-item ${client.id === selectedClientId ? 'active' : ''}" data-client-id="${client.id}">
+                    <div class="client-item ${client.id === selectedClientId ? 'active' : ''}" data-client-id="${client.id}" draggable="true">
                         ${client.name}
                         <div class="action-buttons">
                             <button class="action-btn archive-btn" title="Archive Client">A</button>
@@ -580,11 +603,57 @@
                 sessionInfoEl.value = appointment ? appointment.sessionInfo || '' : '';
                 sessionInfoEl.placeholder = appointment ? "Enter session details..." : "Select an appointment to begin...";
                 
+                sessionTimerWrapper.style.display = appointment ? 'block' : 'none';
+                if (appointment) {
+                    renderSessionTimer(appointment);
+                }
+
                 renderSoap();
                 
                 generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
             };
             
+            const renderSessionTimer = (appointment) => {
+                clearInterval(sessionTimerInterval);
+
+                if (appointment.startTime) {
+                    startTimerBtn.textContent = `Start: ${new Date(appointment.startTime).toLocaleTimeString()}`;
+                } else {
+                    startTimerBtn.textContent = 'Start';
+                }
+
+                if (appointment.endTime) {
+                    stopTimerBtn.textContent = `End: ${new Date(appointment.endTime).toLocaleTimeString()}`;
+                } else {
+                    stopTimerBtn.textContent = 'Stop';
+                }
+
+                const updateDuration = () => {
+                    if (!appointment.startTime) {
+                        sessionDurationEl.textContent = '00:00';
+                        return;
+                    }
+                    
+                    const start = new Date(appointment.startTime);
+                    const end = appointment.endTime ? new Date(appointment.endTime) : new Date();
+                    
+                    let totalSeconds = Math.floor((end - start) / 1000);
+                    if (totalSeconds < 0) totalSeconds = 0;
+
+                    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+                    
+                    sessionDurationEl.textContent = `${minutes}:${seconds}`;
+                };
+
+                updateDuration();
+
+                // If the timer is running (start time exists but no end time), set an interval to update it.
+                if (appointment.startTime && !appointment.endTime) {
+                    sessionTimerInterval = setInterval(updateDuration, 1000);
+                }
+            };
+
             const renderSoap = () => {
                 const client = findClient(selectedClientId);
                 const appointment = client ? findAppointment(client, selectedAppointmentId) : null;
@@ -659,7 +728,8 @@
             // --- Event Handlers & Actions ---
             const selectClient = (id) => {
                 selectedClientId = id;
-                selectedAppointmentId = null; 
+                selectedAppointmentId = null;
+                clearInterval(sessionTimerInterval); // Stop timer when switching clients
                 fullRender();
             };
 
@@ -697,6 +767,8 @@
                     id: crypto.randomUUID(),
                     date: utcDate.toISOString(),
                     sessionInfo: '',
+                    startTime: null,
+                    endTime: null,
                     soap: { s: '', o: '', a: '', p: '' }
                 };
                 client.appointments.push(newAppointment);
@@ -741,6 +813,55 @@
                     fullRender();
                 } else {
                     selectClient(clientId);
+                }
+            });
+
+            // --- Drag and Drop Client Reordering ---
+            let draggedClientId = null;
+
+            clientListEl.addEventListener('dragstart', (e) => {
+                const clientItem = e.target.closest('.client-item');
+                if (clientItem) {
+                    draggedClientId = clientItem.dataset.clientId;
+                    // Add a class for visual feedback
+                    setTimeout(() => clientItem.classList.add('dragging'), 0);
+                }
+            });
+
+            clientListEl.addEventListener('dragend', (e) => {
+                const clientItem = e.target.closest('.client-item');
+                if (clientItem) {
+                    clientItem.classList.remove('dragging');
+                }
+                draggedClientId = null;
+            });
+
+            clientListEl.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Necessary to allow dropping
+                const targetItem = e.target.closest('.client-item');
+                if (targetItem && targetItem.dataset.clientId !== draggedClientId) {
+                    // This is where you could add a visual indicator if desired
+                }
+            });
+
+            clientListEl.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const targetItem = e.target.closest('.client-item');
+                if (targetItem && draggedClientId) {
+                    const targetId = targetItem.dataset.clientId;
+                    
+                    const draggedIndex = data.clients.findIndex(c => c.id === draggedClientId);
+                    const targetIndex = data.clients.findIndex(c => c.id === targetId);
+
+                    if (draggedIndex > -1 && targetIndex > -1) {
+                        // Remove the dragged item
+                        const [draggedItem] = data.clients.splice(draggedIndex, 1);
+                        // Insert it at the target's position
+                        data.clients.splice(targetIndex, 0, draggedItem);
+                        
+                        markDirty();
+                        renderClients(); // Re-render to reflect the new order
+                    }
                 }
             });
 
@@ -1012,18 +1133,18 @@ ${sessionInfoEl.value}
                     let content = result.choices[0].message.content;
                     let soapData = {};
 
-                    const jsonMatches = content.match(/{[\s\S]*?}/g);
-                    if (!jsonMatches) {
-                         throw new Error('AI response did not contain a valid JSON object.');
+                    // Find the first '{' and the last '}' to extract the JSON part.
+                    const firstBrace = content.indexOf('{');
+                    const lastBrace = content.lastIndexOf('}');
+                    if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+                        throw new Error('AI response did not contain a valid JSON object.');
                     }
+                    const jsonString = content.substring(firstBrace, lastBrace + 1);
                     
                     try {
-                         jsonMatches.forEach(jsonString => {
-                            const partialData = JSON.parse(jsonString);
-                            Object.assign(soapData, partialData);
-                        });
+                        soapData = JSON.parse(jsonString);
                     } catch (parseError) {
-                        console.error("Failed to parse the following JSON string from the AI:", content);
+                        console.error("Failed to parse the following JSON string from the AI:", jsonString);
                         throw new Error(`The AI model returned malformed JSON. Check the browser console for the raw output that failed to parse. Details: ${parseError.message}`);
                     }
                     
@@ -1074,6 +1195,14 @@ ${sessionInfoEl.value}
                 serverAddress = address.endsWith('/') ? address.slice(0, -1) : address;
                 apiKey = apiKeyInput.value.trim();
 
+                // Save settings to local storage immediately
+                localStorage.setItem('serverAddress', serverAddress);
+                if (apiKey) {
+                    localStorage.setItem('apiKey', apiKey);
+                } else {
+                    localStorage.removeItem('apiKey');
+                }
+
                 apiStatus.textContent = 'Connecting...';
                 apiStatus.style.color = 'orange';
                 modelSelect.innerHTML = '<option>Loading models...</option>';
@@ -1095,9 +1224,9 @@ ${sessionInfoEl.value}
                     apiStatus.textContent = 'Connected';
                     apiStatus.style.color = 'green';
                     
-                    localStorage.setItem('serverAddress', serverAddress);
-                    if (apiKey) localStorage.setItem('apiKey', apiKey);
-                    else localStorage.removeItem('apiKey');
+                    // localStorage.setItem('serverAddress', serverAddress);
+                    // if (apiKey) localStorage.setItem('apiKey', apiKey);
+                    // else localStorage.removeItem('apiKey');
                     
                     modelSelect.innerHTML = '';
                     const models = data.data;
@@ -1330,6 +1459,11 @@ This error cannot be fixed within this application's code; it requires a configu
 
             // --- Event Listeners ---
             addClientBtn.addEventListener('click', addClient);
+            sortClientsBtn.addEventListener('click', () => {
+                data.clients.sort((a, b) => a.name.localeCompare(b.name));
+                markDirty();
+                renderClients();
+            });
             addAppointmentBtn.addEventListener('click', addAppointment);
             exportBtn.addEventListener('click', exportFile);
             importBtn.addEventListener('click', loadFile);
@@ -1350,6 +1484,26 @@ This error cannot be fixed within this application's code; it requires a configu
             modelSelect.addEventListener('change', (e) => {
                 selectedModel = e.target.value;
                 fullRender();
+            });
+
+            startTimerBtn.addEventListener('click', () => {
+                const appointment = findAppointment(findClient(selectedClientId), selectedAppointmentId);
+                if (appointment) {
+                    appointment.startTime = new Date().toISOString();
+                    appointment.endTime = null; // Clear end time if starting again
+                    markDirty();
+                    renderSessionTimer(appointment);
+                }
+            });
+
+            stopTimerBtn.addEventListener('click', () => {
+                const appointment = findAppointment(findClient(selectedClientId), selectedAppointmentId);
+                if (appointment && appointment.startTime) { // Can only stop if started
+                    appointment.endTime = new Date().toISOString();
+                    clearInterval(sessionTimerInterval);
+                    markDirty();
+                    renderSessionTimer(appointment);
+                }
             });
 
             // --- Resizable Panels ---
