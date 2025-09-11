@@ -3,269 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-Powered Client Data Organizer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Mental Health Client Data Organizer</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            overflow: hidden;
         }
-        /* Custom scrollbar for a cleaner look */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #c7c7c7;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-        .panel {
-            background-color: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: calc(100vh - 20px);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 8rem);
-            min-width: 150px; /* Prevent panels from becoming too small */
         }
-        .list-item {
-            cursor: pointer;
-            transition: background-color 0.2s;
-            border-right: 4px solid transparent;
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
-        .list-item.selected {
-            background-color: #e0f2fe;
-            border-color: #38bdf8;
-            font-weight: 600;
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin-right: auto;
         }
-        .list-item:hover {
-            background-color: #f0f9ff;
-        }
-        textarea {
-            resize: none;
-        }
+
         .btn {
-            transition: background-color 0.2s, transform 0.1s;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .btn:hover {
-            transform: translateY(-1px);
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-         .btn:disabled {
-            background-color: #d1d5db;
+        
+        .btn:disabled {
+            background: #95a5a6;
             cursor: not-allowed;
             transform: none;
         }
-        .btn-primary {
-            background-color: #38bdf8;
+
+        .btn.settings-btn {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+
+        .btn.save-btn {
+             background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .main-content {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            border-right: 2px solid #ecf0f1;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-grow: 1; /* Allow panels to grow/shrink */
+            flex-shrink: 1;
+        }
+
+        .panel:last-child {
+            border-right: none;
+        }
+        
+        .clients-panel { flex-basis: 20%; min-width: 180px; }
+        .appointments-panel { flex-basis: 20%; min-width: 180px;}
+        .session-panel { flex-basis: 30%; display: flex; flex-direction: column; min-width: 250px; }
+        .soap-panel { flex-basis: 30%; min-width: 250px;}
+
+
+        .panel-header {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
             color: white;
+            padding: 12px 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
         }
-        .btn-primary:hover:not(:disabled) {
-            background-color: #0ea5e9;
+
+        .add-btn {
+            background: #27ae60;
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
         }
-        .btn-secondary {
-            background-color: #e5e7eb;
-            color: #374151;
+
+        .add-btn:hover {
+            background: #229954;
+            transform: scale(1.1);
         }
-        .btn-secondary:hover {
-            background-color: #d1d5db;
+        
+        .add-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
         }
-        .btn-danger {
-             background-color: #fee2e2;
-             color: #ef4444;
+
+        .panel-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
         }
-        .btn-danger:hover {
-            background-color: #fecaca;
-            color: #dc2626;
+        
+        .panel-footer {
+            padding: 10px;
+            border-top: 1px solid #ecf0f1;
+            background: #fdfdfd;
+            flex-shrink: 0;
         }
+        
+        input[type="date"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            background-color: white;
+            color: #333;
+        }
+
+        /* Client Panel */
+        .client-item {
+            background: white;
+            margin-bottom: 8px;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid #3498db;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .client-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .client-item.active {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+            font-weight: bold;
+        }
+        
+        .action-buttons {
+            position: absolute;
+            top: 5px; right: 5px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .client-item:hover .action-buttons, .appointment-item:hover .action-buttons {
+            opacity: 1;
+        }
+        .action-btn {
+            border: none; color: white;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            cursor: pointer; font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .archive-btn { background: #f39c12; }
+        .delete-btn { background: #e74c3c; }
+
+        /* Appointments Panel */
+        .appointment-item {
+            background: white; margin-bottom: 8px; padding: 10px;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
+            border-left: 4px solid #9b59b6; position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .appointment-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .appointment-item.active {
+            background: #f3e5f5;
+            border-left-color: #9c27b0;
+        }
+        .appointment-date { font-weight: 600; color: #2c3e50; }
+
+        /* Session and SOAP Panels */
+        textarea {
+            width: 100%; border: 1px solid #ddd; border-radius: 6px;
+            padding: 12px; font-family: inherit; font-size: 14px;
+            resize: none; transition: all 0.2s;
+        }
+        textarea:focus {
+            outline: none; border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .session-section {
+            display: flex; flex-direction: column;
+            flex-grow: 1; min-height: 0;
+        }
+        .session-section .panel-header {
+             background: linear-gradient(135deg, #16a085 0%, #138d75 100%);
+        }
+        .session-section .panel-content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .session-section textarea {
+            flex-grow: 1;
+        }
+        .persistent-notes-section .panel-header {
+             background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .soap-section { margin-bottom: 15px; }
+        .soap-header {
+            background: linear-gradient(135deg, #5D6D7E 0%, #34495E 100%);
+            color: white; padding: 8px 12px;
+            border-radius: 6px 6px 0 0; font-weight: 600;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.2); border: none; color: white;
+            padding: 4px 8px; border-radius: 4px; cursor: pointer;
+            font-size: 12px; transition: all 0.2s;
+        }
+        .copy-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        .soap-textarea {
+            border-radius: 0 0 6px 6px; border-top: none;
+            flex-grow: 1;
+        }
+
+        .no-selection {
+            color: #7f8c8d; text-align: center;
+            margin-top: 50px; font-style: italic;
+        }
+        .autosave-indicator { color: white; font-size: 12px; margin-left: auto; }
+        
+        .deleted-list { max-height: 100px; overflow-y: auto; }
+        .deleted-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; padding: 2px 0; }
+        .restore-btn {
+             background: #3498db; color: white; border: none;
+             padding: 2px 6px; border-radius: 4px; cursor: pointer;
+        }
+        .clear-deleted-btn {
+            background: #e74c3c; color: white; border: none;
+            padding: 2px 6px; border-radius: 4px; cursor: pointer;
+            width: 100%; margin-top: 5px;
+        }
+
         .resizer {
-            background: #e5e7eb;
+            background: #ecf0f1;
             cursor: col-resize;
             width: 6px;
+            flex-shrink: 0;
             z-index: 10;
         }
         .resizer-y {
-            background: #e5e7eb;
+            background: #ecf0f1;
             cursor: row-resize;
             height: 6px;
+            flex-shrink: 0;
             z-index: 10;
         }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 512px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative; /* For the close button */
+        }
+
+
     </style>
 </head>
-<body class="p-4 md:p-6 lg:p-8">
-    <div id="app" class="flex flex-col h-full">
-        <!-- Header -->
-        <header class="flex flex-wrap items-center justify-between mb-6 pb-4 border-b">
-            <h1 class="text-3xl font-bold text-gray-800">Client Data Organizer</h1>
-            <div class="flex items-center space-x-4 mt-4 sm:mt-0">
-                <div id="autoSaveIndicator" class="text-sm text-gray-500 hidden">
-                    <span id="saveStatus"></span>
-                </div>
-                <button id="manualSaveBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Save Now</button>
-                <button id="settingsBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Settings</button>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Client Data Organizer</h1>
+            <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
+                <span id="saveStatus"></span>
             </div>
-        </header>
+            <button id="manualSaveBtn" class="btn save-btn">Save Now</button>
+            <button id="settingsBtn" class="btn settings-btn">Settings</button>
+        </div>
 
-        <!-- Main Content Grid -->
-        <main class="flex flex-col md:flex-row flex-grow gap-6" id="mainGrid">
-            <!-- Panel 1: Clients -->
-            <div class="panel flex flex-col" id="panelClients" style="flex-basis: 16.66%;">
-                <h2 class="text-xl font-semibold text-gray-700 p-4 border-b">Clients</h2>
-                <div id="clientList" class="flex-grow overflow-y-auto"></div>
-                <div class="p-4 border-t">
-                    <input type="text" id="newClientInput" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="New client name...">
-                    <button id="addClientBtn" class="w-full btn btn-primary font-semibold py-2 rounded-lg">Add Client</button>
+        <div class="main-content" id="mainGrid">
+            <!-- Clients Panel -->
+            <div class="panel clients-panel" id="panelClients">
+                <div class="panel-header">
+                    <span>Clients</span>
+                    <button id="addClientBtn" class="add-btn">+</button>
                 </div>
-                <div class="p-4 border-t">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-semibold text-gray-600">Recently Deleted</h3>
-                        <button id="clearDeletedClientsBtn" class="btn btn-danger text-xs px-2 py-1 rounded-md">Clear</button>
-                    </div>
-                    <div id="deletedClientsList" class="text-sm text-gray-500 max-h-24 overflow-y-auto"></div>
+                <div class="panel-content" id="clientList">
+                    <div class="no-selection">Click + to add a client</div>
                 </div>
-                <div class="p-4 border-t">
-                    <h3 class="font-semibold text-gray-600 mb-2">Archived Clients</h3>
-                    <div id="archivedClientsList" class="text-sm text-gray-500 max-h-24 overflow-y-auto"></div>
+                <div class="panel-footer">
+                     <h3 class="font-semibold text-gray-600 mb-2 text-sm">Recently Deleted</h3>
+                     <div id="deletedClientsList" class="deleted-list"></div>
+                     <button id="clearDeletedClientsBtn" class="clear-deleted-btn hidden">Clear All</button>
+                </div>
+                 <div class="panel-footer">
+                     <h3 class="font-semibold text-gray-600 mb-2 text-sm">Archived</h3>
+                     <div id="archivedClientsList" class="deleted-list"></div>
                 </div>
             </div>
 
             <div class="resizer" id="resizer1"></div>
 
-            <!-- Panel 2: Appointments -->
-            <div class="panel flex flex-col" id="panelAppointments" style="flex-basis: 16.66%;">
-                <h2 class="text-xl font-semibold text-gray-700 p-4 border-b">Appointments</h2>
-                <div id="appointmentList" class="flex-grow overflow-y-auto"></div>
-                <div class="p-4 border-t">
-                    <label for="appointmentDate" class="font-semibold text-gray-600 text-sm mb-1">Appointment Date</label>
-                    <input type="date" id="appointmentDate" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-sky-400">
-                    <button id="addAppointmentBtn" class="w-full btn btn-primary font-semibold py-2 rounded-lg mb-4" disabled>Add Appointment</button>
-                    <div class="flex justify-between items-center mb-2 mt-4">
-                        <h3 class="font-semibold text-gray-600">Recently Deleted</h3>
-                        <button id="clearDeletedAppointmentsBtn" class="btn btn-danger text-xs px-2 py-1 rounded-md">Clear</button>
-                    </div>
-                    <div id="deletedAppointmentsList" class="text-sm text-gray-500 max-h-24 overflow-y-auto"></div>
+            <!-- Appointments Panel -->
+            <div class="panel appointments-panel" id="panelAppointments">
+                <div class="panel-header">
+                    <span>Appointments</span>
+                </div>
+                <div class="panel-content" id="appointmentList">
+                    <div class="no-selection">Select a client first</div>
+                </div>
+                <div class="panel-footer">
+                     <label for="appointmentDateInput" style="font-weight: 600; color: #4A5568; font-size: 0.875rem; margin-bottom: 4px; display: block;">Appointment Date</label>
+                     <div style="display: flex; align-items: center; gap: 8px;">
+                         <input type="date" id="appointmentDateInput" style="flex-grow: 1;">
+                         <button class="add-btn" id="addAppointmentBtn" disabled>+</button>
+                     </div>
+                </div>
+                 <div class="panel-footer">
+                     <h3 class="font-semibold text-gray-600 mb-2 text-sm">Recently Deleted</h3>
+                     <div id="deletedAppointmentsList" class="deleted-list"></div>
+                     <button id="clearDeletedAppointmentsBtn" class="clear-deleted-btn hidden">Clear All</button>
                 </div>
             </div>
 
             <div class="resizer" id="resizer2"></div>
 
-            <!-- Panel 3: Session Information & Notes -->
-            <div class="panel flex flex-col" id="panelSession" style="flex-basis: 33.33%;">
-                <div class="flex flex-col h-full">
-                    <div id="sessionInfoWrapper" class="flex flex-col" style="flex-basis: 50%;">
-                         <div class="flex justify-between items-center p-4 border-b">
-                            <h2 class="text-xl font-semibold text-gray-700">Session Information</h2>
-                            <button id="generateNoteBtn" class="btn btn-primary font-semibold py-1 px-3 rounded-lg text-sm" disabled>Generate Note</button>
-                        </div>
-                        <div class="p-4 flex-grow">
-                            <textarea id="sessionInfo" class="w-full h-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="Enter session details here..." disabled style="resize: vertical;"></textarea>
-                        </div>
+            <!-- Session & Notes Panel -->
+            <div class="panel session-panel" id="panelSession">
+                 <div id="sessionInfoWrapper" class="session-section" style="flex-basis: 50%;">
+                    <div class="panel-header">
+                        <span>Session Information</span>
+                        <button id="generateNoteBtn" class="btn" style="padding: 4px 8px; font-size: 0.8rem;" disabled>Generate Note</button>
                     </div>
-                    <div class="resizer-y" id="resizer-session-notes"></div>
-                    <div id="notesWrapper" class="flex flex-col" style="flex-basis: 50%;">
-                         <h2 class="text-xl font-semibold text-gray-700 p-4 border-b border-t">Persistent Notes</h2>
-                        <div class="p-4 flex-grow">
-                            <textarea id="persistentNotes" class="w-full h-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="Notes to reference across multiple sessions..." disabled style="resize: vertical;"></textarea>
-                        </div>
+                    <div class="panel-content">
+                         <textarea id="sessionInfo" placeholder="Select an appointment to enter session details..." disabled></textarea>
+                    </div>
+                </div>
+                <div class="resizer-y" id="resizer-session-notes"></div>
+                 <div id="notesWrapper" class="session-section persistent-notes-section" style="flex-basis: 50%;">
+                    <div class="panel-header">
+                        <span>Persistent Notes</span>
+                    </div>
+                    <div class="panel-content">
+                         <textarea id="persistentNotes" placeholder="Select a client to enter persistent notes..." disabled></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="resizer" id="resizer3"></div>
 
-            <!-- Panel 4: SOAP Note -->
-            <div class="panel flex flex-col" id="panelSoap" style="flex-basis: 33.33%;">
-                <h2 class="text-xl font-semibold text-gray-700 p-4 border-b">SOAP Note</h2>
-                <div class="p-4 flex-grow overflow-y-auto space-y-4">
-                    <!-- Subjective -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label for="soapS" class="font-semibold text-gray-600">S (Subjective)</label>
-                            <button class="btn-copy btn btn-secondary text-xs px-2 py-1 rounded-md" data-target="soapS">Copy</button>
-                        </div>
-                        <textarea id="soapS" class="soap-input w-full h-28 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="• " disabled></textarea>
-                    </div>
-                    <!-- Objective -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label for="soapO" class="font-semibold text-gray-600">O (Objective)</label>
-                            <button class="btn-copy btn btn-secondary text-xs px-2 py-1 rounded-md" data-target="soapO">Copy</button>
-                        </div>
-                        <textarea id="soapO" class="soap-input w-full h-28 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="• " disabled></textarea>
-                    </div>
-                    <!-- Assessment -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label for="soapA" class="font-semibold text-gray-600">A (Assessment)</label>
-                            <button class="btn-copy btn btn-secondary text-xs px-2 py-1 rounded-md" data-target="soapA">Copy</button>
-                        </div>
-                        <textarea id="soapA" class="soap-input w-full h-28 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="• " disabled></textarea>
-                    </div>
-                    <!-- Plan -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label for="soapP" class="font-semibold text-gray-600">P (Plan)</label>
-                            <button class="btn-copy btn btn-secondary text-xs px-2 py-1 rounded-md" data-target="soapP">Copy</button>
-                        </div>
-                        <textarea id="soapP" class="soap-input w-full h-28 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="• " disabled></textarea>
-                    </div>
+            <!-- SOAP Notes Panel -->
+            <div class="panel soap-panel" id="panelSoap">
+                <div class="panel-header">
+                    <span>SOAP Note</span>
+                </div>
+                <div class="panel-content" id="soapContent">
+                    <div class="no-selection">Select an appointment to begin</div>
                 </div>
             </div>
-        </main>
-                <!-- Message Box for copy confirmation -->
-        <div id="messageBox" class="fixed bottom-5 right-5 bg-gray-800 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
-            Copied to clipboard!
         </div>
     </div>
     
     <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <div id="modalOverlay" class="absolute inset-0 bg-black opacity-50"></div>
-        <div class="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
-            <div class="flex justify-between items-center mb-4 pb-4 border-b">
-                <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
-                <button id="closeSettingsBtn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+    <div id="settingsModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #ccc;">
+                <h2 style="font-size: 1.5rem; font-weight: bold; color: #333;">Settings</h2>
+                <button id="closeSettingsBtn" style="color: #555; font-size: 2rem; background: none; border: none; cursor: pointer;">&times;</button>
             </div>
 
-            <!-- Connection Settings -->
-            <div class="mb-6">
-                <h3 class="text-xl font-semibold text-gray-700 mb-3">Connection</h3>
-                <div class="space-y-4">
-                    <div class="flex flex-col">
-                        <label for="serverAddressInput" class="mb-1 font-semibold text-gray-600">Open WebUI Address</label>
-                        <input type="text" id="serverAddressInput" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="e.g., http://localhost:3000">
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: #444; margin-bottom: 0.75rem;">Connection</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label for="serverAddressInput" style="margin-bottom: 0.25rem; font-weight: 600; color: #555; display: block;">Open WebUI Address</label>
+                        <input type="text" id="serverAddressInput" style="border: 1px solid #ccc; border-radius: 6px; padding: 8px; width: 100%;" placeholder="e.g., http://localhost:3000">
                     </div>
-                    <div class="flex flex-col">
-                        <label for="apiKeyInput" class="mb-1 font-semibold text-gray-600">API Key (optional)</label>
-                        <input type="password" id="apiKeyInput" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400">
+                    <div>
+                        <label for="apiKeyInput" style="margin-bottom: 0.25rem; font-weight: 600; color: #555; display: block;">API Key (optional)</label>
+                        <input type="password" id="apiKeyInput" style="border: 1px solid #ccc; border-radius: 6px; padding: 8px; width: 100%;">
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <button id="connectApiBtn" class="btn btn-primary font-semibold py-2 px-4 rounded-lg shadow-sm text-sm">Connect</button>
-                        <span id="apiStatus" class="text-sm font-semibold"></span>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button id="connectApiBtn" class="btn">Connect</button>
+                        <span id="apiStatus" style="font-size: 0.875rem; font-weight: 600;"></span>
                     </div>
-                    <div class="flex flex-col">
-                         <label for="modelSelect" class="mb-1 font-semibold text-gray-600">AI Model</label>
-                         <select id="modelSelect" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" disabled>
+                    <div>
+                         <label for="modelSelect" style="margin-bottom: 0.25rem; font-weight: 600; color: #555; display: block;">AI Model</label>
+                         <select id="modelSelect" style="border: 1px solid #ccc; border-radius: 6px; padding: 8px; width: 100%;" disabled>
                             <option>Connect to server first</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <!-- Data Management -->
             <div>
-                <h3 class="text-xl font-semibold text-gray-700 mb-3">Data Management</h3>
-                <div class="flex flex-wrap gap-4">
-                     <button id="exportBtn" class="btn btn-primary font-semibold py-2 px-4 rounded-lg shadow-sm">Export Data</button>
-                     <button id="loadBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Import Data</button>
-                     <button id="eraseAllBtn" class="btn btn-danger font-semibold py-2 px-4 rounded-lg shadow-sm">Erase All Data</button>
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: #444; margin-bottom: 0.75rem;">Data Management</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                     <button id="exportBtn" class="btn">Export Data</button>
+                     <button id="loadBtn" class="btn" style="background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);">Import Data</button>
+                     <button id="eraseAllBtn" class="btn save-btn">Erase All Data</button>
                 </div>
             </div>
         </div>
@@ -276,11 +480,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             // DOM Elements
             const clientListEl = document.getElementById('clientList');
-            const newClientInput = document.getElementById('newClientInput');
             const addClientBtn = document.getElementById('addClientBtn');
             const appointmentListEl = document.getElementById('appointmentList');
             const addAppointmentBtn = document.getElementById('addAppointmentBtn');
-            const appointmentDateEl = document.getElementById('appointmentDate');
+            const appointmentDateInput = document.getElementById('appointmentDateInput');
             const deletedClientsListEl = document.getElementById('deletedClientsList');
             const clearDeletedClientsBtn = document.getElementById('clearDeletedClientsBtn');
             const archivedClientsListEl = document.getElementById('archivedClientsList');
@@ -288,16 +491,12 @@
             const clearDeletedAppointmentsBtn = document.getElementById('clearDeletedAppointmentsBtn');
             const persistentNotesEl = document.getElementById('persistentNotes');
             const sessionInfoEl = document.getElementById('sessionInfo');
-            const soapSEl = document.getElementById('soapS');
-            const soapOEl = document.getElementById('soapO');
-            const soapAEl = document.getElementById('soapA');
-            const soapPEl = document.getElementById('soapP');
+            const soapContentEl = document.getElementById('soapContent');
             const autoSaveIndicator = document.getElementById('autoSaveIndicator');
             const saveStatus = document.getElementById('saveStatus');
             // Settings and Modal Elements
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsModal = document.getElementById('settingsModal');
-            const modalOverlay = document.getElementById('modalOverlay');
             const closeSettingsBtn = document.getElementById('closeSettingsBtn');
             const manualSaveBtn = document.getElementById('manualSaveBtn');
             const exportBtn = document.getElementById('exportBtn');
@@ -316,7 +515,7 @@
             let deletedItems = { clients: [], appointments: [] };
             let selectedClientId = null;
             let selectedAppointmentId = null;
-            let isDirty = false; // Flag to check if there are unsaved changes
+            let isDirty = false;
             let serverAddress = null;
             let apiKey = null;
             let selectedModel = null;
@@ -325,162 +524,121 @@
             // --- Data Management ---
             const findClient = id => data.clients.find(c => c.id === id) || data.archivedClients.find(c => c.id === id);
             const findAppointment = (client, id) => client?.appointments.find(a => a.id === id);
-
+            
             // --- UI Rendering ---
             const renderClients = () => {
-                clientListEl.innerHTML = '';
-                if (data.clients.length === 0) {
-                     clientListEl.innerHTML = '<p class="p-4 text-sm text-gray-500">No active clients.</p>';
+                const clients = data.clients.sort((a, b) => a.name.localeCompare(b.name));
+                if (clients.length === 0) {
+                    clientListEl.innerHTML = '<div class="no-selection">Click + to add a client</div>';
+                    return;
                 }
-                data.clients.sort((a, b) => a.name.localeCompare(b.name));
-                data.clients.forEach(client => {
-                    const div = document.createElement('div');
-                    div.className = `list-item flex justify-between items-center p-3 border-b ${client.id === selectedClientId ? 'selected' : ''}`;
-                    div.dataset.id = client.id;
-                    const nameSpan = document.createElement('span');
-                    nameSpan.textContent = client.name;
-                    nameSpan.className = 'truncate flex-grow cursor-pointer';
-                    div.appendChild(nameSpan);
-
-                    const btnGroup = document.createElement('div');
-                    btnGroup.className = 'flex items-center space-x-2 ml-2';
-                    const archiveBtn = document.createElement('button');
-                    archiveBtn.textContent = 'Archive';
-                    archiveBtn.title = 'Archive Client';
-                    archiveBtn.className = 'btn btn-secondary text-xs px-2 py-1 rounded-md';
-                    archiveBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        archiveClient(client.id);
-                    };
-                    btnGroup.appendChild(archiveBtn);
-
-                    const removeBtn = document.createElement('button');
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.title = 'Delete Client';
-                    removeBtn.className = 'font-bold text-red-500 hover:text-red-700 text-xl px-1 rounded-full w-6 h-6 flex items-center justify-center';
-                    removeBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        if (confirm(`Are you sure you want to delete ${client.name}? You can restore this client later.`)) {
-                            removeClient(client.id);
-                        }
-                    };
-                    btnGroup.appendChild(removeBtn);
-                    div.appendChild(btnGroup);
-                    div.onclick = () => selectClient(client.id);
-                    clientListEl.appendChild(div);
-                });
+                clientListEl.innerHTML = clients.map(client => `
+                    <div class="client-item ${client.id === selectedClientId ? 'active' : ''}" data-client-id="${client.id}">
+                        ${client.name}
+                        <div class="action-buttons">
+                            <button class="action-btn archive-btn" title="Archive Client">A</button>
+                            <button class="action-btn delete-btn" title="Delete Client">×</button>
+                        </div>
+                    </div>
+                `).join('');
             };
 
             const renderAppointments = () => {
                 const client = findClient(selectedClientId);
-                appointmentListEl.innerHTML = '';
+                addAppointmentBtn.disabled = !client;
                 if (!client) {
-                    appointmentListEl.innerHTML = '<p class="p-4 text-sm text-gray-500">Select a client to see appointments.</p>';
+                    appointmentListEl.innerHTML = '<div class="no-selection">Select a client first</div>';
                     return;
                 }
-                if (!client.appointments || client.appointments.length === 0) {
-                    appointmentListEl.innerHTML = '<p class="p-4 text-sm text-gray-500">No appointments yet.</p>';
+                const appointments = (client.appointments || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+                if (appointments.length === 0) {
+                    appointmentListEl.innerHTML = '<div class="no-selection">Click + to add appointment</div>';
                     return;
                 }
-                client.appointments.sort((a, b) => new Date(b.date) - new Date(a.date));
-                client.appointments.forEach(appt => {
-                    const div = document.createElement('div');
-                    div.className = `list-item flex justify-between items-center p-3 border-b ${appt.id === selectedAppointmentId ? 'selected' : ''}`;
-                    div.dataset.id = appt.id;
-
-                    const span = document.createElement('span');
-                    span.textContent = new Date(appt.date).toLocaleDateString();
-                    span.className = 'flex-grow cursor-pointer';
-                    div.appendChild(span);
-
-                    const removeBtn = document.createElement('button');
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.title = 'Delete Appointment';
-                    removeBtn.className = 'font-bold text-red-500 hover:text-red-700 text-xl px-1 rounded-full w-6 h-6 flex items-center justify-center';
-                    removeBtn.onclick = (e) => {
-                        e.stopPropagation();
-                         if (confirm(`Are you sure you want to delete the appointment on ${new Date(appt.date).toLocaleDateString()}? You can restore it later.`)) {
-                            removeAppointment(appt.id);
-                        }
-                    };
-                    div.appendChild(removeBtn);
-                    div.onclick = () => selectAppointment(appt.id);
-                    appointmentListEl.appendChild(div);
-                });
+                appointmentListEl.innerHTML = appointments.map(appt => `
+                    <div class="appointment-item ${appt.id === selectedAppointmentId ? 'active' : ''}" data-appointment-id="${appt.id}">
+                        <div class="appointment-date">${new Date(appt.date).toLocaleDateString()}</div>
+                        <div class="action-buttons">
+                            <button class="action-btn delete-btn" title="Delete Appointment">×</button>
+                        </div>
+                    </div>
+                `).join('');
             };
 
             const renderDetails = () => {
                 const client = findClient(selectedClientId);
-                const appointment = findAppointment(client, selectedAppointmentId);
-
-                // Enable/disable inputs
+                const appointment = client ? findAppointment(client, selectedAppointmentId) : null;
+                
                 persistentNotesEl.disabled = !client;
-                sessionInfoEl.disabled = !appointment;
-                [soapSEl, soapOEl, soapAEl, soapPEl].forEach(el => el.disabled = !appointment);
-                addAppointmentBtn.disabled = !client;
-                generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
+                persistentNotesEl.value = client ? client.persistentNotes || '' : '';
+                persistentNotesEl.placeholder = client ? "Enter persistent notes for this client..." : "Select a client to enter persistent notes...";
 
-                // Populate data
-                persistentNotesEl.value = client ? (client.persistentNotes || '') : '';
-                sessionInfoEl.value = appointment ? (appointment.sessionInfo || '') : '';
-                soapSEl.value = appointment ? (appointment.soap?.s || '') : '';
-                soapOEl.value = appointment ? (appointment.soap?.o || '') : '';
-                soapAEl.value = appointment ? (appointment.soap?.a || '') : '';
-                soapPEl.value = appointment ? (appointment.soap?.p || '') : '';
+                sessionInfoEl.disabled = !appointment;
+                sessionInfoEl.value = appointment ? appointment.sessionInfo || '' : '';
+                sessionInfoEl.placeholder = appointment ? "Enter session details..." : "Select an appointment to begin...";
+                
+                renderSoap();
+                
+                generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
+            };
+            
+            const renderSoap = () => {
+                const client = findClient(selectedClientId);
+                const appointment = client ? findAppointment(client, selectedAppointmentId) : null;
+
+                if (!appointment) {
+                    soapContentEl.innerHTML = '<div class="no-selection">Select an appointment to begin</div>';
+                    return;
+                }
+
+                const soapData = appointment.soap || { s: '', o: '', a: '', p: '' };
+                soapContentEl.innerHTML = `
+                    <div class="soap-section">
+                        <div class="soap-header"><span>Subjective</span><button class="copy-btn" data-target="soapS">Copy</button></div>
+                        <textarea id="soapS" class="soap-textarea" placeholder="• ">${soapData.s || ''}</textarea>
+                    </div>
+                    <div class="soap-section">
+                        <div class="soap-header"><span>Objective</span><button class="copy-btn" data-target="soapO">Copy</button></div>
+                        <textarea id="soapO" class="soap-textarea" placeholder="• ">${soapData.o || ''}</textarea>
+                    </div>
+                    <div class="soap-section">
+                        <div class="soap-header"><span>Assessment</span><button class="copy-btn" data-target="soapA">Copy</button></div>
+                        <textarea id="soapA" class="soap-textarea" placeholder="• ">${soapData.a || ''}</textarea>
+                    </div>
+                    <div class="soap-section">
+                        <div class="soap-header"><span>Plan</span><button class="copy-btn" data-target="soapP">Copy</button></div>
+                        <textarea id="soapP" class="soap-textarea" placeholder="• ">${soapData.p || ''}</textarea>
+                    </div>`;
             };
 
             const renderDeletedLists = () => {
                 deletedClientsListEl.innerHTML = '';
-                if (deletedItems.clients.length === 0) {
-                    deletedClientsListEl.innerHTML = '<p class="text-xs text-gray-400">None</p>';
-                }
+                clearDeletedClientsBtn.classList.toggle('hidden', deletedItems.clients.length === 0);
                 deletedItems.clients.forEach(client => {
                     const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center text-xs py-1';
-                    div.innerHTML = `<span>${client.name}</span>`;
-                    const btn = document.createElement('button');
-                    btn.textContent = 'Restore';
-                    btn.className = 'btn btn-secondary text-xs px-1 py-0.5 rounded';
-                    btn.onclick = () => restoreClient(client.id);
-                    div.appendChild(btn);
+                    div.className = 'deleted-item';
+                    div.innerHTML = `<span>${client.name}</span><button class="restore-btn" data-id="${client.id}">Restore</button>`;
                     deletedClientsListEl.appendChild(div);
                 });
 
                 deletedAppointmentsListEl.innerHTML = '';
-                if (deletedItems.appointments.length === 0) {
-                    deletedAppointmentsListEl.innerHTML = '<p class="text-xs text-gray-400">None</p>';
-                }
+                 clearDeletedAppointmentsBtn.classList.toggle('hidden', deletedItems.appointments.length === 0);
                 deletedItems.appointments.forEach(appt => {
+                    const clientName = findClient(appt.clientId)?.name?.substring(0, 5) + '...' || 'N/A';
                     const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center text-xs py-1';
-                    const clientName = findClient(appt.clientId)?.name || 'Unknown';
-                    div.innerHTML = `<span>${new Date(appt.date).toLocaleDateString()} (${clientName})</span>`;
-                    const btn = document.createElement('button');
-                    btn.textContent = 'Restore';
-                    btn.className = 'btn btn-secondary text-xs px-1 py-0.5 rounded';
-                    btn.onclick = () => restoreAppointment(appt.id);
-                    div.appendChild(btn);
+                    div.className = 'deleted-item';
+                    div.innerHTML = `<span>${new Date(appt.date).toLocaleDateString()} (${clientName})</span><button class="restore-btn" data-id="${appt.id}">Restore</button>`;
                     deletedAppointmentsListEl.appendChild(div);
                 });
             };
 
             const renderArchivedClients = () => {
                 archivedClientsListEl.innerHTML = '';
-                if (!data.archivedClients || data.archivedClients.length === 0) {
-                    archivedClientsListEl.innerHTML = '<p class="text-xs text-gray-400">None</p>';
-                    return;
-                }
-                data.archivedClients.sort((a, b) => a.name.localeCompare(b.name));
-                data.archivedClients.forEach(client => {
-                    const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center text-xs py-1';
-                    div.innerHTML = `<span>${client.name}</span>`;
-                    const btn = document.createElement('button');
-                    btn.textContent = 'Unarchive';
-                    btn.className = 'btn btn-secondary text-xs px-1 py-0.5 rounded';
-                    btn.onclick = () => unarchiveClient(client.id);
-                    div.appendChild(btn);
-                    archivedClientsListEl.appendChild(div);
+                (data.archivedClients || []).forEach(client => {
+                     const div = document.createElement('div');
+                     div.className = 'deleted-item';
+                     div.innerHTML = `<span>${client.name}</span><button class="restore-btn" data-id="${client.id}">Unarchive</button>`;
+                     archivedClientsListEl.appendChild(div);
                 });
             };
 
@@ -496,151 +654,401 @@
             const selectClient = (id) => {
                 selectedClientId = id;
                 selectedAppointmentId = null; 
-                markDirty();
                 fullRender();
             };
 
             const selectAppointment = (id) => {
                 selectedAppointmentId = id;
-                markDirty();
                 fullRender();
             };
 
             const addClient = () => {
-                const name = newClientInput.value.trim();
-                if (!name) return;
+                const name = prompt("Enter new client's name:");
+                if (!name || !name.trim()) return;
                 const newClient = {
                     id: crypto.randomUUID(),
-                    name,
+                    name: name.trim(),
                     persistentNotes: '',
                     appointments: []
                 };
                 data.clients.push(newClient);
-                newClientInput.value = '';
                 selectClient(newClient.id);
-                markDirty();
-            };
-
-            const removeClient = (id) => {
-                const clientIndex = data.clients.findIndex(c => c.id === id);
-                if (clientIndex === -1) return;
-                const [client] = data.clients.splice(clientIndex, 1);
-                if (client.appointments) {
-                    client.appointments.forEach(appt => {
-                        deletedItems.appointments.push({ ...appt, clientId: client.id });
-                    });
-                }
-                deletedItems.clients.push(client);
-                if (selectedClientId === id) {
-                    selectedClientId = null;
-                    selectedAppointmentId = null;
-                }
-                fullRender();
-                markDirty();
-            };
-
-            const restoreClient = (id) => {
-                const clientIndex = deletedItems.clients.findIndex(c => c.id === id);
-                if (clientIndex === -1) return;
-                const [client] = deletedItems.clients.splice(clientIndex, 1);
-                const appointmentsToRestore = deletedItems.appointments.filter(a => a.clientId === id);
-                client.appointments = client.appointments || [];
-                client.appointments.push(...appointmentsToRestore);
-                deletedItems.appointments = deletedItems.appointments.filter(a => a.clientId !== id);
-                data.clients.push(client);
-                fullRender();
-                markDirty();
-            };
-
-            const archiveClient = (id) => {
-                const clientIndex = data.clients.findIndex(c => c.id === id);
-                if (clientIndex === -1) return;
-                const [client] = data.clients.splice(clientIndex, 1);
-                if (!data.archivedClients) data.archivedClients = [];
-                data.archivedClients.push(client);
-                if (selectedClientId === id) {
-                    selectedClientId = null;
-                    selectedAppointmentId = null;
-                }
-                fullRender();
-                markDirty();
-            };
-
-            const unarchiveClient = (id) => {
-                if (!data.archivedClients) return;
-                const clientIndex = data.archivedClients.findIndex(c => c.id === id);
-                if (clientIndex === -1) return;
-                const [client] = data.archivedClients.splice(clientIndex, 1);
-                data.clients.push(client);
-                fullRender();
                 markDirty();
             };
 
             const addAppointment = () => {
                 const client = findClient(selectedClientId);
-                if (!client || !appointmentDateEl.value) {
-                    alert('Please select a client and a date to add an appointment.');
+                if (!client) return;
+                const date = appointmentDateInput.value;
+                if (!date) {
+                    alert('Please select a date for the appointment.');
                     return;
                 }
+                const dateObj = new Date(date);
+                const utcDate = new Date(dateObj.getUTCFullYear(), dateObj.getUTCMonth(), dateObj.getUTCDate());
+
                 const newAppointment = {
                     id: crypto.randomUUID(),
-                    date: new Date(appointmentDateEl.value).toISOString(),
+                    date: utcDate.toISOString(),
                     sessionInfo: '',
-                    soap: { s: '• ', o: '• ', a: '• ', p: '• ' }
+                    soap: { s: '', o: '', a: '', p: '' }
                 };
-                if (!client.appointments) client.appointments = [];
                 client.appointments.push(newAppointment);
                 selectAppointment(newAppointment.id);
                 markDirty();
             };
+            
+            clientListEl.addEventListener('click', (e) => {
+                const clientItem = e.target.closest('.client-item');
+                if (!clientItem) return;
 
-            const removeAppointment = (id) => {
-                const client = findClient(selectedClientId);
-                if (!client || !client.appointments) return;
-                const apptIndex = client.appointments.findIndex(a => a.id === id);
-                if (apptIndex === -1) return;
-                const [appt] = client.appointments.splice(apptIndex, 1);
-                deletedItems.appointments.push({ ...appt, clientId: client.id });
-                 if (selectedAppointmentId === id) {
-                    selectedAppointmentId = null;
-                }
-                fullRender();
-                markDirty();
-            };
+                const clientId = clientItem.dataset.clientId;
 
-            const restoreAppointment = (id) => {
-                const apptIndex = deletedItems.appointments.findIndex(a => a.id === id);
-                if (apptIndex === -1) return;
-                const [appt] = deletedItems.appointments.splice(apptIndex, 1);
-                const client = findClient(appt.clientId);
-                if (client) {
-                    if (!client.appointments) client.appointments = [];
-                    client.appointments.push(appt);
+                if (e.target.classList.contains('delete-btn')) {
+                     const client = findClient(clientId);
+                     if (confirm(`Are you sure you want to delete ${client.name}?`)) {
+                        const clientIndex = data.clients.findIndex(c => c.id === clientId);
+                        if (clientIndex === -1) return;
+                        const [removedClient] = data.clients.splice(clientIndex, 1);
+                        if (removedClient.appointments) {
+                             deletedItems.appointments.push(...removedClient.appointments.map(a => ({...a, clientId})));
+                        }
+                        deletedItems.clients.push(removedClient);
+                        if (selectedClientId === clientId) {
+                            selectedClientId = null;
+                            selectedAppointmentId = null;
+                        }
+                        markDirty();
+                        fullRender();
+                     }
+                } else if (e.target.classList.contains('archive-btn')) {
+                    const clientIndex = data.clients.findIndex(c => c.id === clientId);
+                    if (clientIndex === -1) return;
+                    const [client] = data.clients.splice(clientIndex, 1);
+                    if (!data.archivedClients) data.archivedClients = [];
+                    data.archivedClients.push(client);
+                    if (selectedClientId === clientId) {
+                        selectedClientId = null;
+                        selectedAppointmentId = null;
+                    }
+                    markDirty();
                     fullRender();
-                    markDirty();
                 } else {
-                    deletedItems.appointments.push(appt);
-                    alert('Cannot restore appointment because its client could not be found. Restore the client first.');
+                    selectClient(clientId);
                 }
-            };
-
-            const handleSoapKeydown = (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const target = e.target;
-                    const start = target.selectionStart;
-                    const end = target.selectionEnd;
-                    const text = target.value;
-                    target.value = text.substring(0, start) + '\n• ' + text.substring(end);
-                    target.selectionStart = target.selectionEnd = start + 3;
-                    markDirty();
-                }
-            };
-            [soapSEl, soapOEl, soapAEl, soapPEl].forEach(el => {
-                el.addEventListener('keydown', handleSoapKeydown);
             });
 
-            // --- AI SOAP Note Generation (Open WebUI) ---
+            appointmentListEl.addEventListener('click', (e) => {
+                 const appointmentItem = e.target.closest('.appointment-item');
+                 if (!appointmentItem) return;
+
+                 const appointmentId = appointmentItem.dataset.appointmentId;
+                 
+                 if (e.target.classList.contains('delete-btn')) {
+                    const client = findClient(selectedClientId);
+                    if (!client) return;
+                    const apptIndex = client.appointments.findIndex(a => a.id === appointmentId);
+                    if (apptIndex > -1) {
+                        const [appt] = client.appointments.splice(apptIndex, 1);
+                        deletedItems.appointments.push({ ...appt, clientId: client.id });
+                        if (selectedAppointmentId === appointmentId) {
+                            selectedAppointmentId = null;
+                        }
+                        markDirty();
+                        fullRender();
+                    }
+                 } else {
+                     selectAppointment(appointmentId);
+                 }
+            });
+            
+            deletedClientsListEl.addEventListener('click', e => {
+                if (e.target.classList.contains('restore-btn')) {
+                    const id = e.target.dataset.id;
+                    const clientIndex = deletedItems.clients.findIndex(c => c.id === id);
+                    if (clientIndex === -1) return;
+                    const [client] = deletedItems.clients.splice(clientIndex, 1);
+                    data.clients.push(client);
+                    markDirty();
+                    fullRender();
+                }
+            });
+
+            archivedClientsListEl.addEventListener('click', e => {
+                if (e.target.classList.contains('restore-btn')) {
+                    const id = e.target.dataset.id;
+                    if (!data.archivedClients) return;
+                    const clientIndex = data.archivedClients.findIndex(c => c.id === id);
+                    if (clientIndex === -1) return;
+                    const [client] = data.archivedClients.splice(clientIndex, 1);
+                    data.clients.push(client);
+                    markDirty();
+                    fullRender();
+                }
+            });
+
+            deletedAppointmentsListEl.addEventListener('click', e => {
+                 if (e.target.classList.contains('restore-btn')) {
+                    const id = e.target.dataset.id;
+                    const apptIndex = deletedItems.appointments.findIndex(a => a.id === id);
+                    if (apptIndex === -1) return;
+
+                    const [appt] = deletedItems.appointments.splice(apptIndex, 1);
+                    const client = findClient(appt.clientId);
+                    if (client) {
+                        if (!client.appointments) client.appointments = [];
+                        client.appointments.push(appt);
+                        markDirty();
+                        fullRender();
+                    } else {
+                        deletedItems.appointments.push(appt);
+                        alert('Cannot restore. Client not found.');
+                    }
+                 }
+            });
+            
+            clearDeletedClientsBtn.addEventListener('click', () => {
+                if(confirm('Permanently delete all recently deleted clients?')) {
+                    deletedItems.clients = [];
+                    markDirty();
+                    fullRender();
+                }
+            });
+            clearDeletedAppointmentsBtn.addEventListener('click', () => {
+                 if(confirm('Permanently delete all recently deleted appointments?')) {
+                    deletedItems.appointments = [];
+                    markDirty();
+                    fullRender();
+                }
+            });
+            
+            persistentNotesEl.addEventListener('input', () => {
+                 const client = findClient(selectedClientId);
+                 if (client) {
+                    client.persistentNotes = persistentNotesEl.value;
+                    markDirty();
+                 }
+            });
+             sessionInfoEl.addEventListener('input', () => {
+                 const client = findClient(selectedClientId);
+                 const appointment = findAppointment(client, selectedAppointmentId);
+                 if (appointment) {
+                    appointment.sessionInfo = sessionInfoEl.value;
+                    markDirty();
+                 }
+                 generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
+            });
+            
+            // Auto-bulleting for SOAP notes
+            const handleSoapInput = (e) => {
+                if (!e.target.matches('.soap-textarea')) return;
+
+                const textarea = e.target;
+                const originalValue = textarea.value;
+                const originalCursor = textarea.selectionStart;
+
+                let lines = originalValue.split('\n');
+                let wasModified = false;
+
+                const newLines = lines.map(line => {
+                    if (line.trim().length > 0 && !line.trim().startsWith('•')) {
+                        wasModified = true;
+                        return '• ' + line.trimStart();
+                    }
+                    return line;
+                });
+
+                if (originalValue.length > 0 && !newLines[0].trim().startsWith('•') && newLines[0].trim().length > 0) {
+                    newLines[0] = '• ' + newLines[0].trimStart();
+                    wasModified = true;
+                }
+                
+                if (wasModified) {
+                    const newValue = newLines.join('\n');
+                    textarea.value = newValue;
+                    const diff = newValue.length - originalValue.length;
+                    textarea.selectionStart = textarea.selectionEnd = originalCursor + diff;
+                }
+
+                // Save changes
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                if (appointment) {
+                    const key = textarea.id.slice(-1).toLowerCase();
+                    if (!appointment.soap) appointment.soap = {s:'', o:'', a:'', p:''};
+                    appointment.soap[key] = textarea.value;
+                    markDirty();
+                }
+            };
+            
+            const handleSoapKeyDown = (e) => {
+                if (!e.target.matches('.soap-textarea') || e.key !== 'Enter') return;
+
+                e.preventDefault();
+                const textarea = e.target;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = textarea.value;
+                
+                const currentLineStart = text.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = text.substring(currentLineStart, start);
+
+                if (currentLine.trim() === '•') {
+                    textarea.value = text.substring(0, currentLineStart) + text.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = currentLineStart;
+                } else {
+                    textarea.value = text.substring(0, start) + '\n• ' + text.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = start + 3;
+                }
+                
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            };
+
+            soapContentEl.addEventListener('input', handleSoapInput);
+            soapContentEl.addEventListener('keydown', handleSoapKeyDown);
+
+            soapContentEl.addEventListener('click', (e) => {
+                 if (e.target.classList.contains('copy-btn')) {
+                     const targetId = e.target.dataset.target;
+                     const textarea = document.getElementById(targetId);
+                     if (!textarea) return;
+                     navigator.clipboard.writeText(textarea.value).then(() => {
+                        const messageBox = document.getElementById('messageBox');
+                        messageBox.textContent = 'Copied to clipboard!';
+                        messageBox.classList.remove('opacity-0');
+                        setTimeout(() => messageBox.classList.add('opacity-0'), 2000);
+                     });
+                 }
+            });
+
+
+            const systemPrompt = `You are a helpful assistant for a therapist or clinician. Your primary function is to accurately categorize user-provided session notes into a structured SOAP note format.
+
+**Your Task:**
+Analyze the "Session Information" text provided by the user. Categorize every piece of information into one of the four SOAP sections based on the strict definitions below.
+
+- **Subjective (S):** Information reported by the client. This includes direct quotes, feelings, goals, and history as told by the client.
+- **Objective (O):** Observable, measurable facts from the session. This includes the clinician's direct observations of the client's appearance, affect, behavior, and body language, as well as any test scores or other concrete data.
+- **Assessment (A):** The clinician's professional analysis and interpretation of the subjective and objective information. This includes clinical impressions, progress toward goals, and diagnoses.
+- **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework assignments, referrals, and any modifications to the treatment plan.
+
+**CRITICAL INSTRUCTIONS:**
+- **DO NOT INVENT:** Your response must ONLY contain information found in the "Session Information" text. Do not add any details, assumptions, or statements that are not explicitly provided.
+- **DO NOT INTERPRET BEYOND CATEGORIZATION:** Your job is to sort the provided information, not to add clinical interpretation or make assumptions about progress, affect, or presentation unless it is explicitly stated in the source text. For example, do not write "client appeared tired" unless the source text says "client appeared tired."
+
+**Output Format:**
+Your entire response must be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences or add any explanatory text. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.
+
+**Example of PERFECT Output:**
+{"s":"• Client stated they felt better this week.","o":"• Client was on time and casually dressed.","a":"• Client shows good progress toward treatment goals.","p":"• Continue with current treatment plan.\\n• Assign mindfulness worksheet for homework."}`;
+
+            const generateSoapNote = async () => {
+                if (!selectedModel) {
+                    alert('Please connect to your server and select a model first.');
+                    return;
+                }
+
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                if (!client || !appointment || !sessionInfoEl.value.trim()) {
+                    alert('Please select a client and appointment, and enter some session information.');
+                    return;
+                }
+
+                generateNoteBtn.disabled = true;
+                generateNoteBtn.textContent = 'Generating...';
+
+                const userPrompt = `
+- **Client Name:** ${client.name}
+- **Session Information (This Session):**
+${sessionInfoEl.value}
+`;
+
+                const payload = {
+                    model: selectedModel,
+                    messages: [
+                        { "role": "system", "content": systemPrompt },
+                        { "role": "user", "content": userPrompt }
+                    ],
+                    response_format: { "type": "json_object" },
+                    stream: false
+                };
+                
+                try {
+                    const headers = new Headers({ 'Content-Type': 'application/json' });
+                     if (apiKey) {
+                        headers.append('Authorization', `Bearer ${apiKey}`);
+                    }
+                    const response = await fetch(`${serverAddress}/api/v1/chat/completions`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        const error = new Error(`API error: ${response.status} - ${errorText}`);
+                        error.response = response;
+                        throw error;
+                    }
+
+                    const result = await response.json();
+                    let content = result.choices[0].message.content;
+                    let soapData = {};
+
+                    const jsonMatches = content.match(/{[\s\S]*?}/g);
+                    if (!jsonMatches) {
+                         throw new Error('AI response did not contain a valid JSON object.');
+                    }
+                    
+                    try {
+                         jsonMatches.forEach(jsonString => {
+                            const partialData = JSON.parse(jsonString);
+                            Object.assign(soapData, partialData);
+                        });
+                    } catch (parseError) {
+                        console.error("Failed to parse the following JSON string from the AI:", content);
+                        throw new Error(`The AI model returned malformed JSON. Check the browser console for the raw output that failed to parse. Details: ${parseError.message}`);
+                    }
+                    
+                    for (const key in soapData) {
+                        if (Array.isArray(soapData[key])) {
+                            soapData[key] = soapData[key].map(item => {
+                                const cleanedItem = item.toString().trim().replace(/^•\s*/, '');
+                                return `• ${cleanedItem}`;
+                            }).join('\n');
+                        }
+                    }
+
+                    if (typeof soapData.s !== 'string' || typeof soapData.o !== 'string' || typeof soapData.a !== 'string' || typeof soapData.p !== 'string') {
+                        console.error("Received valid JSON from AI, but it was missing required SOAP keys or they were not strings after processing. Received object:", soapData);
+                        throw new Error(`AI response was not in the expected JSON format (missing s, o, a, or p keys). The AI returned: ${JSON.stringify(soapData)}`);
+                    }
+                    
+                    if (!appointment.soap) appointment.soap = {};
+                    appointment.soap.s = soapData.s;
+                    appointment.soap.o = soapData.o;
+                    appointment.soap.a = soapData.a;
+                    appointment.soap.p = soapData.p;
+                    markDirty();
+                    renderSoap();
+
+                } catch (error) {
+                    console.error('SOAP Note Generation Error:', error);
+                    let alertMessage = `Failed to generate SOAP note. Please check your connection and the console for details.\nError: ${error.message}`;
+                     
+                    if (error.response?.status === 401) {
+                         alertMessage = `Authentication failed (401 Unauthorized) while trying to generate the note. Please re-check your API Key.`;
+                    } else if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
+                        alertMessage = `Network Error: Failed to fetch. Check CORS policy on your server.`;
+                    }
+                    alert(alertMessage);
+                } finally {
+                    generateNoteBtn.disabled = false;
+                    generateNoteBtn.textContent = 'Generate Note';
+                }
+            };
+            
             const connectToServer = async () => {
                 const address = serverAddressInput.value.trim();
                 if (!address) {
@@ -705,7 +1113,6 @@
                         if (autoSelectedModelId) {
                             modelSelect.value = autoSelectedModelId;
                         } else if (models.length > 0) {
-                            // If no preferred model found, just default to the first in the list
                             modelSelect.value = models[0].id;
                         }
 
@@ -750,163 +1157,16 @@ This error cannot be fixed within this application's code; it requires a configu
                 }
             };
 
-            const generateSoapNote = async () => {
-                if (!selectedModel) {
-                    alert('Please connect to your server and select a model first.');
-                    return;
-                }
-
-                const client = findClient(selectedClientId);
-                const appointment = findAppointment(client, selectedAppointmentId);
-                if (!client || !appointment || !sessionInfoEl.value.trim()) {
-                    alert('Please select a client and appointment, and enter some session information.');
-                    return;
-                }
-
-                generateNoteBtn.disabled = true;
-                generateNoteBtn.textContent = 'Generating...';
-
-                const systemPrompt = `You are a helpful assistant for a therapist or clinician. Your task is to convert raw session notes into a structured SOAP note format. The user will provide "Session Information" which contains the notes from the current session. Analyze these notes to generate a SOAP note.
-
-**Guidelines for each section:**
-- **Subjective (S):** What the client reports. Direct quotes, feelings, goals, and history reported by the client.
-- **Objective (O):** Observable facts. The clinician's observations of the client's affect, appearance, behavior, and body language.
-- **Assessment (A):** The clinician's professional judgment and interpretation of the subjective and objective information. Diagnosis, progress towards goals, and clinical impressions.
-- **Plan (P):** The course of action. Topics for the next session, homework, referrals, and treatment plan modifications.
-
-**Important Constraints:**
-- **Stick to the provided information:** Do NOT invent details that are not present in the "Session Information".
-- **Do not add client statements:** Only include quotes or reported feelings if they are in the source text.
-- **Do not assume presentation:** Do not make assumptions about the client's presentation (e.g., "appeared tired") unless it is explicitly documented.
-- **Do not infer progress:** Do not add statements about progress unless it is specifically noted in the session information.
-- It is acceptable to identify and detail therapeutic interventions if they are mentioned in the notes.
-
-Your entire response must be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences or add any explanatory text. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.
-
-Here is an example of the exact format required:
-{"s":"• Client stated they felt better this week.","o":"• Client was on time and casually dressed.","a":"• Client shows good progress toward treatment goals.","p":"• Continue with current treatment plan.\\n• Assign mindfulness worksheet for homework."}`;
-
-                const userPrompt = `
-- **Client Name:** ${client.name}
-- **Session Information (This Session):**
-${sessionInfoEl.value}
-`;
-
-                const payload = {
-                    model: selectedModel,
-                    messages: [
-                        { "role": "system", "content": systemPrompt },
-                        { "role": "user", "content": userPrompt }
-                    ],
-                    response_format: { "type": "json_object" },
-                    stream: false
-                };
-                
-                try {
-                    const headers = new Headers({ 'Content-Type': 'application/json' });
-                     if (apiKey) {
-                        headers.append('Authorization', `Bearer ${apiKey}`);
-                    }
-                    const response = await fetch(`${serverAddress}/api/v1/chat/completions`, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        const error = new Error(`API error: ${response.status} - ${errorText}`);
-                        error.response = response;
-                        throw error;
-                    }
-
-                    const result = await response.json();
-                    let content = result.choices[0].message.content;
-                    let soapData = {};
-
-                    // The model might return multiple JSON objects. We need to find and merge them.
-                    const jsonMatches = content.match(/{[\s\S]*?}/g);
-                    if (!jsonMatches) {
-                         throw new Error('AI response did not contain a valid JSON object.');
-                    }
-                    
-                    try {
-                         jsonMatches.forEach(jsonString => {
-                            const partialData = JSON.parse(jsonString);
-                            Object.assign(soapData, partialData);
-                        });
-                    } catch (parseError) {
-                        console.error("Failed to parse the following JSON string from the AI:", content);
-                        throw new Error(`The AI model returned malformed JSON. Check the browser console for the raw output that failed to parse. Details: ${parseError.message}`);
-                    }
-                    
-                    // The AI might return an array of strings instead of a single string.
-                    // We need to handle this by joining the array elements.
-                    for (const key in soapData) {
-                        if (Array.isArray(soapData[key])) {
-                            // Join the array items, ensuring each starts with a bullet point.
-                            soapData[key] = soapData[key].map(item => {
-                                // Trim and remove existing bullets to prevent duplication
-                                const cleanedItem = item.toString().trim().replace(/^•\s*/, '');
-                                return `• ${cleanedItem}`;
-                            }).join('\n');
-                        }
-                    }
-
-                    if (typeof soapData.s !== 'string' || typeof soapData.o !== 'string' || typeof soapData.a !== 'string' || typeof soapData.p !== 'string') {
-                        console.error("Received valid JSON from AI, but it was missing required SOAP keys or they were not strings after processing. Received object:", soapData);
-                        throw new Error(`AI response was not in the expected JSON format (missing s, o, a, or p keys). The AI returned: ${JSON.stringify(soapData)}`);
-                    }
-
-                    // Update UI and data model
-                    soapSEl.value = soapData.s;
-                    soapOEl.value = soapData.o;
-                    soapAEl.value = soapData.a;
-                    soapPEl.value = soapData.p;
-
-                    if (!appointment.soap) appointment.soap = {};
-                    appointment.soap.s = soapData.s;
-                    appointment.soap.o = soapData.o;
-                    appointment.soap.a = soapData.a;
-                    appointment.soap.p = soapData.p;
-                    markDirty();
-
-                } catch (error) {
-                    console.error('SOAP Note Generation Error:', error);
-                    let alertMessage = `Failed to generate SOAP note. Please check your connection and the console for details.\nError: ${error.message}`;
-                     
-                    if (error.response?.status === 401) {
-                         alertMessage = `Authentication failed (401 Unauthorized) while trying to generate the note. Please re-check your API Key.`;
-                    } else if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
-                        alertMessage = `Network Error: Failed to fetch.
-
-This is the most common error and is almost always caused by one of two things:
-
-1.  **CORS Policy:** Your browser is blocking the request for security reasons. The Open WebUI server must be configured to allow requests from this webpage.
-    *SOLUTION:* In your Open WebUI settings, find the "Allowed Origins" configuration and add the URL of this page. You can often just add "*" to allow all origins, but this is less secure.
-
-2.  **Server Not Reachable:** The address "${serverAddress}" is incorrect, or the Open WebUI server is not running. Please double-check the address and ensure the server is active.
-
-This error cannot be fixed within this application's code; it requires a configuration change on the server you are trying to connect to.`;
-                    }
-                    alert(alertMessage);
-                } finally {
-                    generateNoteBtn.disabled = false;
-                    generateNoteBtn.textContent = 'Generate Note';
-                    renderDetails(); 
-                }
-            };
-
 
             // --- Data Persistence (Save/Load/AutoSave) ---
             const updateSaveStatus = (message, isGood = true, duration = 0) => {
-                autoSaveIndicator.classList.remove('hidden');
+                autoSaveIndicator.style.opacity = '1';
                 saveStatus.textContent = message;
-                saveStatus.style.color = isGood ? 'green' : 'red';
+                saveStatus.style.color = isGood ? 'white' : '#f1c40f'; // Gold for warning
                 if (duration > 0) {
                     setTimeout(() => {
                          if (saveStatus.textContent === message) {
-                            autoSaveIndicator.classList.add('hidden');
+                            autoSaveIndicator.style.opacity = '0';
                          }
                     }, duration);
                 }
@@ -941,7 +1201,6 @@ This error cannot be fixed within this application's code; it requires a configu
                         deletedItems = state.deletedItems || { clients: [], appointments: [] };
                         selectedClientId = state.selectedClientId || null;
                         selectedAppointmentId = state.selectedAppointmentId || null;
-                        updateSaveStatus('Loaded from cookie', true, 2000);
                     } catch (e) {
                         console.error("Failed to load from cookie", e);
                         data = getInitialData();
@@ -952,16 +1211,8 @@ This error cannot be fixed within this application's code; it requires a configu
 
             const exportFile = async () => {
                 try {
-                    // First, ensure the latest state is saved to the cookie
-                    saveDataToCookie();
-                    updateSaveStatus('Saved.', true, 2000);
-                                         
-                    const cookie = document.cookie.split('; ').find(row => row.startsWith('clientData='));
-                    if (!cookie) {
-                        updateSaveStatus('Nothing to export!', false, 3000);
-                        return;
-                    }
-                    const stateJSON = decodeURIComponent(cookie.split('=')[1]);
+                    const stateToSave = { data, deletedItems, selectedClientId, selectedAppointmentId };
+                    const stateJSON = JSON.stringify(stateToSave, null, 2);
                                         
                     const blob = new Blob([stateJSON], { type: 'application/json' });
                     const handle = await window.showSaveFilePicker({
@@ -971,10 +1222,12 @@ This error cannot be fixed within this application's code; it requires a configu
                     const writable = await handle.createWritable();
                     await writable.write(blob);
                     await writable.close();
-                    updateSaveStatus('Exported successfully!', true, 3000);
+                    alert('Exported successfully!');
+                    updateSaveStatus('Exported.', true, 2000);
                 } catch (err) {
                     if (err.name !== 'AbortError') {
                         console.error('Failed to export file:', err);
+                        alert('Export failed!');
                         updateSaveStatus('Export failed!', false, 3000);
                     }
                 }
@@ -985,9 +1238,7 @@ This error cannot be fixed within this application's code; it requires a configu
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
                     saveDataToCookie();
-                    if (!isDirty) {
-                       updateSaveStatus('Auto-saved', true, 2000);
-                    }
+                    updateSaveStatus('Auto-saved', true, 2000);
                 }, 1500);
             };
 
@@ -1001,20 +1252,34 @@ This error cannot be fixed within this application's code; it requires a configu
                     });
                     const file = await handle.getFile();
                     const contents = await file.text();
-                    JSON.parse(contents); // Validate JSON
-                    document.cookie = `clientData=${encodeURIComponent(contents)};path=/;max-age=31536000;samesite=strict`;
-                    updateSaveStatus(`Imported ${file.name}. Reloading...`, true, 3000);
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    const state = JSON.parse(contents); 
+
+                    if (!state.data || !state.deletedItems) {
+                        throw new Error("Invalid file structure. Required properties are missing.");
+                    }
+
+                    data = state.data;
+                    deletedItems = state.deletedItems;
+                    selectedClientId = state.selectedClientId || null;
+                    selectedAppointmentId = state.selectedAppointmentId || null;
+
+                    if (!data.archivedClients) {
+                        data.archivedClients = [];
+                    }
+
+                    isDirty = false;
+                    saveDataToCookie(); 
+                    
+                    alert(`Imported ${file.name} successfully.`);
+                    fullRender();
+
                 } catch (err) {
                     if (err.name !== 'AbortError') {
                         console.error('Failed to load file:', err);
-                        updateSaveStatus('Import failed! Invalid file.', false, 3000);
+                        alert(`Import failed! Invalid file.\n\nError: ${err.message}`);
                     }
                 }
             };
-
             const eraseAllData = () => {
                 const confirmationText = "DELETE ALL DATA";
                 const userInput = prompt(`This action will permanently erase all client data from this browser. This cannot be undone.\n\nTo confirm, please type "${confirmationText}" in the box below.`);
@@ -1025,11 +1290,10 @@ This error cannot be fixed within this application's code; it requires a configu
                     selectedAppointmentId = null;
                     isDirty = false;
                     document.cookie = 'clientData=;path=/;max-age=0';
-                    localStorage.removeItem('columnSizes');
-                    localStorage.removeItem('rowSizes');
                     localStorage.removeItem('serverAddress');
                     localStorage.removeItem('apiKey');
-                    autoSaveIndicator.classList.add('hidden');
+                    localStorage.removeItem('columnSizes');
+                    localStorage.removeItem('rowSizes');
                     alert('All data has been permanently erased. The page will now reload.');
                     window.location.reload();
                 } else if (userInput !== null) {
@@ -1039,92 +1303,31 @@ This error cannot be fixed within this application's code; it requires a configu
 
             // --- Event Listeners ---
             addClientBtn.addEventListener('click', addClient);
-            newClientInput.addEventListener('keyup', (e) => e.key === 'Enter' && addClient());
             addAppointmentBtn.addEventListener('click', addAppointment);
             exportBtn.addEventListener('click', exportFile);
             loadBtn.addEventListener('click', loadFile);
             eraseAllBtn.addEventListener('click', eraseAllData);
             generateNoteBtn.addEventListener('click', generateSoapNote);
             connectApiBtn.addEventListener('click', connectToServer);
-
             manualSaveBtn.addEventListener('click', () => {
                 saveDataToCookie();
                 updateSaveStatus('Data saved!', true, 2000);
             });
-
             settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
             closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-            modalOverlay.addEventListener('click', () => settingsModal.classList.add('hidden'));
-            
+            settingsModal.addEventListener('click', (e) => {
+                if(e.target.id === 'settingsModal') {
+                    settingsModal.classList.add('hidden');
+                }
+            });
             modelSelect.addEventListener('change', (e) => {
                 selectedModel = e.target.value;
                 fullRender();
             });
 
-            clearDeletedClientsBtn.addEventListener('click', () => {
-                if (deletedItems.clients.length > 0 && confirm('Are you sure you want to permanently delete all recently deleted clients? This cannot be undone.')) {
-                    deletedItems.clients = [];
-                    fullRender();
-                    markDirty();
-                }
-            });
-            clearDeletedAppointmentsBtn.addEventListener('click', () => {
-                if (deletedItems.appointments.length > 0 && confirm('Are you sure you want to permanently delete all recently deleted appointments? This cannot be undone.')) {
-                    deletedItems.appointments = [];
-                    fullRender();
-                    markDirty();
-                }
-            });
-
-            persistentNotesEl.addEventListener('input', () => {
-                const client = findClient(selectedClientId);
-                if (client) {
-                    client.persistentNotes = persistentNotesEl.value;
-                    markDirty();
-                }
-            });
-            sessionInfoEl.addEventListener('input', () => {
-                const client = findClient(selectedClientId);
-                const appointment = findAppointment(client, selectedAppointmentId);
-                if (appointment) {
-                    appointment.sessionInfo = sessionInfoEl.value;
-                    markDirty();
-                }
-                renderDetails(); 
-            });
-            [soapSEl, soapOEl, soapAEl, soapPEl].forEach(el => {
-                el.addEventListener('input', () => {
-                    const client = findClient(selectedClientId);
-                    const appointment = findAppointment(client, selectedAppointmentId);
-                    if (appointment) {
-                        const key = el.id.slice(-1).toLowerCase();
-                        if (!appointment.soap) appointment.soap = {};
-                        appointment.soap[key] = el.value;
-                        markDirty();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.btn-copy').forEach(button => {
-                button.addEventListener('click', () => {
-                    const targetId = button.dataset.target;
-                    const textarea = document.getElementById(targetId);
-                    if (textarea.disabled) return;
-                    navigator.clipboard.writeText(textarea.value).then(() => {
-                        const messageBox = document.getElementById('messageBox');
-                        messageBox.classList.remove('opacity-0');
-                        setTimeout(() => {
-                            messageBox.classList.add('opacity-0');
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('Failed to copy text: ', err);
-                    });
-                });
-            });
-
             // --- Resizable Panels ---
-            const panels = ['panelClients', 'panelAppointments', 'panelSession', 'panelSoap'];
             function saveColumnSizes() {
+                const panels = ['panelClients', 'panelAppointments', 'panelSession', 'panelSoap'];
                 const sizes = panels.map(id => document.getElementById(id).style.flexBasis);
                 localStorage.setItem('columnSizes', JSON.stringify(sizes));
                 const sessionInfoHeight = document.getElementById('sessionInfoWrapper').style.flexBasis;
@@ -1134,8 +1337,8 @@ This error cannot be fixed within this application's code; it requires a configu
 
             function loadColumnSizes() {
                 const sizes = JSON.parse(localStorage.getItem('columnSizes'));
-                if (sizes && sizes.length === panels.length) {
-                    panels.forEach((id, index) => {
+                if (sizes && sizes.length === 4) {
+                    ['panelClients', 'panelAppointments', 'panelSession', 'panelSoap'].forEach((id, index) => {
                         const panel = document.getElementById(id);
                         if (panel) panel.style.flexBasis = sizes[index];
                     });
@@ -1150,53 +1353,61 @@ This error cannot be fixed within this application's code; it requires a configu
             }
 
             function makeResizable(resizer, prev, next, direction = 'x') {
-                if (!resizer || !prev || !next) return;
-                let isResizing = false;
-                resizer.addEventListener('mousedown', (e) => {
+                let x = 0;
+                let y = 0;
+                let prevSize = 0;
+                let nextSize = 0;
+
+                resizer.addEventListener('mousedown', function (e) {
                     e.preventDefault();
-                    isResizing = true;
-                    const cursor = direction === 'x' ? 'col-resize' : 'row-resize';
-                    document.body.style.cursor = cursor;
+                    if (direction === 'x') {
+                        x = e.clientX;
+                        prevSize = prev.getBoundingClientRect().width;
+                        nextSize = next.getBoundingClientRect().width;
+                    } else {
+                        y = e.clientY;
+                        prevSize = prev.getBoundingClientRect().height;
+                        nextSize = next.getBoundingClientRect().height;
+                    }
+                    
+                    document.body.style.cursor = direction === 'x' ? 'col-resize' : 'row-resize';
                     document.body.style.userSelect = 'none';
 
-                    const mousemove = (e) => {
-                        if (!isResizing) return;
-                        const prevRect = prev.getBoundingClientRect();
-                        const nextRect = next.getBoundingClientRect();
-                        if (direction === 'x') {
-                            const newPrevWidth = e.clientX - prevRect.left;
-                            const newNextWidth = nextRect.right - e.clientX;
-                            if (newPrevWidth > 150 && newNextWidth > 150) {
-                                prev.style.flexBasis = `${newPrevWidth}px`;
-                                next.style.flexBasis = `${newNextWidth}px`;
-                            }
-                        } else {
-                            const newPrevHeight = e.clientY - prevRect.top;
-                            const newNextHeight = nextRect.bottom - e.clientY;
-                            if (newPrevHeight > 100 && newNextHeight > 100) {
-                                prev.style.flexBasis = `${newPrevHeight}px`;
-                                next.style.flexBasis = `${newNextHeight}px`;
-                            }
-                        }
-                    };
-
-                    const mouseup = () => {
-                        isResizing = false;
-                        window.removeEventListener('mousemove', mousemove);
-                        window.removeEventListener('mouseup', mouseup);
-                        document.body.style.cursor = '';
-                        document.body.style.userSelect = '';
-                        saveColumnSizes();
-                    };
-                    window.addEventListener('mousemove', mousemove);
-                    window.addEventListener('mouseup', mouseup);
+                    document.addEventListener('mousemove', mousemove);
+                    document.addEventListener('mouseup', mouseup);
                 });
-            }
-            makeResizable(document.getElementById('resizer1'), document.getElementById('panelClients'), document.getElementById('panelAppointments'), 'x');
-            makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'), 'x');
-            makeResizable(document.getElementById('resizer3'), document.getElementById('panelSession'), document.getElementById('panelSoap'), 'x');
-            makeResizable(document.getElementById('resizer-session-notes'), document.getElementById('sessionInfoWrapper'), document.getElementById('notesWrapper'), 'y');
 
+                function mousemove(e) {
+                    if (direction === 'x') {
+                        const dx = e.clientX - x;
+                        const newPrevSize = prevSize + dx;
+                        const newNextSize = nextSize - dx;
+                        
+                        if(newPrevSize > 150 && newNextSize > 150) {
+                            prev.style.flexBasis = `${newPrevSize}px`;
+                            next.style.flexBasis = `${newNextSize}px`;
+                        }
+                    } else {
+                        const dy = e.clientY - y;
+                        const newPrevSize = prevSize + dy;
+                        const newNextSize = nextSize - dy;
+
+                        if(newPrevSize > 100 && newNextSize > 100) {
+                            prev.style.flexBasis = `${newPrevSize}px`;
+                            next.style.flexBasis = `${newNextSize}px`;
+                        }
+                    }
+                }
+
+                function mouseup() {
+                    document.removeEventListener('mousemove', mousemove);
+                    document.removeEventListener('mouseup', mouseup);
+                    document.body.style.cursor = 'default';
+                    document.body.style.userSelect = 'auto';
+                    saveColumnSizes();
+                }
+            }
+            
             // --- Initial Load & Render ---
             const loadServerSettings = () => {
                 const savedAddress = localStorage.getItem('serverAddress');
@@ -1207,12 +1418,18 @@ This error cannot be fixed within this application's code; it requires a configu
                     connectToServer();
                 }
             };
-
+            
+            appointmentDateInput.value = new Date().toISOString().split('T')[0];
             loadServerSettings();
             loadDataFromCookie();
             loadColumnSizes();
-            appointmentDateEl.value = new Date().toISOString().split('T')[0];
             fullRender();
+            
+            makeResizable(document.getElementById('resizer1'), document.getElementById('panelClients'), document.getElementById('panelAppointments'));
+            makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'));
+            makeResizable(document.getElementById('resizer3'), document.getElementById('panelSession'), document.getElementById('panelSoap'));
+            makeResizable(document.getElementById('resizer-session-notes'), document.getElementById('sessionInfoWrapper'), document.getElementById('notesWrapper'), 'y');
+
         });
     </script>
 </body>
