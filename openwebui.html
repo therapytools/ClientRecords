@@ -774,6 +774,13 @@ This error cannot be fixed within this application's code; it requires a configu
 - **Assessment (A):** The clinician's professional judgment and interpretation of the subjective and objective information. Diagnosis, progress towards goals, and clinical impressions.
 - **Plan (P):** The course of action. Topics for the next session, homework, referrals, and treatment plan modifications.
 
+**Important Constraints:**
+- **Stick to the provided information:** Do NOT invent details that are not present in the "Session Information" or "Persistent Notes".
+- **Do not add client statements:** Only include quotes or reported feelings if they are in the source text.
+- **Do not assume presentation:** Do not make assumptions about the client's presentation (e.g., "appeared tired") unless it is explicitly documented.
+- **Do not infer progress:** Do not add statements about progress unless it is specifically noted in the session information.
+- It is acceptable to identify and detail therapeutic interventions if they are mentioned in the notes.
+
 Your entire response must be a single, raw JSON object. Do not wrap it in markdown code fences or add any explanatory text. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.`;
 
                 const userPrompt = `
