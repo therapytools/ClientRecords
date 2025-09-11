@@ -956,25 +956,14 @@
                     markDirty();
                  }
             });
-             sessionInfoEl.addEventListener('input', () => {
-                 const client = findClient(selectedClientId);
-                 const appointment = findAppointment(client, selectedAppointmentId);
-                 if (appointment) {
-                    appointment.sessionInfo = sessionInfoEl.value;
-                    markDirty();
-                 }
-                 generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
-            });
-            
+
             const autoResizeTextarea = (el) => {
                 el.style.height = 'auto';
                 el.style.height = el.scrollHeight + 'px';
             };
 
-            // Auto-bulleting for SOAP notes
-            const handleSoapInput = (e) => {
-                if (!e.target.matches('.soap-textarea')) return;
-
+            // --- Generic Bullet Point Handlers ---
+            const handleBulletedInput = (e, saveDataCallback) => {
                 const textarea = e.target;
                 
                 // Auto-resize
@@ -1006,19 +995,12 @@
                     textarea.selectionStart = textarea.selectionEnd = originalCursor + diff;
                 }
 
-                // Save changes
-                const client = findClient(selectedClientId);
-                const appointment = findAppointment(client, selectedAppointmentId);
-                if (appointment) {
-                    const key = textarea.id.slice(-1).toLowerCase();
-                    if (!appointment.soap) appointment.soap = {s:'', o:'', a:'', p:''};
-                    appointment.soap[key] = textarea.value;
-                    markDirty();
-                }
+                // Save changes using the provided callback
+                saveDataCallback(textarea);
             };
             
-            const handleSoapKeyDown = (e) => {
-                if (!e.target.matches('.soap-textarea') || e.key !== 'Enter') return;
+            const handleBulletedKeyDown = (e) => {
+                if (e.key !== 'Enter') return;
 
                 e.preventDefault();
                 const textarea = e.target;
@@ -1040,8 +1022,42 @@
                 textarea.dispatchEvent(new Event('input', { bubbles: true }));
             };
 
-            soapContentEl.addEventListener('input', handleSoapInput);
-            soapContentEl.addEventListener('keydown', handleSoapKeyDown);
+            // --- Specific Save Callbacks ---
+            const saveSessionInfo = (textarea) => {
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                if (appointment) {
+                    appointment.sessionInfo = textarea.value;
+                    markDirty();
+                }
+                generateNoteBtn.disabled = !appointment || !selectedModel || !textarea.value.trim();
+            };
+
+            const saveSoapNote = (textarea) => {
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                if (appointment) {
+                    const key = textarea.id.slice(-1).toLowerCase();
+                    if (!appointment.soap) appointment.soap = {s:'', o:'', a:'', p:''};
+                    appointment.soap[key] = textarea.value;
+                    markDirty();
+                }
+            };
+
+            // --- Attach Bullet Point Handlers ---
+            sessionInfoEl.addEventListener('input', (e) => handleBulletedInput(e, saveSessionInfo));
+            sessionInfoEl.addEventListener('keydown', handleBulletedKeyDown);
+
+            soapContentEl.addEventListener('input', (e) => {
+                if (e.target.matches('.soap-textarea')) {
+                    handleBulletedInput(e, saveSoapNote);
+                }
+            });
+            soapContentEl.addEventListener('keydown', (e) => {
+                if (e.target.matches('.soap-textarea')) {
+                    handleBulletedKeyDown(e);
+                }
+            });
 
             soapContentEl.addEventListener('click', (e) => {
                  if (e.target.classList.contains('copy-btn')) {
