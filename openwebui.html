@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1600px;
+            width: 100%;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -468,13 +468,14 @@
                 <h3 style="font-size: 1.25rem; font-weight: 600; color: #444; margin-bottom: 0.75rem;">Data Management</h3>
                 <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
                      <button id="exportBtn" class="btn">Export Data</button>
-                     <button id="loadBtn" class="btn" style="background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);">Import Data</button>
+                     <button id="importBtn" class="btn" style="background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);">Import Data</button>
                      <button id="eraseAllBtn" class="btn save-btn">Erase All Data</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <input type="file" id="fileInput" class="hidden" accept="application/json">
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -500,7 +501,7 @@
             const closeSettingsBtn = document.getElementById('closeSettingsBtn');
             const manualSaveBtn = document.getElementById('manualSaveBtn');
             const exportBtn = document.getElementById('exportBtn');
-            const loadBtn = document.getElementById('loadBtn');
+            const importBtn = document.getElementById('importBtn');
             const eraseAllBtn = document.getElementById('eraseAllBtn');
             // AI Integration Elements
             const serverAddressInput = document.getElementById('serverAddressInput');
@@ -509,6 +510,7 @@
             const apiStatus = document.getElementById('apiStatus');
             const modelSelect = document.getElementById('modelSelect');
             const generateNoteBtn = document.getElementById('generateNoteBtn');
+            const fileInput = document.getElementById('fileInput');
 
             // App State
             let data = { clients: [], archivedClients: [] };
@@ -1183,7 +1185,13 @@ This error cannot be fixed within this application's code; it requires a configu
             const saveDataToCookie = () => {
                 try {
                     const state = { data, deletedItems, selectedClientId, selectedAppointmentId };
-                    document.cookie = `clientData=${encodeURIComponent(JSON.stringify(state))};path=/;max-age=31536000;samesite=strict`;
+                    const dataStr = JSON.stringify(state);
+                    // Check if the cookie size exceeds the limit (e.g., 4KB)
+                    if (encodeURIComponent(dataStr).length > 4000) {
+                        updateSaveStatus('Data too large for cookie!', false, 5000);
+                        console.warn("Data size is large, cookie saving might fail. Consider exporting to a file.");
+                    }
+                    document.cookie = `clientData=${encodeURIComponent(dataStr)};path=/;max-age=31536000;samesite=strict`;
                     isDirty = false;
                 } catch (e) {
                     console.error("Failed to save to cookie", e);
@@ -1209,27 +1217,24 @@ This error cannot be fixed within this application's code; it requires a configu
                 }
             };
 
-            const exportFile = async () => {
+            const exportFile = () => {
                 try {
                     const stateToSave = { data, deletedItems, selectedClientId, selectedAppointmentId };
                     const stateJSON = JSON.stringify(stateToSave, null, 2);
-                                        
                     const blob = new Blob([stateJSON], { type: 'application/json' });
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: `client-data-${new Date().toISOString().split('T')[0]}.json`,
-                        types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }]
-                    });
-                    const writable = await handle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    alert('Exported successfully!');
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `client-data-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
                     updateSaveStatus('Exported.', true, 2000);
                 } catch (err) {
-                    if (err.name !== 'AbortError') {
-                        console.error('Failed to export file:', err);
-                        alert('Export failed!');
-                        updateSaveStatus('Export failed!', false, 3000);
-                    }
+                    console.error('Failed to export file:', err);
+                    alert('Export failed!');
+                    updateSaveStatus('Export failed!', false, 3000);
                 }
             };
 
@@ -1242,44 +1247,52 @@ This error cannot be fixed within this application's code; it requires a configu
                 }, 1500);
             };
 
-            const loadFile = async () => {
+            const loadFile = () => {
                  if (isDirty && !confirm('You have unsaved changes that will be lost. Are you sure you want to import a new file?')) {
                     return;
                 }
-                try {
-                    const [handle] = await window.showOpenFilePicker({
-                        types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }]
-                    });
-                    const file = await handle.getFile();
-                    const contents = await file.text();
-                    const state = JSON.parse(contents); 
+                fileInput.click();
+            };
 
-                    if (!state.data || !state.deletedItems) {
-                        throw new Error("Invalid file structure. Required properties are missing.");
-                    }
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
 
-                    data = state.data;
-                    deletedItems = state.deletedItems;
-                    selectedClientId = state.selectedClientId || null;
-                    selectedAppointmentId = state.selectedAppointmentId || null;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const contents = e.target.result;
+                        const state = JSON.parse(contents);
 
-                    if (!data.archivedClients) {
-                        data.archivedClients = [];
-                    }
+                        if (!state.data || !state.deletedItems) {
+                            throw new Error("Invalid file structure. Required properties are missing.");
+                        }
 
-                    isDirty = false;
-                    saveDataToCookie(); 
-                    
-                    alert(`Imported ${file.name} successfully.`);
-                    fullRender();
+                        data = state.data;
+                        deletedItems = state.deletedItems;
+                        selectedClientId = state.selectedClientId || null;
+                        selectedAppointmentId = state.selectedAppointmentId || null;
 
-                } catch (err) {
-                    if (err.name !== 'AbortError') {
+                        if (!data.archivedClients) {
+                            data.archivedClients = [];
+                        }
+
+                        isDirty = false;
+                        saveDataToCookie();
+
+                        alert(`Imported ${file.name} successfully.`);
+                        fullRender();
+                    } catch (err) {
                         console.error('Failed to load file:', err);
                         alert(`Import failed! Invalid file.\n\nError: ${err.message}`);
+                    } finally {
+                        // Reset file input so the same file can be loaded again
+                        fileInput.value = '';
                     }
-                }
-            };
+                };
+                reader.readAsText(file);
+            });
+
             const eraseAllData = () => {
                 const confirmationText = "DELETE ALL DATA";
                 const userInput = prompt(`This action will permanently erase all client data from this browser. This cannot be undone.\n\nTo confirm, please type "${confirmationText}" in the box below.`);
@@ -1305,7 +1318,7 @@ This error cannot be fixed within this application's code; it requires a configu
             addClientBtn.addEventListener('click', addClient);
             addAppointmentBtn.addEventListener('click', addAppointment);
             exportBtn.addEventListener('click', exportFile);
-            loadBtn.addEventListener('click', loadFile);
+            importBtn.addEventListener('click', loadFile);
             eraseAllBtn.addEventListener('click', eraseAllData);
             generateNoteBtn.addEventListener('click', generateSoapNote);
             connectApiBtn.addEventListener('click', connectToServer);
@@ -1357,6 +1370,7 @@ This error cannot be fixed within this application's code; it requires a configu
                 let y = 0;
                 let prevSize = 0;
                 let nextSize = 0;
+                let containerSize = 0;
 
                 resizer.addEventListener('mousedown', function (e) {
                     e.preventDefault();
@@ -1364,10 +1378,12 @@ This error cannot be fixed within this application's code; it requires a configu
                         x = e.clientX;
                         prevSize = prev.getBoundingClientRect().width;
                         nextSize = next.getBoundingClientRect().width;
+                        containerSize = prev.parentElement.getBoundingClientRect().width;
                     } else {
                         y = e.clientY;
                         prevSize = prev.getBoundingClientRect().height;
                         nextSize = next.getBoundingClientRect().height;
+                        containerSize = prev.parentElement.getBoundingClientRect().height;
                     }
                     
                     document.body.style.cursor = direction === 'x' ? 'col-resize' : 'row-resize';
@@ -1384,8 +1400,8 @@ This error cannot be fixed within this application's code; it requires a configu
                         const newNextSize = nextSize - dx;
                         
                         if(newPrevSize > 150 && newNextSize > 150) {
-                            prev.style.flexBasis = `${newPrevSize}px`;
-                            next.style.flexBasis = `${newNextSize}px`;
+                            prev.style.flexBasis = `${(newPrevSize / containerSize) * 100}%`;
+                            next.style.flexBasis = `${(newNextSize / containerSize) * 100}%`;
                         }
                     } else {
                         const dy = e.clientY - y;
@@ -1393,8 +1409,8 @@ This error cannot be fixed within this application's code; it requires a configu
                         const newNextSize = nextSize - dy;
 
                         if(newPrevSize > 100 && newNextSize > 100) {
-                            prev.style.flexBasis = `${newPrevSize}px`;
-                            next.style.flexBasis = `${newNextSize}px`;
+                            prev.style.flexBasis = `${(newPrevSize / containerSize) * 100}%`;
+                            next.style.flexBasis = `${(newNextSize / containerSize) * 100}%`;
                         }
                     }
                 }
