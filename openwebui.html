@@ -105,23 +105,11 @@
         <header class="flex flex-wrap items-center justify-between mb-6 pb-4 border-b">
             <h1 class="text-3xl font-bold text-gray-800">Client Data Organizer</h1>
             <div class="flex items-center space-x-4 mt-4 sm:mt-0">
-                <div id="ollamaSettings" class="flex items-center space-x-2 border-r pr-4">
-                    <input type="text" id="ollamaAddressInput" class="border border-gray-300 rounded-md px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="Ollama Address (e.g., http://localhost:11434)">
-                    <input type="password" id="ollamaApiKeyInput" class="border border-gray-300 rounded-md px-3 py-2 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="API Key (optional)">
-                    <button id="connectOllamaBtn" class="btn btn-secondary font-semibold py-2 px-3 rounded-lg shadow-sm text-sm">Connect</button>
-                    <span id="ollamaStatus" class="text-sm font-semibold ml-2"></span>
-                </div>
-                 <div class="flex items-center space-x-2">
-                    <select id="ollamaModelSelect" class="border border-gray-300 rounded-md px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-sky-400" disabled>
-                        <option>Connect to Ollama first</option>
-                    </select>
-                </div>
-                <button id="eraseAllBtn" class="btn btn-danger font-semibold py-2 px-4 rounded-lg shadow-sm">Erase All Data</button>
-                <button id="saveBtn" class="btn btn-primary font-semibold py-2 px-4 rounded-lg shadow-sm">Export</button>
-                <button id="loadBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Import</button>
-                <div id="autoSaveIndicator" class="text-sm text-gray-500 ml-4 hidden">
+                <div id="autoSaveIndicator" class="text-sm text-gray-500 hidden">
                     <span id="saveStatus"></span>
                 </div>
+                <button id="manualSaveBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Save Now</button>
+                <button id="settingsBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Settings</button>
             </div>
         </header>
 
@@ -236,6 +224,53 @@
             Copied to clipboard!
         </div>
     </div>
+    
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div id="modalOverlay" class="absolute inset-0 bg-black opacity-50"></div>
+        <div class="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
+                <button id="closeSettingsBtn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </div>
+
+            <!-- Connection Settings -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">Connection</h3>
+                <div class="space-y-4">
+                    <div class="flex flex-col">
+                        <label for="serverAddressInput" class="mb-1 font-semibold text-gray-600">Open WebUI Address</label>
+                        <input type="text" id="serverAddressInput" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="e.g., http://localhost:3000">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="apiKeyInput" class="mb-1 font-semibold text-gray-600">API Key (optional)</label>
+                        <input type="password" id="apiKeyInput" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400">
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="connectApiBtn" class="btn btn-primary font-semibold py-2 px-4 rounded-lg shadow-sm text-sm">Connect</button>
+                        <span id="apiStatus" class="text-sm font-semibold"></span>
+                    </div>
+                    <div class="flex flex-col">
+                         <label for="modelSelect" class="mb-1 font-semibold text-gray-600">AI Model</label>
+                         <select id="modelSelect" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" disabled>
+                            <option>Connect to server first</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-3">Data Management</h3>
+                <div class="flex flex-wrap gap-4">
+                     <button id="exportBtn" class="btn btn-primary font-semibold py-2 px-4 rounded-lg shadow-sm">Export Data</button>
+                     <button id="loadBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg shadow-sm">Import Data</button>
+                     <button id="eraseAllBtn" class="btn btn-danger font-semibold py-2 px-4 rounded-lg shadow-sm">Erase All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -257,17 +292,23 @@
             const soapOEl = document.getElementById('soapO');
             const soapAEl = document.getElementById('soapA');
             const soapPEl = document.getElementById('soapP');
-            const saveBtn = document.getElementById('saveBtn');
-            const loadBtn = document.getElementById('loadBtn');
-            const eraseAllBtn = document.getElementById('eraseAllBtn');
             const autoSaveIndicator = document.getElementById('autoSaveIndicator');
             const saveStatus = document.getElementById('saveStatus');
+            // Settings and Modal Elements
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsModal = document.getElementById('settingsModal');
+            const modalOverlay = document.getElementById('modalOverlay');
+            const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+            const manualSaveBtn = document.getElementById('manualSaveBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const loadBtn = document.getElementById('loadBtn');
+            const eraseAllBtn = document.getElementById('eraseAllBtn');
             // AI Integration Elements
-            const ollamaAddressInput = document.getElementById('ollamaAddressInput');
-            const ollamaApiKeyInput = document.getElementById('ollamaApiKeyInput');
-            const connectOllamaBtn = document.getElementById('connectOllamaBtn');
-            const ollamaStatus = document.getElementById('ollamaStatus');
-            const ollamaModelSelect = document.getElementById('ollamaModelSelect');
+            const serverAddressInput = document.getElementById('serverAddressInput');
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const connectApiBtn = document.getElementById('connectApiBtn');
+            const apiStatus = document.getElementById('apiStatus');
+            const modelSelect = document.getElementById('modelSelect');
             const generateNoteBtn = document.getElementById('generateNoteBtn');
 
             // App State
@@ -276,9 +317,9 @@
             let selectedClientId = null;
             let selectedAppointmentId = null;
             let isDirty = false; // Flag to check if there are unsaved changes
-            let ollamaAddress = null;
-            let ollamaApiKey = null;
-            let selectedOllamaModel = null;
+            let serverAddress = null;
+            let apiKey = null;
+            let selectedModel = null;
             const getInitialData = () => ({ clients: [], archivedClients: [] });
 
             // --- Data Management ---
@@ -377,7 +418,7 @@
                 sessionInfoEl.disabled = !appointment;
                 [soapSEl, soapOEl, soapAEl, soapPEl].forEach(el => el.disabled = !appointment);
                 addAppointmentBtn.disabled = !client;
-                generateNoteBtn.disabled = !appointment || !selectedOllamaModel || !sessionInfoEl.value.trim();
+                generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
 
                 // Populate data
                 persistentNotesEl.value = client ? (client.persistentNotes || '') : '';
@@ -599,67 +640,119 @@
                 el.addEventListener('keydown', handleSoapKeydown);
             });
 
-            // --- AI SOAP Note Generation (Ollama) ---
-            const connectToOllama = async () => {
-                const address = ollamaAddressInput.value.trim();
+            // --- AI SOAP Note Generation (Open WebUI) ---
+            const connectToServer = async () => {
+                const address = serverAddressInput.value.trim();
                 if (!address) {
-                    alert('Please enter an Ollama address.');
+                    alert('Please enter an Open WebUI address.');
                     return;
                 }
-                ollamaAddress = address.endsWith('/') ? address.slice(0, -1) : address;
-                ollamaApiKey = ollamaApiKeyInput.value.trim();
+                serverAddress = address.endsWith('/') ? address.slice(0, -1) : address;
+                apiKey = apiKeyInput.value.trim();
 
-                ollamaStatus.textContent = 'Connecting...';
-                ollamaStatus.style.color = 'orange';
-                ollamaModelSelect.innerHTML = '<option>Loading models...</option>';
-                ollamaModelSelect.disabled = true;
+                apiStatus.textContent = 'Connecting...';
+                apiStatus.style.color = 'orange';
+                modelSelect.innerHTML = '<option>Loading models...</option>';
+                modelSelect.disabled = true;
 
                 try {
                     const headers = new Headers();
-                    if (ollamaApiKey) {
-                        headers.append('Authorization', `Bearer ${ollamaApiKey}`);
+                    if (apiKey) {
+                        headers.append('Authorization', `Bearer ${apiKey}`);
                     }
-                    const response = await fetch(`${ollamaAddress}/api/tags`, { headers });
+                    const response = await fetch(`${serverAddress}/api/v1/models`, { headers });
                     if (!response.ok) {
-                        throw new Error(`Failed to connect to Ollama. Status: ${response.status}`);
+                        const error = new Error(`Failed to connect to Open WebUI. Status: ${response.status}`);
+                        error.response = response;
+                        throw error;
                     }
                     const data = await response.json();
                     
-                    ollamaStatus.textContent = 'Connected';
-                    ollamaStatus.style.color = 'green';
+                    apiStatus.textContent = 'Connected';
+                    apiStatus.style.color = 'green';
                     
-                    localStorage.setItem('ollamaAddress', ollamaAddress);
-                    if (ollamaApiKey) localStorage.setItem('ollamaApiKey', ollamaApiKey);
-                    else localStorage.removeItem('ollamaApiKey');
+                    localStorage.setItem('serverAddress', serverAddress);
+                    if (apiKey) localStorage.setItem('apiKey', apiKey);
+                    else localStorage.removeItem('apiKey');
                     
-                    ollamaModelSelect.innerHTML = '';
-                    if (data.models && data.models.length > 0) {
-                        data.models.forEach(model => {
+                    modelSelect.innerHTML = '';
+                    const models = data.data;
+
+                    if (models && models.length > 0) {
+                        models.forEach(model => {
                             const option = document.createElement('option');
-                            option.value = model.name;
-                            option.textContent = model.name;
-                            ollamaModelSelect.appendChild(option);
+                            option.value = model.id;
+                            option.textContent = model.id;
+                            modelSelect.appendChild(option);
                         });
-                        ollamaModelSelect.disabled = false;
-                        selectedOllamaModel = ollamaModelSelect.value;
+
+                        let autoSelectedModelId = null;
+                        const deepseekModel = models.find(m => m.id === 'deepseek-r1:1.5b');
+
+                        if (deepseekModel) {
+                            autoSelectedModelId = deepseekModel.id;
+                        } else {
+                            const fallbackModel = models.find(m => 
+                                m.id !== 'arena-model' && 
+                                !m.id.toLowerCase().includes('coder') && 
+                                !m.id.toLowerCase().includes('coding')
+                            );
+                            if (fallbackModel) {
+                                autoSelectedModelId = fallbackModel.id;
+                            }
+                        }
+
+                        if (autoSelectedModelId) {
+                            modelSelect.value = autoSelectedModelId;
+                        } else if (models.length > 0) {
+                            // If no preferred model found, just default to the first in the list
+                            modelSelect.value = models[0].id;
+                        }
+
+                        selectedModel = modelSelect.value;
+                        modelSelect.disabled = false;
+                        
                     } else {
-                        ollamaModelSelect.innerHTML = '<option>No models found</option>';
+                        modelSelect.innerHTML = '<option>No models found</option>';
+                        selectedModel = null;
+                        modelSelect.disabled = true;
                     }
 
                 } catch (error) {
-                    console.error('Ollama connection error:', error);
-                    ollamaStatus.textContent = 'Failed';
-                    ollamaStatus.style.color = 'red';
-                    ollamaAddress = null;
-                    ollamaModelSelect.innerHTML = '<option>Connection failed</option>';
+                    console.error('API connection error:', error);
+                    apiStatus.textContent = 'Failed';
+                    apiStatus.style.color = 'red';
+                    serverAddress = null;
+                    modelSelect.innerHTML = '<option>Connection failed</option>';
+                    
+                    let alertMessage = `Connection to "${address}" failed.`;
+                    
+                    if (error.response?.status === 401) {
+                         alertMessage += `\n\nError: Authentication failed (401 Unauthorized). Please check if your API Key is correct and has the necessary permissions. Some servers require an API key even if it's optional in the UI.`;
+                    } else if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
+                        alertMessage = `Network Error: Failed to fetch.
+
+This is the most common error and is almost always caused by one of two things:
+
+1.  **CORS Policy:** Your browser is blocking the request for security reasons. The Open WebUI server must be configured to allow requests from this webpage.
+    *SOLUTION:* In your Open WebUI settings, find the "Allowed Origins" configuration and add the URL of this page. You can often just add "*" to allow all origins, but this is less secure.
+
+2.  **Server Not Reachable:** The address "${address}" is incorrect, or the Open WebUI server is not running. Please double-check the address and ensure the server is active.
+
+This error cannot be fixed within this application's code; it requires a configuration change on the server you are trying to connect to.`;
+                    } else {
+                        alertMessage += `\n\nError: ${error.message}`;
+                    }
+                    alert(alertMessage);
+
                 } finally {
                     fullRender();
                 }
             };
 
             const generateSoapNote = async () => {
-                if (!selectedOllamaModel) {
-                    alert('Please connect to Ollama and select a model first.');
+                if (!selectedModel) {
+                    alert('Please connect to your server and select a model first.');
                     return;
                 }
 
@@ -681,30 +774,33 @@
 - **Assessment (A):** The clinician's professional judgment and interpretation of the subjective and objective information. Diagnosis, progress towards goals, and clinical impressions.
 - **Plan (P):** The course of action. Topics for the next session, homework, referrals, and treatment plan modifications.
 
-Each key's value in the final JSON object should be a string formatted with bullet points (•) for each distinct point. Respond with ONLY the JSON object, without any additional text, comments, or code fences.`;
+Your entire response must be a single, raw JSON object. Do not wrap it in markdown code fences or add any explanatory text. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.`;
 
                 const userPrompt = `
 - **Client Name:** ${client.name}
 - **Persistent Notes (Background):**
 ${persistentNotesEl.value || 'N/A'}
+
 - **Session Information (This Session):**
 ${sessionInfoEl.value}
 `;
 
                 const payload = {
-                    model: selectedOllamaModel,
-                    system: systemPrompt,
-                    prompt: userPrompt,
-                    format: "json",
+                    model: selectedModel,
+                    messages: [
+                        { "role": "system", "content": systemPrompt },
+                        { "role": "user", "content": userPrompt }
+                    ],
+                    response_format: { "type": "json_object" },
                     stream: false
                 };
                 
                 try {
                     const headers = new Headers({ 'Content-Type': 'application/json' });
-                     if (ollamaApiKey) {
-                        headers.append('Authorization', `Bearer ${ollamaApiKey}`);
+                     if (apiKey) {
+                        headers.append('Authorization', `Bearer ${apiKey}`);
                     }
-                    const response = await fetch(`${ollamaAddress}/api/generate`, {
+                    const response = await fetch(`${serverAddress}/api/v1/chat/completions`, {
                         method: 'POST',
                         headers: headers,
                         body: JSON.stringify(payload)
@@ -712,14 +808,31 @@ ${sessionInfoEl.value}
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        throw new Error(`Ollama API error: ${response.status} - ${errorText}`);
+                        const error = new Error(`API error: ${response.status} - ${errorText}`);
+                        error.response = response;
+                        throw error;
                     }
 
                     const result = await response.json();
-                    const soapData = JSON.parse(result.response);
+                    let content = result.choices[0].message.content;
+                    
+                    const jsonMatch = content.match(/{[\s\S]*}/);
+                    if (!jsonMatch) {
+                        throw new Error('AI response did not contain a valid JSON object.');
+                    }
+                    const jsonString = jsonMatch[0];
+                    let soapData;
+
+                    try {
+                        soapData = JSON.parse(jsonString);
+                    } catch (parseError) {
+                        console.error("Failed to parse the following JSON string from the AI:", jsonString);
+                        throw new Error(`The AI model returned malformed JSON. Check the browser console for the raw output that failed to parse. Details: ${parseError.message}`);
+                    }
 
                     if (typeof soapData.s !== 'string' || typeof soapData.o !== 'string' || typeof soapData.a !== 'string' || typeof soapData.p !== 'string') {
-                        throw new Error('AI response was not in the expected format.');
+                        console.error("Received valid JSON from AI, but it was missing required SOAP keys. Received object:", soapData);
+                        throw new Error(`AI response was not in the expected JSON format (missing s, o, a, or p keys). The AI returned: ${JSON.stringify(soapData)}`);
                     }
 
                     // Update UI and data model
@@ -737,7 +850,23 @@ ${sessionInfoEl.value}
 
                 } catch (error) {
                     console.error('SOAP Note Generation Error:', error);
-                    alert(`Failed to generate SOAP note. Please check your Ollama connection and the console for details.\nError: ${error.message}`);
+                    let alertMessage = `Failed to generate SOAP note. Please check your connection and the console for details.\nError: ${error.message}`;
+                     
+                    if (error.response?.status === 401) {
+                         alertMessage = `Authentication failed (401 Unauthorized) while trying to generate the note. Please re-check your API Key.`;
+                    } else if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
+                        alertMessage = `Network Error: Failed to fetch.
+
+This is the most common error and is almost always caused by one of two things:
+
+1.  **CORS Policy:** Your browser is blocking the request for security reasons. The Open WebUI server must be configured to allow requests from this webpage.
+    *SOLUTION:* In your Open WebUI settings, find the "Allowed Origins" configuration and add the URL of this page. You can often just add "*" to allow all origins, but this is less secure.
+
+2.  **Server Not Reachable:** The address "${serverAddress}" is incorrect, or the Open WebUI server is not running. Please double-check the address and ensure the server is active.
+
+This error cannot be fixed within this application's code; it requires a configuration change on the server you are trying to connect to.`;
+                    }
+                    alert(alertMessage);
                 } finally {
                     generateNoteBtn.disabled = false;
                     generateNoteBtn.textContent = 'Generate Note';
@@ -798,26 +927,19 @@ ${sessionInfoEl.value}
                 }
             };
 
-            const saveFile = async (isAutoSave = false) => {
-                if (isAutoSave) {
-                    if (!isDirty) return;
-                    updateSaveStatus('Saving...', true);
-                    saveDataToCookie();
-                    setTimeout(() => {
-                        if (!isDirty) {
-                           updateSaveStatus('Auto-saved', true, 2000);
-                        }
-                    }, 500);
-                    return;
-                }
+            const exportFile = async () => {
                 try {
+                    // First, ensure the latest state is saved to the cookie
                     saveDataToCookie();
+                    updateSaveStatus('Saved.', true, 2000);
+                                         
                     const cookie = document.cookie.split('; ').find(row => row.startsWith('clientData='));
                     if (!cookie) {
                         updateSaveStatus('Nothing to export!', false, 3000);
                         return;
                     }
                     const stateJSON = decodeURIComponent(cookie.split('=')[1]);
+                                        
                     const blob = new Blob([stateJSON], { type: 'application/json' });
                     const handle = await window.showSaveFilePicker({
                         suggestedName: `client-data-${new Date().toISOString().split('T')[0]}.json`,
@@ -833,6 +955,17 @@ ${sessionInfoEl.value}
                         updateSaveStatus('Export failed!', false, 3000);
                     }
                 }
+            };
+
+            let saveTimeout;
+            const debouncedAutoSave = () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    saveDataToCookie();
+                    if (!isDirty) {
+                       updateSaveStatus('Auto-saved', true, 2000);
+                    }
+                }, 1500);
             };
 
             const loadFile = async () => {
@@ -871,8 +1004,8 @@ ${sessionInfoEl.value}
                     document.cookie = 'clientData=;path=/;max-age=0';
                     localStorage.removeItem('columnSizes');
                     localStorage.removeItem('rowSizes');
-                    localStorage.removeItem('ollamaAddress');
-                    localStorage.removeItem('ollamaApiKey');
+                    localStorage.removeItem('serverAddress');
+                    localStorage.removeItem('apiKey');
                     autoSaveIndicator.classList.add('hidden');
                     alert('All data has been permanently erased. The page will now reload.');
                     window.location.reload();
@@ -881,25 +1014,27 @@ ${sessionInfoEl.value}
                 }
             };
 
-            let saveTimeout;
-            const debouncedAutoSave = () => {
-                clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(() => {
-                    saveFile(true);
-                }, 1500);
-            };
-
             // --- Event Listeners ---
             addClientBtn.addEventListener('click', addClient);
             newClientInput.addEventListener('keyup', (e) => e.key === 'Enter' && addClient());
             addAppointmentBtn.addEventListener('click', addAppointment);
-            saveBtn.addEventListener('click', () => saveFile(false));
+            exportBtn.addEventListener('click', exportFile);
             loadBtn.addEventListener('click', loadFile);
             eraseAllBtn.addEventListener('click', eraseAllData);
             generateNoteBtn.addEventListener('click', generateSoapNote);
-            connectOllamaBtn.addEventListener('click', connectToOllama);
-            ollamaModelSelect.addEventListener('change', (e) => {
-                selectedOllamaModel = e.target.value;
+            connectApiBtn.addEventListener('click', connectToServer);
+
+            manualSaveBtn.addEventListener('click', () => {
+                saveDataToCookie();
+                updateSaveStatus('Data saved!', true, 2000);
+            });
+
+            settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+            closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+            modalOverlay.addEventListener('click', () => settingsModal.classList.add('hidden'));
+            
+            modelSelect.addEventListener('change', (e) => {
+                selectedModel = e.target.value;
                 fullRender();
             });
 
@@ -1040,17 +1175,17 @@ ${sessionInfoEl.value}
             makeResizable(document.getElementById('resizer-session-notes'), document.getElementById('sessionInfoWrapper'), document.getElementById('notesWrapper'), 'y');
 
             // --- Initial Load & Render ---
-            const loadOllamaSettings = () => {
-                const savedAddress = localStorage.getItem('ollamaAddress');
-                const savedApiKey = localStorage.getItem('ollamaApiKey');
+            const loadServerSettings = () => {
+                const savedAddress = localStorage.getItem('serverAddress');
+                const savedApiKey = localStorage.getItem('apiKey');
                 if (savedAddress) {
-                    ollamaAddressInput.value = savedAddress;
-                    if(savedApiKey) ollamaApiKeyInput.value = savedApiKey;
-                    connectToOllama();
+                    serverAddressInput.value = savedAddress;
+                    if(savedApiKey) apiKeyInput.value = savedApiKey;
+                    connectToServer();
                 }
             };
 
-            loadOllamaSettings();
+            loadServerSettings();
             loadDataFromCookie();
             loadColumnSizes();
             appointmentDateEl.value = new Date().toISOString().split('T')[0];
