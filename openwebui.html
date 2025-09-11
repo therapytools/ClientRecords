@@ -766,7 +766,7 @@ This error cannot be fixed within this application's code; it requires a configu
                 generateNoteBtn.disabled = true;
                 generateNoteBtn.textContent = 'Generating...';
 
-                const systemPrompt = `You are a helpful assistant for a therapist or clinician. Your task is to convert raw session notes into a structured SOAP note format. The user will provide "Persistent Notes" which contain background information about the client, and "Session Information" which contains the notes from the current session. Analyze both sets of notes and generate a SOAP note.
+                const systemPrompt = `You are a helpful assistant for a therapist or clinician. Your task is to convert raw session notes into a structured SOAP note format. The user will provide "Session Information" which contains the notes from the current session. Analyze these notes to generate a SOAP note.
 
 **Guidelines for each section:**
 - **Subjective (S):** What the client reports. Direct quotes, feelings, goals, and history reported by the client.
@@ -775,19 +775,19 @@ This error cannot be fixed within this application's code; it requires a configu
 - **Plan (P):** The course of action. Topics for the next session, homework, referrals, and treatment plan modifications.
 
 **Important Constraints:**
-- **Stick to the provided information:** Do NOT invent details that are not present in the "Session Information" or "Persistent Notes".
+- **Stick to the provided information:** Do NOT invent details that are not present in the "Session Information".
 - **Do not add client statements:** Only include quotes or reported feelings if they are in the source text.
 - **Do not assume presentation:** Do not make assumptions about the client's presentation (e.g., "appeared tired") unless it is explicitly documented.
 - **Do not infer progress:** Do not add statements about progress unless it is specifically noted in the session information.
 - It is acceptable to identify and detail therapeutic interventions if they are mentioned in the notes.
 
-Your entire response must be a single, raw JSON object. Do not wrap it in markdown code fences or add any explanatory text. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.`;
+Your entire response must be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences or add any explanatory text. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.
+
+Here is an example of the exact format required:
+{"s":"• Client stated they felt better this week.","o":"• Client was on time and casually dressed.","a":"• Client shows good progress toward treatment goals.","p":"• Continue with current treatment plan.\\n• Assign mindfulness worksheet for homework."}`;
 
                 const userPrompt = `
 - **Client Name:** ${client.name}
-- **Persistent Notes (Background):**
-${persistentNotesEl.value || 'N/A'}
-
 - **Session Information (This Session):**
 ${sessionInfoEl.value}
 `;
@@ -822,23 +822,39 @@ ${sessionInfoEl.value}
 
                     const result = await response.json();
                     let content = result.choices[0].message.content;
-                    
-                    const jsonMatch = content.match(/{[\s\S]*}/);
-                    if (!jsonMatch) {
-                        throw new Error('AI response did not contain a valid JSON object.');
-                    }
-                    const jsonString = jsonMatch[0];
-                    let soapData;
+                    let soapData = {};
 
+                    // The model might return multiple JSON objects. We need to find and merge them.
+                    const jsonMatches = content.match(/{[\s\S]*?}/g);
+                    if (!jsonMatches) {
+                         throw new Error('AI response did not contain a valid JSON object.');
+                    }
+                    
                     try {
-                        soapData = JSON.parse(jsonString);
+                         jsonMatches.forEach(jsonString => {
+                            const partialData = JSON.parse(jsonString);
+                            Object.assign(soapData, partialData);
+                        });
                     } catch (parseError) {
-                        console.error("Failed to parse the following JSON string from the AI:", jsonString);
+                        console.error("Failed to parse the following JSON string from the AI:", content);
                         throw new Error(`The AI model returned malformed JSON. Check the browser console for the raw output that failed to parse. Details: ${parseError.message}`);
+                    }
+                    
+                    // The AI might return an array of strings instead of a single string.
+                    // We need to handle this by joining the array elements.
+                    for (const key in soapData) {
+                        if (Array.isArray(soapData[key])) {
+                            // Join the array items, ensuring each starts with a bullet point.
+                            soapData[key] = soapData[key].map(item => {
+                                // Trim and remove existing bullets to prevent duplication
+                                const cleanedItem = item.toString().trim().replace(/^•\s*/, '');
+                                return `• ${cleanedItem}`;
+                            }).join('\n');
+                        }
                     }
 
                     if (typeof soapData.s !== 'string' || typeof soapData.o !== 'string' || typeof soapData.a !== 'string' || typeof soapData.p !== 'string') {
-                        console.error("Received valid JSON from AI, but it was missing required SOAP keys. Received object:", soapData);
+                        console.error("Received valid JSON from AI, but it was missing required SOAP keys or they were not strings after processing. Received object:", soapData);
                         throw new Error(`AI response was not in the expected JSON format (missing s, o, a, or p keys). The AI returned: ${JSON.stringify(soapData)}`);
                     }
 
