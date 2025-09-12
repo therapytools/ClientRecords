@@ -346,7 +346,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer</h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.15</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -1098,6 +1098,7 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework, and any modifications to the treatment plan.
 
 **CRITICAL INSTRUCTIONS:**
+- **THE GOLDEN RULE:** ONLY use information explicitly provided in the "Session Information" text. Do not use any information from the example output below, which is for formatting reference only.
 - **INFORMATION FIDELITY:**
     - **NO NEW INFORMATION:** You must not add, invent, or infer any details, events, or feelings not explicitly stated in the "Session Information." Your task is to categorize, not create.
     - **NO ASSUMPTIONS:** Do not make clinical assumptions. If the text says "Ct cried," report "Ct cried." Do not interpret this as "Ct was sad" unless the text also states that.
@@ -1114,8 +1115,8 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 **Output Format:**
 Your entire response MUST be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences. Do not add any explanatory text, comments, or any words outside of the JSON object itself. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.
 
-**Example of PERFECT Output:**
-{"s":"• Ct stated they felt better this week and reported, \\"I'm sleeping more.\\"","o":"• Ct was on time and casually dressed. Writer observed that Ct's affect was bright.","a":"• Ct showed good progress toward treatment goals.","p":"• Continue with current treatment plan.\\n• Writer will assign mindfulness worksheet for homework."}
+**Example of PERFECT Output (FOR FORMATTING ONLY):**
+{"s":"• [Subjective point from session info]\\n• [Another subjective point, with a quote like \\"this.\\"]","o":"• [Objective point from session info]","a":"• [Assessment point from session info]","p":"• [Plan point from session info]"}
 `;
 
             const generateSoapNote = async () => {
