@@ -346,7 +346,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.15</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.16</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -1397,35 +1397,35 @@ This error cannot be fixed within this application's code; it requires a configu
                 debouncedAutoSave();
             };
 
-            const saveDataToCookie = () => {
+            const saveDataToLocalStorage = () => {
                 try {
                     const state = { data, deletedItems, selectedClientId, selectedAppointmentId };
                     const dataStr = JSON.stringify(state);
-                    // Check if the cookie size exceeds the limit (e.g., 4KB)
-                    if (encodeURIComponent(dataStr).length > 4000) {
-                        updateSaveStatus('Data too large for cookie!', false, 5000);
-                        console.warn("Data size is large, cookie saving might fail. Consider exporting to a file.");
-                    }
-                    document.cookie = `clientData=${encodeURIComponent(dataStr)};path=/;max-age=31536000;samesite=strict`;
+                    localStorage.setItem('clientData', dataStr);
                     isDirty = false;
                 } catch (e) {
-                    console.error("Failed to save to cookie", e);
-                    updateSaveStatus('Cookie save failed!', false, 3000);
+                    console.error("Failed to save to localStorage", e);
+                    updateSaveStatus('Save failed!', false, 3000);
+                    // Handle potential quota exceeded error
+                    if (e.name === 'QuotaExceededError') {
+                        alert('Failed to save data: Storage quota exceeded. Please export your data to a file and consider clearing some old records.');
+                    }
                 }
             };
 
-            const loadDataFromCookie = () => {
-                const cookie = document.cookie.split('; ').find(row => row.startsWith('clientData='));
-                if (cookie) {
+            const loadDataFromLocalStorage = () => {
+                const dataStr = localStorage.getItem('clientData');
+                if (dataStr) {
                     try {
-                        const state = JSON.parse(decodeURIComponent(cookie.split('=')[1]));
+                        const state = JSON.parse(dataStr);
                         data = state.data || getInitialData();
                         if (!data.archivedClients) data.archivedClients = [];
                         deletedItems = state.deletedItems || { clients: [], appointments: [] };
                         selectedClientId = state.selectedClientId || null;
                         selectedAppointmentId = state.selectedAppointmentId || null;
                     } catch (e) {
-                        console.error("Failed to load from cookie", e);
+                        console.error("Failed to load from localStorage", e);
+                        alert("Error loading data from storage. Data might be corrupt. Starting fresh.");
                         data = getInitialData();
                         deletedItems = { clients: [], appointments: [] };
                     }
@@ -1457,7 +1457,7 @@ This error cannot be fixed within this application's code; it requires a configu
             const debouncedAutoSave = () => {
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
-                    saveDataToCookie();
+                    saveDataToLocalStorage();
                     updateSaveStatus('Auto-saved', true, 2000);
                 }, 1500);
             };
@@ -1493,7 +1493,7 @@ This error cannot be fixed within this application's code; it requires a configu
                         }
 
                         isDirty = false;
-                        saveDataToCookie();
+                        saveDataToLocalStorage();
 
                         alert(`Imported ${file.name} successfully.`);
                         fullRender();
@@ -1517,7 +1517,7 @@ This error cannot be fixed within this application's code; it requires a configu
                     selectedClientId = null;
                     selectedAppointmentId = null;
                     isDirty = false;
-                    document.cookie = 'clientData=;path=/;max-age=0';
+                    localStorage.removeItem('clientData');
                     localStorage.removeItem('serverAddress');
                     localStorage.removeItem('apiKey');
                     localStorage.removeItem('columnSizes');
@@ -1543,7 +1543,7 @@ This error cannot be fixed within this application's code; it requires a configu
             generateNoteBtn.addEventListener('click', generateSoapNote);
             connectApiBtn.addEventListener('click', connectToServer);
             manualSaveBtn.addEventListener('click', () => {
-                saveDataToCookie();
+                saveDataToLocalStorage();
                 updateSaveStatus('Data saved!', true, 2000);
             });
             settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
@@ -1677,7 +1677,7 @@ This error cannot be fixed within this application's code; it requires a configu
             
             appointmentDateInput.value = new Date().toISOString().split('T')[0];
             loadServerSettings();
-            loadDataFromCookie();
+            loadDataFromLocalStorage();
             loadColumnSizes();
             fullRender();
             
