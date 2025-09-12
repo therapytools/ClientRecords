@@ -1085,15 +1085,21 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework assignments, referrals, and any modifications to the treatment plan.
 
 **CRITICAL INSTRUCTIONS:**
-- **REFERRALS:** The client should always be referred to as "Ct." The therapist (the user inputting the notes) should always be referred to in the first person as "Writer."
+- **TENSE:** All output must be in the past tense. For example, use "Ct reported" instead of "Ct reports," and "Writer stated" instead of "Writer states."
+- **REFERRALS & PRONOUNS:**
+    - Always refer to the client as **"Ct"**. Do NOT use the client's actual name, which is provided for context only.
+    - Always refer to the therapist/clinician (the user) as **"Writer."** Use the third person (e.g., "Writer observed..."). Do not use "I" or "me."
+    - Never use articles before the referrals. It is always "Ct" or "Writer," never "the Ct" or "the Writer."
+- **ESCAPE QUOTES:** You MUST escape any double quotes inside the JSON string values. For example, if the client says "I feel sad," the JSON output should be '{"s":"• Ct reported feeling \\"sad.\\""}'.
 - **DO NOT INVENT:** Your response must ONLY contain information found in the "Session Information" text. Do not add any details, assumptions, or statements that are not explicitly provided.
 - **DO NOT INTERPRET BEYOND CATEGORIZATION:** Your job is to sort the provided information, not to add clinical interpretation or make assumptions about progress, affect, or presentation unless it is explicitly stated in the source text. For example, do not write "client appeared tired" unless the source text says "client appeared tired."
 
 **Output Format:**
-Your entire response must be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences or add any explanatory text. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.
+Your entire response MUST be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences. Do not add any explanatory text, comments, or any words outside of the JSON object itself. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.
 
 **Example of PERFECT Output:**
-{"s":"• Ct. stated they felt better this week.","o":"• Ct. was on time and casually dressed. Writer observed that Ct's affect was bright.","a":"• Ct. shows good progress toward treatment goals.","p":"• Continue with current treatment plan.\\n• Writer will assign mindfulness worksheet for homework."}`;
+{"s":"• Ct stated they felt better this week and reported, \\"I'm sleeping more.\\"","o":"• Ct was on time and casually dressed. Writer observed that Ct's affect was bright.","a":"• Ct showed good progress toward treatment goals.","p":"• Continue with current treatment plan.\\n• Writer will assign mindfulness worksheet for homework."}
+`;
 
             const generateSoapNote = async () => {
                 if (!selectedModel) {
@@ -1149,19 +1155,34 @@ ${sessionInfoEl.value}
                     let content = result.choices[0].message.content;
                     let soapData = {};
 
-                    // Find the first '{' and the last '}' to extract the JSON part.
-                    const firstBrace = content.indexOf('{');
-                    const lastBrace = content.lastIndexOf('}');
-                    if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
-                        throw new Error('AI response did not contain a valid JSON object.');
-                    }
-                    const jsonString = content.substring(firstBrace, lastBrace + 1);
-                    
+                    // Aggressive JSON extraction and cleanup
                     try {
-                        soapData = JSON.parse(jsonString);
+                        // Find the first '{' and the last '}' to extract the JSON part.
+                        const firstBrace = content.indexOf('{');
+                        const lastBrace = content.lastIndexOf('}');
+                        if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+                            throw new Error('AI response did not contain a valid JSON object.');
+                        }
+                        let jsonString = content.substring(firstBrace, lastBrace + 1);
+                        
+                        // Attempt to parse it. If it fails, it's likely due to unescaped quotes.
+                        try {
+                            soapData = JSON.parse(jsonString);
+                        } catch (e) {
+                            // This is a fallback for models that fail to escape quotes properly.
+                            // It replaces unescaped quotes inside the values.
+                            // This is a bit risky but can salvage a malformed response.
+                            console.warn("Initial JSON.parse failed. Attempting to fix unescaped quotes.", e.message);
+                            jsonString = jsonString.replace(/:\s*"(.*?)"/g, (match, group1) => {
+                                const fixedGroup = group1.replace(/(?<!\\)"/g, '\\"');
+                                return `: "${fixedGroup}"`;
+                            });
+                            soapData = JSON.parse(jsonString); // Retry parsing
+                        }
+
                     } catch (parseError) {
-                        console.error("Failed to parse the following JSON string from the AI:", jsonString);
-                        throw new Error(`The AI model returned malformed JSON. Check the browser console for the raw output that failed to parse. Details: ${parseError.message}`);
+                        console.error("Failed to parse the following JSON string from the AI:", content);
+                        throw new Error(`The AI model returned malformed JSON that could not be automatically fixed. Check the browser console for the raw output. Details: ${parseError.message}`);
                     }
                     
                     for (const key in soapData) {
@@ -1256,9 +1277,12 @@ ${sessionInfoEl.value}
                         });
 
                         let autoSelectedModelId = null;
+                        const llamaModel = models.find(m => m.id === 'llama3.2:3b');
                         const deepseekModel = models.find(m => m.id === 'deepseek-r1:1.5b');
 
-                        if (deepseekModel) {
+                        if (llamaModel) {
+                            autoSelectedModelId = llamaModel.id;
+                        } else if (deepseekModel) {
                             autoSelectedModelId = deepseekModel.id;
                         } else {
                             const fallbackModel = models.find(m => 
