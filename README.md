@@ -1,0 +1,1 @@
+Simple project to connect Open WebUI to convert session notes into progress notes. Keeps track of session notes locally, no online storage, and can be exported locally for backup. Persistent notes to keep track of details across sessions without being entered into SOAP notes. SOAP format for entry into EHR.
