@@ -963,37 +963,50 @@
             };
 
             // --- Generic Bullet Point Handlers ---
+            const formatBulletPoints = (text) => {
+                // Replace any '•' that isn't at the start of a line with a newline and then '•'
+                let formattedText = text.replace(/([^\n])\s*•/g, '$1\n•');
+
+                // Ensure every non-empty line starts with a bullet, and clean up lines
+                let lines = formattedText.split('\n');
+                let newLines = lines.map(line => {
+                    let trimmedLine = line.trim();
+                    if (trimmedLine.length > 0) {
+                        if (trimmedLine.startsWith('•')) {
+                            // Return the line with a single bullet and trimmed content
+                            return '• ' + trimmedLine.substring(1).trim();
+                        } else {
+                            // Add a bullet to a line that doesn't have one
+                            return '• ' + trimmedLine;
+                        }
+                    }
+                    return ''; // Return empty string for empty lines
+                }).filter(line => line.length > 0); // Remove all empty lines
+
+                // Ensure the very first line starts with a bullet if there's any content
+                if (newLines.length > 0 && !newLines[0].startsWith('•')) {
+                    newLines[0] = '• ' + newLines[0];
+                }
+
+                return newLines.join('\n');
+            };
+
             const handleBulletedInput = (e, saveDataCallback) => {
                 const textarea = e.target;
-                
-                // Auto-resize
-                autoResizeTextarea(textarea);
-
                 const originalValue = textarea.value;
                 const originalCursor = textarea.selectionStart;
 
-                let lines = originalValue.split('\n');
-                let wasModified = false;
+                const newValue = formatBulletPoints(originalValue);
 
-                const newLines = lines.map(line => {
-                    if (line.trim().length > 0 && !line.trim().startsWith('•')) {
-                        wasModified = true;
-                        return '• ' + line.trimStart();
-                    }
-                    return line;
-                });
-
-                if (originalValue.length > 0 && !newLines[0].trim().startsWith('•') && newLines[0].trim().length > 0) {
-                    newLines[0] = '• ' + newLines[0].trimStart();
-                    wasModified = true;
-                }
-                
-                if (wasModified) {
-                    const newValue = newLines.join('\n');
+                if (newValue !== originalValue) {
                     textarea.value = newValue;
+                    // This is a simple cursor repositioning, might not be perfect but is better than nothing.
                     const diff = newValue.length - originalValue.length;
                     textarea.selectionStart = textarea.selectionEnd = originalCursor + diff;
                 }
+                
+                // Auto-resize
+                autoResizeTextarea(textarea);
 
                 // Save changes using the provided callback
                 saveDataCallback(textarea);
@@ -1079,12 +1092,16 @@
 **Your Task:**
 Analyze the "Session Information" text provided by the user. Categorize every piece of information into one of the four SOAP sections based on the strict definitions below.
 
-- **Subjective (S):** Information reported by the client. This includes direct quotes, feelings, goals, and history as told by the client.
-- **Objective (O):** Observable, measurable facts from the session. This includes the clinician's direct observations of the client's appearance, affect, behavior, and body language, as well as any test scores or other concrete data.
-- **Assessment (A):** The clinician's professional analysis and interpretation of the subjective and objective information. This includes clinical impressions, progress toward goals, and diagnoses.
-- **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework assignments, referrals, and any modifications to the treatment plan.
+- **Subjective (S):** Information reported by the client (e.g., feelings, goals, history). This is for the client's voice and perspective. **EXCEPTION:** If a client's report is directly tied to a therapeutic intervention or a reflection by the writer, that entire interaction belongs in the Objective section.
+- **Objective (O):** Everything that *happens* in the therapy session. This includes all therapeutic interventions, actions taken, connections made, and reflections or psychoeducation provided by the writer.
+- **Assessment (A):** The writer's clinical analysis and observations. This includes notes on progress towards goals and direct observations of the client's state (e.g., "client appeared tired," "client's affect was bright").
+- **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework, and any modifications to the treatment plan.
 
 **CRITICAL INSTRUCTIONS:**
+- **INFORMATION FIDELITY:**
+    - **NO NEW INFORMATION:** You must not add, invent, or infer any details, events, or feelings not explicitly stated in the "Session Information." Your task is to categorize, not create.
+    - **NO ASSUMPTIONS:** Do not make clinical assumptions. If the text says "Ct cried," report "Ct cried." Do not interpret this as "Ct was sad" unless the text also states that.
+    - **PRESERVE QUOTES:** Only use quotation marks in your output if the "Session Information" contains a direct quote. Do not put paraphrased statements in quotes.
 - **TENSE:** All output must be in the past tense. For example, use "Ct reported" instead of "Ct reports," and "Writer stated" instead of "Writer states."
 - **REFERRALS & PRONOUNS:**
     - Always refer to the client as **"Ct"**. Do NOT use the client's actual name, which is provided for context only.
@@ -1165,19 +1182,28 @@ ${sessionInfoEl.value}
                         }
                         let jsonString = content.substring(firstBrace, lastBrace + 1);
                         
-                        // Attempt to parse it. If it fails, it's likely due to unescaped quotes.
+                        // Attempt to parse it. If it fails, it's likely due to malformed content.
                         try {
                             soapData = JSON.parse(jsonString);
                         } catch (e) {
-                            // This is a fallback for models that fail to escape quotes properly.
-                            // It replaces unescaped quotes inside the values.
-                            // This is a bit risky but can salvage a malformed response.
-                            console.warn("Initial JSON.parse failed. Attempting to fix unescaped quotes.", e.message);
-                            jsonString = jsonString.replace(/:\s*"(.*?)"/g, (match, group1) => {
+                            console.warn("Initial JSON.parse failed. Attempting to clean and re-parse.", e.message);
+                            // This is a more robust fallback for models that fail to escape content correctly.
+                            // It performs multiple passes to clean up common issues.
+                            
+                            // 1. Remove newlines within JSON strings, which is a common error.
+                            let cleanedString = jsonString.replace(/:\s*"(.*?)"/gs, (match, group1) => {
+                                const singleLineGroup = group1.replace(/\n/g, '\\n').replace(/\r/g, '');
+                                return `: "${singleLineGroup}"`;
+                            });
+
+                            // 2. Fix unescaped quotes inside values. This is more complex.
+                            // We look for a quote that is not preceded by a backslash.
+                            cleanedString = cleanedString.replace(/:\s*"(.*?)"/g, (match, group1) => {
                                 const fixedGroup = group1.replace(/(?<!\\)"/g, '\\"');
                                 return `: "${fixedGroup}"`;
                             });
-                            soapData = JSON.parse(jsonString); // Retry parsing
+
+                            soapData = JSON.parse(cleanedString); // Retry parsing with the cleaned string
                         }
 
                     } catch (parseError) {
@@ -1186,11 +1212,16 @@ ${sessionInfoEl.value}
                     }
                     
                     for (const key in soapData) {
-                        if (Array.isArray(soapData[key])) {
+                        if (typeof soapData[key] === 'string') {
+                            // Format bullet points for every key
+                            soapData[key] = formatBulletPoints(soapData[key]);
+                        } else if (Array.isArray(soapData[key])) {
+                            // This handles cases where the AI might return an array of strings
                             soapData[key] = soapData[key].map(item => {
                                 const cleanedItem = item.toString().trim().replace(/^•\s*/, '');
                                 return `• ${cleanedItem}`;
                             }).join('\n');
+                            soapData[key] = formatBulletPoints(soapData[key]);
                         }
                     }
 
