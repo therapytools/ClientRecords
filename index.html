@@ -346,7 +346,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.16</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.17</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -952,8 +952,8 @@
             persistentNotesEl.addEventListener('input', () => {
                  const client = findClient(selectedClientId);
                  if (client) {
-                    client.persistentNotes = persistentNotesEl.value;
-                    markDirty();
+                     client.persistentNotes = persistentNotesEl.value;
+                     markDirty();
                  }
             });
 
@@ -970,18 +970,19 @@
                 // Ensure every non-empty line starts with a bullet, and clean up lines
                 let lines = formattedText.split('\n');
                 let newLines = lines.map(line => {
-                    let trimmedLine = line.trim();
+                    let trimmedLine = line.trimStart(); // Only trim leading whitespace
                     if (trimmedLine.length > 0) {
                         if (trimmedLine.startsWith('•')) {
-                            // Return the line with a single bullet and trimmed content
-                            return '• ' + trimmedLine.substring(1).trim();
+                            // It has a bullet. Normalize space after it, but preserve trailing space on the line.
+                            let content = trimmedLine.substring(1).trimStart();
+                            return '• ' + content;
                         } else {
-                            // Add a bullet to a line that doesn't have one
+                            // No bullet, add one.
                             return '• ' + trimmedLine;
                         }
                     }
-                    return ''; // Return empty string for empty lines
-                }).filter(line => line.length > 0); // Remove all empty lines
+                    return ''; // Return empty string for empty/whitespace-only lines
+                }).filter(line => line.length > 0);
 
                 // Ensure the very first line starts with a bullet if there's any content
                 if (newLines.length > 0 && !newLines[0].startsWith('•')) {
@@ -1078,10 +1079,12 @@
                      const textarea = document.getElementById(targetId);
                      if (!textarea) return;
                      navigator.clipboard.writeText(textarea.value).then(() => {
-                        const messageBox = document.getElementById('messageBox');
-                        messageBox.textContent = 'Copied to clipboard!';
-                        messageBox.classList.remove('opacity-0');
-                        setTimeout(() => messageBox.classList.add('opacity-0'), 2000);
+                        const originalText = e.target.textContent;
+                        e.target.textContent = 'Copied!';
+                        setTimeout(() => { e.target.textContent = originalText; }, 2000);
+                     }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                        alert('Could not copy text to clipboard.');
                      });
                  }
             });
@@ -1154,7 +1157,7 @@ ${sessionInfoEl.value}
                 try {
                     const headers = new Headers({ 'Content-Type': 'application/json' });
                      if (apiKey) {
-                        headers.append('Authorization', `Bearer ${apiKey}`);
+                         headers.append('Authorization', `Bearer ${apiKey}`);
                     }
                     const response = await fetch(`${serverAddress}/api/v1/chat/completions`, {
                         method: 'POST',
@@ -1242,7 +1245,7 @@ ${sessionInfoEl.value}
                 } catch (error) {
                     console.error('SOAP Note Generation Error:', error);
                     let alertMessage = `Failed to generate SOAP note. Please check your connection and the console for details.\nError: ${error.message}`;
-                     
+                    
                     if (error.response?.status === 401) {
                          alertMessage = `Authentication failed (401 Unauthorized) while trying to generate the note. Please re-check your API Key.`;
                     } else if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
@@ -1365,7 +1368,7 @@ This is the most common error and is almost always caused by one of two things:
 
 This error cannot be fixed within this application's code; it requires a configuration change on the server you are trying to connect to.`;
                     } else {
-                        alertMessage += `\n\nError: ${error.message}`;
+                         alertMessage += `\n\nError: ${error.message}`;
                     }
                     alert(alertMessage);
 
@@ -1382,9 +1385,9 @@ This error cannot be fixed within this application's code; it requires a configu
                 saveStatus.style.color = isGood ? 'white' : '#f1c40f'; // Gold for warning
                 if (duration > 0) {
                     setTimeout(() => {
-                         if (saveStatus.textContent === message) {
+                        if (saveStatus.textContent === message) {
                             autoSaveIndicator.style.opacity = '0';
-                         }
+                        }
                     }, duration);
                 }
             }
@@ -1464,8 +1467,8 @@ This error cannot be fixed within this application's code; it requires a configu
 
             const loadFile = () => {
                  if (isDirty && !confirm('You have unsaved changes that will be lost. Are you sure you want to import a new file?')) {
-                    return;
-                }
+                     return;
+                 }
                 fileInput.click();
             };
 
@@ -1690,4 +1693,3 @@ This error cannot be fixed within this application's code; it requires a configu
     </script>
 </body>
 </html>
-
