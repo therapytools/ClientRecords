@@ -1014,31 +1014,41 @@
             };
             
             const handleBulletedKeyDown = (e) => {
-                if (e.key !== 'Enter') return;
-
-                e.preventDefault();
                 const textarea = e.target;
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
                 const text = textarea.value;
-                
-                const currentLineStart = text.lastIndexOf('\n', start - 1) + 1;
-                const currentLine = text.substring(currentLineStart, start);
-                const currentLineContent = text.substring(currentLineStart, text.indexOf('\n', start))
 
-                // If the current line is just a bullet or a bullet with spaces, remove it and go up a line.
-                if (currentLine.trim() === '•') {
-                    // remove the current line
-                    textarea.value = text.substring(0, currentLineStart) + text.substring(end);
-                    // move cursor to the start of the line
-                    textarea.selectionStart = textarea.selectionEnd = currentLineStart;
-                } else {
-                    // default behavior: insert a new line with a bullet
-                    textarea.value = text.substring(0, start) + '\n• ' + text.substring(end);
-                    textarea.selectionStart = textarea.selectionEnd = start + 3;
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    
+                    const currentLineStart = text.lastIndexOf('\n', start - 1) + 1;
+                    const currentLine = text.substring(currentLineStart, start);
+
+                    if (currentLine.trim() === '•') {
+                        textarea.value = text.substring(0, currentLineStart) + text.substring(end);
+                        textarea.selectionStart = textarea.selectionEnd = currentLineStart;
+                    } else {
+                        textarea.value = text.substring(0, start) + '\n• ' + text.substring(end);
+                        textarea.selectionStart = textarea.selectionEnd = start + 3;
+                    }
+                    
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    return;
                 }
-                
-                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+
+                if (e.key === 'Backspace' && start === end) {
+                    const currentLineStart = text.lastIndexOf('\n', start - 1) + 1;
+                    const lineText = text.substring(currentLineStart, start);
+                    
+                    if (lineText.trim() === '•' && start > 0) {
+                        e.preventDefault();
+                        const prevLineEnd = currentLineStart > 0 ? currentLineStart - 1 : 0;
+                        textarea.value = text.substring(0, prevLineEnd) + text.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = prevLineEnd;
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
             };
 
             // --- Specific Save Callbacks ---
