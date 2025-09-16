@@ -1024,11 +1024,16 @@
                 
                 const currentLineStart = text.lastIndexOf('\n', start - 1) + 1;
                 const currentLine = text.substring(currentLineStart, start);
+                const currentLineContent = text.substring(currentLineStart, text.indexOf('\n', start))
 
+                // If the current line is just a bullet or a bullet with spaces, remove it and go up a line.
                 if (currentLine.trim() === '•') {
+                    // remove the current line
                     textarea.value = text.substring(0, currentLineStart) + text.substring(end);
+                    // move cursor to the start of the line
                     textarea.selectionStart = textarea.selectionEnd = currentLineStart;
                 } else {
+                    // default behavior: insert a new line with a bullet
                     textarea.value = text.substring(0, start) + '\n• ' + text.substring(end);
                     textarea.selectionStart = textarea.selectionEnd = start + 3;
                 }
