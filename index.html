@@ -915,7 +915,10 @@
 
             appointmentListEl.addEventListener('click', (e) => {
                  const appointmentItem = e.target.closest('.appointment-item');
-                 if (!appointmentItem) return;
+                 if (!appointmentItem) {
+                     selectAppointment(null);
+                     return;
+                 }
 
                  const appointmentId = appointmentItem.dataset.appointmentId;
                  
