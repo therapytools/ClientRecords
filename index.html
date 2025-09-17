@@ -212,6 +212,7 @@
         }
         .archive-btn { background: #f39c12; }
         .delete-btn { background: #e74c3c; }
+        .edit-btn { background: #3498db; }
 
         /* Appointments Panel */
         .appointment-item {
@@ -346,7 +347,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.19</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.20</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -393,6 +394,7 @@
                      <div style="display: flex; align-items: center; gap: 8px;">
                          <input type="date" id="appointmentDateInput" style="flex-grow: 1;">
                          <button class="add-btn" id="addAppointmentBtn" disabled>+</button>
+                         <button id="updateAppointmentDateBtn" class="btn hidden" style="padding: 4px 8px; font-size: 0.8rem;">Update</button>
                      </div>
                 </div>
                  <div class="panel-footer">
@@ -525,6 +527,7 @@
             const appointmentListEl = document.getElementById('appointmentList');
             const addAppointmentBtn = document.getElementById('addAppointmentBtn');
             const appointmentDateInput = document.getElementById('appointmentDateInput');
+            const updateAppointmentDateBtn = document.getElementById('updateAppointmentDateBtn');
             const deletedClientsListEl = document.getElementById('deletedClientsList');
             const clearDeletedClientsBtn = document.getElementById('clearDeletedClientsBtn');
             const archivedClientsListEl = document.getElementById('archivedClientsList');
@@ -594,6 +597,7 @@
                     <div class="client-item ${client.id === selectedClientId ? 'active' : ''}" data-client-id="${client.id}" draggable="true">
                         ${client.name}
                         <div class="action-buttons">
+                            <button class="action-btn edit-btn" title="Edit Name">✏️</button>
                             <button class="action-btn archive-btn" title="Archive Client">A</button>
                             <button class="action-btn delete-btn" title="Delete Client">×</button>
                         </div>
@@ -635,6 +639,9 @@
                 sessionInfoEl.value = appointment ? appointment.sessionInfo || '' : '';
                 sessionInfoEl.placeholder = appointment ? "Enter session details..." : "Select an appointment to begin...";
                 
+                updateAppointmentDateBtn.classList.toggle('hidden', !appointment);
+                addAppointmentBtn.classList.toggle('hidden', !!appointment);
+
                 sessionTimerWrapper.style.display = appointment ? 'block' : 'none';
                 if (appointment) {
                     renderSessionTimer(appointment);
@@ -843,6 +850,15 @@
                     }
                     markDirty();
                     fullRender();
+                } else if (e.target.classList.contains('edit-btn')) {
+                    const client = findClient(clientId);
+                    if (!client) return;
+                    const newName = prompt(`Enter new name for ${client.name}:`, client.name);
+                    if (newName && newName.trim() && newName.trim() !== client.name) {
+                        client.name = newName.trim();
+                        markDirty();
+                        fullRender();
+                    }
                 } else {
                     selectClient(clientId);
                 }
@@ -921,6 +937,23 @@
                  }
             });
             
+            updateAppointmentDateBtn.addEventListener('click', () => {
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                const newDateStr = appointmentDateInput.value;
+
+                if (client && appointment && newDateStr) {
+                    const dateObj = new Date(newDateStr);
+                    const utcDate = new Date(dateObj.getUTCFullYear(), dateObj.getUTCMonth(), dateObj.getUTCDate());
+                    appointment.date = utcDate.toISOString();
+                    markDirty();
+                    renderAppointments(); // Just re-render appointments to see the change
+                    alert('Appointment date updated.');
+                } else {
+                    alert('Could not update date. Ensure a client, appointment, and date are selected.');
+                }
+            });
+
             deletedClientsListEl.addEventListener('click', e => {
                 if (e.target.classList.contains('restore-btn')) {
                     const id = e.target.dataset.id;
@@ -1802,6 +1835,7 @@ This error cannot be fixed within this application's code; it requires a configu
             });
             modelSelect.addEventListener('change', (e) => {
                 selectedModel = e.target.value;
+                localStorage.setItem('openWebUIModel', selectedModel);
                 fullRender();
             });
 
