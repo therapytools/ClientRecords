@@ -280,6 +280,30 @@
             overflow-y: hidden; /* Hide vertical scrollbar */
         }
 
+        .suggestion-box {
+            background-color: #fff5f5;
+            border: 1px solid #e53e3e;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .suggestion-text {
+            color: #c53030;
+            margin-bottom: 8px;
+        }
+        .suggestion-actions button {
+            background: none;
+            border: 1px solid;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .suggestion-accept { color: #27ae60; border-color: #27ae60; }
+        .suggestion-decline { color: #e74c3c; border-color: #e74c3c; }
+
         .no-selection {
             color: #7f8c8d; text-align: center;
             margin-top: 50px; font-style: italic;
@@ -347,7 +371,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.20</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.21</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -715,14 +739,29 @@
                     <div class="soap-section">
                         <div class="soap-header"><span>Assessment</span><button class="copy-btn" data-target="soapA">Copy</button></div>
                         <textarea id="soapA" class="soap-textarea" placeholder="• ">${soapData.a || ''}</textarea>
+                        ${renderSuggestionBox('a', soapData.a_suggestion)}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Plan</span><button class="copy-btn" data-target="soapP">Copy</button></div>
                         <textarea id="soapP" class="soap-textarea" placeholder="• ">${soapData.p || ''}</textarea>
+                        ${renderSuggestionBox('p', soapData.p_suggestion)}
                     </div>`;
                 
                 // After rendering, resize all textareas
                 soapContentEl.querySelectorAll('.soap-textarea').forEach(autoResizeTextarea);
+            };
+
+            const renderSuggestionBox = (type, suggestion) => {
+                if (!suggestion) return '';
+                return `
+                    <div class="suggestion-box" data-suggestion-type="${type}">
+                        <div class="suggestion-text"><strong>Suggestion:</strong> ${suggestion}</div>
+                        <div class="suggestion-actions">
+                            <button class="suggestion-accept">Accept</button>
+                            <button class="suggestion-decline">Decline</button>
+                        </div>
+                    </div>
+                `;
             };
 
             const renderDeletedLists = () => {
@@ -1170,7 +1209,44 @@
                         alert('Could not copy text to clipboard.');
                      });
                  }
+                 if (e.target.classList.contains('suggestion-accept')) {
+                    handleSuggestion(e.target, true);
+                 }
+                 if (e.target.classList.contains('suggestion-decline')) {
+                    handleSuggestion(e.target, false);
+                 }
             });
+
+            const handleSuggestion = (button, isAccepted) => {
+                const suggestionBox = button.closest('.suggestion-box');
+                const type = suggestionBox.dataset.suggestionType;
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+
+                if (!appointment || !appointment.soap) return;
+
+                const suggestionKey = `${type}_suggestion`;
+                const suggestionText = appointment.soap[suggestionKey];
+
+                if (isAccepted && suggestionText) {
+                    const textarea = document.getElementById(`soap${type.toUpperCase()}`);
+                    const currentText = textarea.value.trim();
+                    const newText = `• ${suggestionText.replace(/^•\s*/, '')}`;
+                    
+                    if (currentText.length === 0) {
+                        textarea.value = newText;
+                    } else {
+                        textarea.value = `${currentText}\n${newText}`;
+                    }
+                    // Manually trigger input event to resize and save
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+
+                // Clear suggestion and re-render
+                delete appointment.soap[suggestionKey];
+                markDirty();
+                renderSoap();
+            };
 
 
             const systemPrompt = `You are a helpful assistant for a therapist or clinician. Your primary function is to accurately categorize user-provided session notes into a structured SOAP note format.
@@ -1182,6 +1258,14 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - **Objective (O):** Everything that *happens* in the therapy session. This includes all therapeutic interventions, actions taken, connections made, and reflections or psychoeducation provided by the writer. **Any sentence that describes the writer's actions or speech belongs here.**
 - **Assessment (A):** The writer's clinical analysis and observations. This includes notes on progress towards goals and direct observations of the client's state (e.g., "client appeared tired," "client's affect was bright"). This section should NOT contain actions or speech from the session.
 - **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework, and any modifications to the treatment plan.
+
+**NEW: Suggestions**
+- In addition to the main SOAP content, you will provide clinical suggestions for the Assessment and Plan sections.
+- These suggestions should be based on the session information and common clinical practices.
+- The suggestions should be returned in two new JSON keys: \`a_suggestion\` and \`p_suggestion\`.
+- \`a_suggestion\`: A brief, one-sentence suggestion for the Assessment. Example: "Client appears to be making progress toward treatment goals related to anxiety."
+- \`p_suggestion\`: A brief, one-sentence suggestion for the Plan. Example: "Continue to utilize CBT techniques to challenge cognitive distortions in the next session."
+- If you have no suggestion, return an empty string for that key.
 
 **CRITICAL INSTRUCTIONS:**
 - **THE GOLDEN RULE:** ONLY use information explicitly provided in the "Session Information" text. Do not use any information from the example output below, which is for formatting reference only.
@@ -1199,11 +1283,11 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - **DO NOT INTERPRET BEYOND CATEGORIZATION:** Your job is to sort the provided information, not to add clinical interpretation or make assumptions about progress, affect, or presentation unless it is explicitly stated in the source text. For example, do not write "client appeared tired" unless the source text says "client appeared tired."
 
 **Output Format:**
-Your entire response MUST be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences. Do not add any explanatory text, comments, or any words outside of the JSON object itself. The JSON object must have exactly four keys: "s", "o", "a", and "p". Each key's value must be a string formatted with bullet points (•) for each distinct point.
+Your entire response MUST be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences. Do not add any explanatory text, comments, or any words outside of the JSON object itself. The JSON object must have exactly six keys: "s", "o", "a", "p", "a_suggestion", and "p_suggestion". Each key's value must be a string. For "s", "o", "a", and "p", the string should be formatted with bullet points (•) for each distinct point.
 
 **Example of PERFECT Output (FOR FORMATTING ONLY):**
-{"s":"• [Subjective point from session info]\\n• [Another subjective point, with a quote like \\"this.\\"]","o":"• [Objective point from session info]","a":"• [Assessment point from session info]","p":"• [Plan point from session info]"}
-`;
+{"s":"• [Subjective point from session info]","o":"• [Objective point from session info]","a":"• [Assessment point from session info]","p":"• [Plan point from session info]","a_suggestion":"[Assessment suggestion]","p_suggestion":"[Plan suggestion]"};
+            `;
 
             const generateSoapNote = async () => {
                 if (!selectedModel) {
@@ -1288,6 +1372,8 @@ ${sessionInfoEl.value}
                     appointment.soap.o = soapData.o;
                     appointment.soap.a = soapData.a;
                     appointment.soap.p = soapData.p;
+                    appointment.soap.a_suggestion = soapData.a_suggestion || '';
+                    appointment.soap.p_suggestion = soapData.p_suggestion || '';
                     markDirty();
                     renderSoap();
 
@@ -1398,7 +1484,7 @@ ${sessionInfoEl.value}
                     }
                     
                     for (const key in soapData) {
-                        if (typeof soapData[key] === 'string') {
+                        if (typeof soapData[key] === 'string' && ['s', 'o', 'a', 'p'].includes(key)) {
                             // Format bullet points for every key
                             soapData[key] = formatBulletPoints(soapData[key]);
                         } else if (Array.isArray(soapData[key])) {
@@ -1421,6 +1507,8 @@ ${sessionInfoEl.value}
                     appointment.soap.o = soapData.o;
                     appointment.soap.a = soapData.a;
                     appointment.soap.p = soapData.p;
+                    appointment.soap.a_suggestion = soapData.a_suggestion || '';
+                    appointment.soap.p_suggestion = soapData.p_suggestion || '';
                     markDirty();
                     renderSoap();
 
@@ -1616,6 +1704,7 @@ ${sessionInfoEl.value}
                     serverAddress = null;
                     modelSelect.innerHTML = '<option>Connection failed</option>';
                     
+                                       
                     let alertMessage = `Connection to "${address}" failed.`;
                     
                     if (error.response?.status === 401) {
