@@ -371,7 +371,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.21</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.22</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -1071,47 +1071,20 @@
 
             // --- Generic Bullet Point Handlers ---
             const formatBulletPoints = (text) => {
-                // Replace any '•' that isn't at the start of a line with a newline and then '•'
-                let formattedText = text.replace(/([^\n])\s*•/g, '$1\n•');
-
-                // Ensure every non-empty line starts with a bullet, and clean up lines
-                let lines = formattedText.split('\n');
+                // Only format when pasting or loading data, not during normal typing
+                let lines = text.split('\n');
                 let newLines = lines.map(line => {
-                    let trimmedLine = line.trimStart(); // Only trim leading whitespace
-                    if (trimmedLine.length > 0) {
-                        if (trimmedLine.startsWith('•')) {
-                            // It has a bullet. Normalize space after it, but preserve trailing space on the line.
-                            let content = trimmedLine.substring(1).trimStart();
-                            return '• ' + content;
-                        } else {
-                            // No bullet, add one.
-                            return '• ' + trimmedLine;
-                        }
+                    let trimmedLine = line.trim();
+                    if (trimmedLine.length > 0 && !trimmedLine.startsWith('•')) {
+                        return '• ' + trimmedLine;
                     }
-                    return ''; // Return empty string for empty/whitespace-only lines
-                }).filter(line => line.length > 0);
-
-                // Ensure the very first line starts with a bullet if there's any content
-                if (newLines.length > 0 && !newLines[0].startsWith('•')) {
-                    newLines[0] = '• ' + newLines[0];
-                }
-
+                    return line; // Keep the line as-is if it's empty or already has a bullet
+                });
                 return newLines.join('\n');
             };
 
             const handleBulletedInput = (e, saveDataCallback) => {
                 const textarea = e.target;
-                const originalValue = textarea.value;
-                const originalCursor = textarea.selectionStart;
-
-                const newValue = formatBulletPoints(originalValue);
-
-                if (newValue !== originalValue) {
-                    textarea.value = newValue;
-                    // This is a simple cursor repositioning, might not be perfect but is better than nothing.
-                    const diff = newValue.length - originalValue.length;
-                    textarea.selectionStart = textarea.selectionEnd = originalCursor + diff;
-                }
                 
                 // Auto-resize
                 autoResizeTextarea(textarea);
@@ -1692,6 +1665,7 @@ ${sessionInfoEl.value}
                         modelSelect.disabled = false;
                         
                     } else {
+
                         modelSelect.innerHTML = '<option>No models found</option>';
                         selectedModel = null;
                         modelSelect.disabled = true;
