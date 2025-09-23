@@ -1086,6 +1086,13 @@
             const handleBulletedInput = (e, saveDataCallback) => {
                 const textarea = e.target;
                 
+                // If textarea is empty or doesn't start with a bullet, add one
+                if (textarea.value.length > 0 && !textarea.value.startsWith('•')) {
+                    const cursorPos = textarea.selectionStart;
+                    textarea.value = '• ' + textarea.value;
+                    textarea.selectionStart = textarea.selectionEnd = cursorPos + 2;
+                }
+                
                 // Auto-resize
                 autoResizeTextarea(textarea);
 
@@ -1156,18 +1163,6 @@
             // --- Attach Bullet Point Handlers ---
             sessionInfoEl.addEventListener('input', (e) => handleBulletedInput(e, saveSessionInfo));
             sessionInfoEl.addEventListener('keydown', handleBulletedKeyDown);
-
-            soapContentEl.addEventListener('input', (e) => {
-                if (e.target.matches('.soap-textarea')) {
-                    handleBulletedInput(e, saveSoapNote);
-                }
-            });
-            soapContentEl.addEventListener('keydown', (e) => {
-                if (e.target.matches('.soap-textarea')) {
-                    handleBulletedKeyDown(e);
-                }
-            });
-
             soapContentEl.addEventListener('click', (e) => {
                  if (e.target.classList.contains('copy-btn')) {
                      const targetId = e.target.dataset.target;
