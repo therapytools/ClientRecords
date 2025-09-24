@@ -371,7 +371,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.22</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.23</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -1163,6 +1163,33 @@
             // --- Attach Bullet Point Handlers ---
             sessionInfoEl.addEventListener('input', (e) => handleBulletedInput(e, saveSessionInfo));
             sessionInfoEl.addEventListener('keydown', handleBulletedKeyDown);
+            sessionInfoEl.addEventListener('focus', (e) => {
+                const textarea = e.target;
+                if (textarea.value.length === 0) {
+                    textarea.value = '• ';
+                    textarea.selectionStart = textarea.selectionEnd = 2;
+                }
+            });
+
+            soapContentEl.addEventListener('input', (e) => {
+                if (e.target.matches('.soap-textarea')) {
+                    handleBulletedInput(e, saveSoapNote);
+                }
+            });
+            soapContentEl.addEventListener('keydown', (e) => {
+                if (e.target.matches('.soap-textarea')) {
+                    handleBulletedKeyDown(e);
+                }
+            });
+            soapContentEl.addEventListener('focus', (e) => {
+                if (e.target.matches('.soap-textarea')) {
+                    const textarea = e.target;
+                    if (textarea.value.length === 0) {
+                        textarea.value = '• ';
+                        textarea.selectionStart = textarea.selectionEnd = 2;
+                    }
+                }
+            });
             soapContentEl.addEventListener('click', (e) => {
                  if (e.target.classList.contains('copy-btn')) {
                      const targetId = e.target.dataset.target;
