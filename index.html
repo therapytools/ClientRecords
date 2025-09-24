@@ -1071,16 +1071,40 @@
 
             // --- Generic Bullet Point Handlers ---
             const formatBulletPoints = (text) => {
-                // Only format when pasting or loading data, not during normal typing
-                let lines = text.split('\n');
+                // Split text into individual bullet points and ensure each is on its own line
+                let content = text.trim();
+                if (!content) return '';
+                
+                // Replace any bullet points that are not at the start of a line
+                content = content.replace(/([^\n])\s*•\s*/g, '$1\n• ');
+                
+                // Split into lines and process each one
+                let lines = content.split('\n');
                 let newLines = lines.map(line => {
                     let trimmedLine = line.trim();
-                    if (trimmedLine.length > 0 && !trimmedLine.startsWith('•')) {
-                        return '• ' + trimmedLine;
+                    if (trimmedLine.length > 0) {
+                        if (!trimmedLine.startsWith('•')) {
+                            return '• ' + trimmedLine;
+                        } else {
+                            // Ensure proper spacing after bullet
+                            return trimmedLine.replace(/^•\s*/, '• ');
+                        }
                     }
-                    return line; // Keep the line as-is if it's empty or already has a bullet
+                    return line; // Keep empty lines as-is
                 });
-                return newLines.join('\n');
+                
+                // Filter out consecutive empty lines but keep single empty lines
+                let result = [];
+                let lastWasEmpty = false;
+                for (let line of newLines) {
+                    let isEmpty = line.trim().length === 0;
+                    if (!isEmpty || !lastWasEmpty) {
+                        result.push(line);
+                    }
+                    lastWasEmpty = isEmpty;
+                }
+                
+                return result.join('\n');
             };
 
             const handleBulletedInput = (e, saveDataCallback) => {
