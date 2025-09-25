@@ -235,7 +235,10 @@
         textarea {
             width: 100%; border: 1px solid #ddd; border-radius: 6px;
             padding: 12px; font-family: inherit; font-size: 14px;
-            resize: none; transition: all 0.2s;
+            resize: both; /* Allow vertical and horizontal resizing */
+            transition: all 0.2s;
+            min-height: 50px; /* Ensure a minimum height */
+            overflow: auto; /* Show scrollbars when content overflows */
         }
         textarea:focus {
             outline: none; border-color: #3498db;
@@ -277,7 +280,7 @@
         .soap-textarea {
             border-radius: 0 0 6px 6px; border-top: none;
             flex-grow: 1;
-            overflow-y: hidden; /* Hide vertical scrollbar */
+            /* overflow-y: hidden; is removed to allow manual resize */
         }
 
         .suggestion-box {
@@ -302,6 +305,7 @@
             margin-right: 5px;
         }
         .suggestion-accept { color: #27ae60; border-color: #27ae60; }
+        .suggestion-accept-replace { color: #27ae60; border-color: #27ae60; }
         .suggestion-decline { color: #e74c3c; border-color: #e74c3c; }
 
         .no-selection {
@@ -371,7 +375,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.23</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.24</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -727,38 +731,78 @@
                 }
 
                 const soapData = appointment.soap || { s: '', o: '', a: '', p: '' };
+                const interventions = extractInterventions(soapData);
                 soapContentEl.innerHTML = `
                     <div class="soap-section">
                         <div class="soap-header"><span>Subjective</span><button class="copy-btn" data-target="soapS">Copy</button></div>
                         <textarea id="soapS" class="soap-textarea" placeholder="• ">${soapData.s || ''}</textarea>
+                        ${(soapData.s_suggestion || []).map((s, i) => renderSuggestionBox('s', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Objective</span><button class="copy-btn" data-target="soapO">Copy</button></div>
                         <textarea id="soapO" class="soap-textarea" placeholder="• ">${soapData.o || ''}</textarea>
+                        ${(soapData.o_suggestion || []).map((s, i) => renderSuggestionBox('o', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Assessment</span><button class="copy-btn" data-target="soapA">Copy</button></div>
                         <textarea id="soapA" class="soap-textarea" placeholder="• ">${soapData.a || ''}</textarea>
-                        ${renderSuggestionBox('a', soapData.a_suggestion)}
+                        ${(soapData.a_suggestion || []).map((s, i) => renderSuggestionBox('a', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Plan</span><button class="copy-btn" data-target="soapP">Copy</button></div>
                         <textarea id="soapP" class="soap-textarea" placeholder="• ">${soapData.p || ''}</textarea>
-                        ${renderSuggestionBox('p', soapData.p_suggestion)}
+                        ${(soapData.p_suggestion || []).map((s, i) => renderSuggestionBox('p', s, i)).join('')}
+                    </div>
+                    <div class="soap-section">
+                        <div class="soap-header"><span>Interventions</span><button class="copy-btn" data-target="interventions">Copy</button></div>
+                        <textarea id="interventions" class="soap-textarea" readonly>${interventions}</textarea>
                     </div>`;
                 
                 // After rendering, resize all textareas
-                soapContentEl.querySelectorAll('.soap-textarea').forEach(autoResizeTextarea);
+                soapContentEl.querySelectorAll('.soap-textarea').forEach(el => {
+                    if (!el.readOnly) { // Don't auto-resize the read-only interventions box
+                        autoResizeTextarea(el);
+                    }
+                });
             };
 
-            const renderSuggestionBox = (type, suggestion) => {
+            const renderSuggestionBox = (type, suggestion, index) => {
                 if (!suggestion) return '';
+
+                let suggestionTitle = 'Suggestion:';
+                let suggestionContent = `<strong>${suggestionTitle}</strong> ${suggestion}`;
+                let actionsHtml = `
+                    <button class="suggestion-accept">Accept</button>
+                    <button class="suggestion-decline">Decline</button>
+                `;
+
+                // For S and O, we are replacing text, so show a different interface
+                if (['s', 'o'].includes(type) && typeof suggestion === 'object' && suggestion.original && suggestion.suggested) {
+                    suggestionTitle = 'Clinical Language Suggestion:';
+                    suggestionContent = `
+                        <div><strong>Original:</strong> ${suggestion.original}</div>
+                        <div style="margin-top: 4px;"><strong>Suggested:</strong> ${suggestion.suggested}</div>
+                    `;
+                    actionsHtml = `
+                        <button class="suggestion-decline">Keep Original</button>
+                        <button class="suggestion-accept-replace">Use Suggestion</button>
+                    `;
+                } else if (['s', 'o'].includes(type)) {
+                    // Fallback for old string format suggestions for S and O
+                    suggestionTitle = 'Clinical Language Suggestion:';
+                    suggestionContent = `<strong>${suggestionTitle}</strong> ${suggestion}`;
+                     actionsHtml = `
+                        <button class="suggestion-decline">Keep Original</button>
+                        <button class="suggestion-accept-replace">Use Suggestion</button>
+                    `;
+                }
+
+
                 return `
-                    <div class="suggestion-box" data-suggestion-type="${type}">
-                        <div class="suggestion-text"><strong>Suggestion:</strong> ${suggestion}</div>
+                    <div class="suggestion-box" data-suggestion-type="${type}" data-suggestion-index="${index}">
+                        <div class="suggestion-text">${suggestionContent}</div>
                         <div class="suggestion-actions">
-                            <button class="suggestion-accept">Accept</button>
-                            <button class="suggestion-decline">Decline</button>
+                            ${actionsHtml}
                         </div>
                     </div>
                 `;
@@ -1065,8 +1109,12 @@
             });
 
             const autoResizeTextarea = (el) => {
-                el.style.height = 'auto';
-                el.style.height = el.scrollHeight + 'px';
+                // Only resize if the user hasn't manually resized it.
+                // We check if the style.height is not set or is 'auto'.
+                if (!el.style.height || el.style.height === 'auto') {
+                    el.style.height = 'auto';
+                    el.style.height = el.scrollHeight + 'px';
+                }
             };
 
             // --- Generic Bullet Point Handlers ---
@@ -1109,6 +1157,9 @@
 
             const handleBulletedInput = (e, saveDataCallback) => {
                 const textarea = e.target;
+
+                // When user types, reset height to allow auto-resizing again
+                textarea.style.height = 'auto';
                 
                 // If textarea is empty or doesn't start with a bullet, add one
                 if (textarea.value.length > 0 && !textarea.value.startsWith('•')) {
@@ -1231,38 +1282,60 @@
                  if (e.target.classList.contains('suggestion-accept')) {
                     handleSuggestion(e.target, true);
                  }
+                 if (e.target.classList.contains('suggestion-accept-replace')) {
+                    handleSuggestion(e.target, true, true);
+                 }
                  if (e.target.classList.contains('suggestion-decline')) {
                     handleSuggestion(e.target, false);
                  }
             });
 
-            const handleSuggestion = (button, isAccepted) => {
+            const handleSuggestion = (button, isAccepted, replace = false) => {
                 const suggestionBox = button.closest('.suggestion-box');
                 const type = suggestionBox.dataset.suggestionType;
+                const index = parseInt(suggestionBox.dataset.suggestionIndex, 10);
                 const client = findClient(selectedClientId);
                 const appointment = findAppointment(client, selectedAppointmentId);
 
                 if (!appointment || !appointment.soap) return;
 
                 const suggestionKey = `${type}_suggestion`;
-                const suggestionText = appointment.soap[suggestionKey];
+                const suggestionData = appointment.soap[suggestionKey]?.[index];
 
-                if (isAccepted && suggestionText) {
+                if (isAccepted && suggestionData) {
                     const textarea = document.getElementById(`soap${type.toUpperCase()}`);
-                    const currentText = textarea.value.trim();
-                    const newText = `• ${suggestionText.replace(/^•\s*/, '')}`;
                     
-                    if (currentText.length === 0) {
-                        textarea.value = newText;
+                    if (replace && typeof suggestionData === 'object' && suggestionData.original && suggestionData.suggested) {
+                        // New object-based replacement
+                        const originalText = formatBulletPoints(suggestionData.original);
+                        const suggestedText = formatBulletPoints(suggestionData.suggested);
+                        textarea.value = textarea.value.replace(originalText, suggestedText);
+
+                    } else if (replace) {
+                        // Legacy string-based replacement (replaces whole field)
+                        textarea.value = formatBulletPoints(suggestionData);
+
                     } else {
-                        textarea.value = `${currentText}\n${newText}`;
+                        // Append the suggestion (for A and P)
+                        const suggestionText = (typeof suggestionData === 'object' ? suggestionData.suggested : suggestionData) || '';
+                        const currentText = textarea.value.trim();
+                        const newText = `• ${suggestionText.replace(/^•\s*/, '')}`;
+                        
+                        if (currentText.length === 0 || currentText === '•') {
+                            textarea.value = newText;
+                        } else {
+                            textarea.value = `${currentText}\n${newText}`;
+                        }
                     }
                     // Manually trigger input event to resize and save
                     textarea.dispatchEvent(new Event('input', { bubbles: true }));
                 }
 
-                // Clear suggestion and re-render
-                delete appointment.soap[suggestionKey];
+                // Remove the specific suggestion from the array and re-render
+                if (Array.isArray(appointment.soap[suggestionKey])) {
+                    appointment.soap[suggestionKey].splice(index, 1);
+                }
+                
                 markDirty();
                 renderSoap();
             };
@@ -1279,12 +1352,12 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework, and any modifications to the treatment plan.
 
 **NEW: Suggestions**
-- In addition to the main SOAP content, you will provide clinical suggestions for the Assessment and Plan sections.
-- These suggestions should be based on the session information and common clinical practices.
-- The suggestions should be returned in two new JSON keys: \`a_suggestion\` and \`p_suggestion\`.
-- \`a_suggestion\`: A brief, one-sentence suggestion for the Assessment. Example: "Client appears to be making progress toward treatment goals related to anxiety."
-- \`p_suggestion\`: A brief, one-sentence suggestion for the Plan. Example: "Continue to utilize CBT techniques to challenge cognitive distortions in the next session."
-- If you have no suggestion, return an empty string for that key.
+- In addition to the main SOAP content, you will provide clinical language suggestions for all four sections when appropriate stronger clinical terminology is available.
+- These suggestions should improve clinical precision and professional language without adding new information.
+- The suggestions should be returned in four JSON keys: \`s_suggestion\`, \`o_suggestion\`, \`a_suggestion\`, and \`p_suggestion\`.
+- \`s_suggestion\` & \`o_suggestion\`: For Subjective and Objective, if you have suggestions, the value for this key MUST be an array of JSON objects, like: \`[{"original": "[the exact original text to be replaced]", "suggested": "[the new suggested text]"}]\`. The "original" text must be a direct, verbatim quote of one of the bullet points from the corresponding "s" or "o" section you generated.
+- \`a_suggestion\` & \`p_suggestion\`: For Assessment and Plan, these should be an array of brief, one-sentence suggestions as strings. Example: ["Client appears to be making progress toward treatment goals related to anxiety."].
+- If you have no suggestion for any section, return an empty array \`[]\` for that key.
 
 **CRITICAL INSTRUCTIONS:**
 - **THE GOLDEN RULE:** ONLY use information explicitly provided in the "Session Information" text. Do not use any information from the example output below, which is for formatting reference only.
@@ -1302,10 +1375,10 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - **DO NOT INTERPRET BEYOND CATEGORIZATION:** Your job is to sort the provided information, not to add clinical interpretation or make assumptions about progress, affect, or presentation unless it is explicitly stated in the source text. For example, do not write "client appeared tired" unless the source text says "client appeared tired."
 
 **Output Format:**
-Your entire response MUST be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences. Do not add any explanatory text, comments, or any words outside of the JSON object itself. The JSON object must have exactly six keys: "s", "o", "a", "p", "a_suggestion", and "p_suggestion". Each key's value must be a string. For "s", "o", "a", and "p", the string should be formatted with bullet points (•) for each distinct point.
+Your entire response MUST be a single, raw, and syntactically correct JSON object. Do not wrap it in markdown code fences. Do not add any explanatory text, comments, or any words outside of the JSON object itself. The JSON object must have exactly eight keys: "s", "o", "a", "p", "s_suggestion", "o_suggestion", "a_suggestion", and "p_suggestion".
 
 **Example of PERFECT Output (FOR FORMATTING ONLY):**
-{"s":"• [Subjective point from session info]","o":"• [Objective point from session info]","a":"• [Assessment point from session info]","p":"• [Plan point from session info]","a_suggestion":"[Assessment suggestion]","p_suggestion":"[Plan suggestion]"};
+{"s":"• Ct said they felt bad.","o":"• Writer talked about coping.","a":"• Ct displays affect congruent with mood.","p":"• Continue to explore themes of loss.","s_suggestion":[{"original":"• Ct said they felt bad.","suggested":"• Ct reported experiencing significant distress."}],"o_suggestion":[{"original":"• Writer talked about coping.","suggested":"• Writer provided psychoeducation on coping strategies."}],"a_suggestion":["Client appears to be making progress toward treatment goals related to anxiety."],"p_suggestion":["Continue to utilize CBT techniques to challenge cognitive distortions in the next session."]};
             `;
 
             const generateSoapNote = async () => {
@@ -1377,7 +1450,7 @@ ${sessionInfoEl.value}
                     let soapData = JSON.parse(content);
 
                     for (const key in soapData) {
-                        if (typeof soapData[key] === 'string') {
+                        if (typeof soapData[key] === 'string' && !key.endsWith('_suggestion')) {
                             soapData[key] = formatBulletPoints(soapData[key]);
                         }
                     }
@@ -1391,8 +1464,10 @@ ${sessionInfoEl.value}
                     appointment.soap.o = soapData.o;
                     appointment.soap.a = soapData.a;
                     appointment.soap.p = soapData.p;
-                    appointment.soap.a_suggestion = soapData.a_suggestion || '';
-                    appointment.soap.p_suggestion = soapData.p_suggestion || '';
+                    appointment.soap.s_suggestion = soapData.s_suggestion || [];
+                    appointment.soap.o_suggestion = soapData.o_suggestion || [];
+                    appointment.soap.a_suggestion = soapData.a_suggestion || [];
+                    appointment.soap.p_suggestion = soapData.p_suggestion || [];
                     markDirty();
                     renderSoap();
 
@@ -1513,6 +1588,10 @@ ${sessionInfoEl.value}
                                 return `• ${cleanedItem}`;
                             }).join('\n');
                             soapData[key] = formatBulletPoints(soapData[key]);
+                        } else if (key.endsWith('_suggestion') && soapData[key] && typeof soapData[key] === 'object') {
+                            // Don't format suggestion objects
+                        } else if (key.endsWith('_suggestion') && typeof soapData[key] === 'string') {
+                            // This is for a_suggestion and p_suggestion, no formatting needed
                         }
                     }
 
@@ -1526,8 +1605,10 @@ ${sessionInfoEl.value}
                     appointment.soap.o = soapData.o;
                     appointment.soap.a = soapData.a;
                     appointment.soap.p = soapData.p;
-                    appointment.soap.a_suggestion = soapData.a_suggestion || '';
-                    appointment.soap.p_suggestion = soapData.p_suggestion || '';
+                    appointment.soap.s_suggestion = soapData.s_suggestion || [];
+                    appointment.soap.o_suggestion = soapData.o_suggestion || [];
+                    appointment.soap.a_suggestion = soapData.a_suggestion || [];
+                    appointment.soap.p_suggestion = soapData.p_suggestion || [];
                     markDirty();
                     renderSoap();
 
@@ -1556,6 +1637,136 @@ ${sessionInfoEl.value}
                 }
             };
 
+            const extractInterventions = (soapData) => {
+                const text = [soapData.s, soapData.o, soapData.a, soapData.p].join(' ');
+                const interventions = new Set();
+
+                const keywords = [
+                    // CBT
+
+                    'cognitive restructuring', 'behavioral activation', 'exposure therapy', 'exposure and response prevention', 'erp',
+
+                    'skills training', 'cognitive processing therapy', 'cpt', 'relapse prevention', 'activity scheduling',
+                    'cognitive bias modification', 'homework assignments', 'cognitive behavioral stress management', 'schema therapy',
+                    'rational emotive behavior therapy', 'rebt', 'stress inoculation training', 'cognitive remediation therapy',
+                    'compensatory strategy training', 'behavioral experiments', 'graded exposure hierarchies', 'socratic questioning',
+                    'thought records', 'response cost', 'time-out procedures', 'differential reinforcement', 'prompting and fading',
+                    'contingency contracts', 'behavioral rehearsal', 'modeling', 'cognitive challenging', 'cognitive reframing',
+                    'identifying/challenging cognitive distortions',
+
+                    // ACT / Mindfulness
+                    'acceptance and commitment therapy', 'act', 'values clarification', 'cognitive defusion', 'committed action',
+                    'mindfulness-based interventions', 'mindfulness training', 'act defusion exercises', 'act metaphors',
+                    'mindfulness meditation', 'self-as-context exercises', 'attention training', 'mct',
+
+                    // DBT
+                    'dialectical behavior therapy', 'dbt', 'distress tolerance', 'emotion regulation', 'interpersonal effectiveness',
+                    'dbt chain analysis', 'dbt diary cards', 'dbt phone coaching',
+
+                    // Psychodynamic / Psychoanalytic
+                    'interpretation', 'exploration of transference', 'exploration of countertransference', 'free association',
+                    'dream work', 'working through', 'object relations interventions', 'supportive-expressive therapy',
+                    'transference', 'countertransference', 'resistance', 'defense mechanism', 'unconscious', 'explored childhood',
+                    'examined patterns', 'linking past and present', 'making the unconscious conscious', 'insight-oriented',
+                    'clarification and confrontation', 'alliance rupture repair', 'defense analysis', 'active imagination',
+                    'archetypal work', 'short-term psychodynamic therapy', 'stpp', 'mentalization-based therapy', 'mbt',
+                    'transference-focused psychotherapy', 'tfp', 'exploration of attachment patterns', 'exploration of themes and patterns',
+                    'explore defense mechanisms', 'insight & emotional integration',
+
+                    // Humanistic / Existential / Gestalt
+                    'client-centered techniques', 'gestalt methods', 'empty chair technique', 'role reversal', 'here-and-now awareness',
+                    'existential therapy techniques', 'emotion-focused therapy', 'eft', 'unconditional positive regard', 'empathy',
+                    'empathic', 'congruence', 'active listening', 'gestalt', 'empty chair', 'existential', 'search for meaning',
+                    'empathic reflection', 'two-chair conflict resolution', 'focusing', 'gendlin', 'logotherapy techniques',
+                    'paradoxical intention', 'dereflection', 'authenticity and congruence', 'evocative responding',
+                    'facilitation of emotional engagement', 'heightening', 'emotional processing',
+
+                    // Narrative Therapy
+                    'narrative therapy interventions', 'deconstruction', 'externalization', 're-authoring', 're-framing',
+                    're-membering', 'scaffolding questions', 'values exploration', 'externalizing the problem', 'unique outcomes',
+                    'story', 'alternative story', 'dominant story', 'landscape of action', 'landscape of identity',
+                    'family re-authoring', 'identifying unique outcomes',
+
+                    // Trauma-Informed
+                    'eye movement desensitization and reprocessing', 'emdr', 'trauma-focused cbt', 'prolonged exposure', 'pe',
+                    'stabilization techniques', 'sensorimotor psychotherapy', 'narrative exposure therapy', 'net',
+                    'imagery rescripting', 'internal family systems', 'ifs', 'ego state therapy', 'grounding techniques',
+                    'flash technique', 'lifespan integration', 'tapping', 'emotional freedom techniques', 'trauma release exercises', 'tre',
+
+                    // Family / Couples Therapy
+                    'structural family therapy', 'strategic family therapy', 'multisystemic therapy', 'mst',
+                    'functional family therapy', 'fft', 'parent management training', 'pmt', 'couples therapy interventions',
+                    'genograms', 'differentiation of self', 'enactments', 'paradoxical injunctions', 'attachment-based family therapy', 'abft',
+                    'gottman method interventions', 'love maps', 'rituals of connection', 'imago relationship therapy',
+                    'parent-child interaction therapy', 'pcit', 'choreographing enactments', 'restructuring interactions',
+
+                    // Somatic / Body-Based
+                    'somatic experiencing', 'yoga therapy', 'movement therapy', 'massage therapy', 'acupuncture',
+                    'progressive muscle relaxation', 'breathing retraining', 'biofeedback', 'neurofeedback',
+                    'dance/movement therapy', 'breathwork', 'bioenergetic grounding', 'alexander technique', 'feldenkrais method',
+
+                    // General / Skills
+                    'psychoeducation', 'coping skills', 'grounding techniques', 'role-playing', 'explored feelings',
+                    'processed emotions', 'provided support', 'building rapport', 'goal setting', 'treatment plan',
+                    'explored options', 'problem-solving', 'reframing', 'scaling questions', 'circular questioning',
+                    'communication skills', 'de-escalation', 'relaxation/deep breathing', 'review of treatment plan/progress',
+                    'safety planning', 'decisional balance', 'evoking commitment language', 'identifying discrepancy',
+
+                    // Group Therapy
+                    'psychoeducational groups', 'process groups', 'skills groups', 'support groups', 'yalom’s therapeutic factors',
+                    'process commentary', 'supportive confrontation in group', 'group cohesion building',
+
+                    // Substance Use
+                    'motivational interviewing', 'mi', 'contingency management', 'community reinforcement approach', 'cra',
+                    '12-step facilitation', 'cue exposure', 'urge surfing', 'harm reduction counseling',
+
+                    // Medical / Psychiatric
+                    'medication management', 'antidepressant medication', 'antipsychotic medication', 'mood stabilizers',
+                    'anxiolytic medication', 'stimulant medication', 'electroconvulsive therapy', 'ect',
+                    'transcranial magnetic stimulation', 'tms', 'vagus nerve stimulation', 'vns', 'deep brain stimulation', 'dbs',
+                    'ketamine treatment', 'esketamine treatment', 'medication-assisted treatment', 'mat',
+                    'long-acting injectable medication', 'lais', 'polypharmacy management', 'light therapy', 'sleep deprivation therapy',
+                    'chronotherapy', 'nutraceuticals', 'psychedelic-assisted therapy',
+
+                    // Crisis / Safety
+                    'crisis intervention models', 'safety planning', 'de-escalation techniques', 'emergency hospitalization',
+                    'lethal means counseling', 'collaborative assessment and management of suicidality', 'cams',
+                    'asist suicide intervention model', 'hotline support', 'psychological first aid', 'pfa',
+
+                    // Other
+                    'systematic desensitization', 'operant conditioning strategies', 'token economies', 'aversion therapy',
+                    'habit reversal training', 'shaping', 'chaining', 'interpersonal therapy', 'ipt', 'art therapy',
+                    'music therapy', 'drama therapy', 'psychodrama', 'play therapy', 'bibliotherapy', 'sleep hygiene interventions',
+                    'nutrition guidance', 'exercise prescriptions', 'smoking cessation counseling', 'vocational rehabilitation',
+                    'supported employment', 'assertive community treatment', 'case management', 'supported housing',
+                    'peer support programs', 'community outreach', 'measurement-based care', 'functional analysis',
+                    'risk assessment protocols', 'neuropsychological rehabilitation', 'internet-delivered cbt', 'teletherapy',
+                    'mobile mental health apps', 'computerized cognitive training', 'virtual reality exposure therapy',
+                    'automated chatbots for psychoeducation', 'culturally adapted psychotherapy', 'traditional healing integration',
+                    'interpreter-supported therapy', 'forensic risk management', 'competency restoration', 'diversion programs',
+                    'prevention programs', 'school-based mental health programs', 'workplace interventions', 'sand tray therapy',
+                    'mandala drawing', 'lyric analysis', 'improvisational music therapy', 'playback theatre', 'storytelling interventions',
+                    'herbal interventions', 'animal-assisted therapy', 'equine-assisted therapy', 'nature-based therapy', 'ecotherapy',
+                    'solution-focused therapy', 'single session therapy techniques', 'miracle question', 'exception finding',
+                    'exception-finding'
+                ];
+
+                keywords.forEach(keyword => {
+                    const regex = new RegExp(`\\b${keyword}(s|ing|ed)?\\b`, 'gi');
+                    if (regex.test(text)) {
+                        // Capitalize first letter for display
+                        const formattedIntervention = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+                        interventions.add(formattedIntervention);
+                    }
+                });
+
+                if (interventions.size === 0) {
+                    return 'No specific interventions identified.';
+                }
+
+                return Array.from(interventions).map(i => `• ${i}`).join('\n');
+            };
+            
             const connectToGemini = async () => {
                 const key = geminiApiKeyInput.value.trim();
                 if (!key) {
@@ -1678,7 +1889,7 @@ ${sessionInfoEl.value}
                         models.forEach(model => {
                             const option = document.createElement('option');
                             option.value = model.id;
-                            option.textContent = model.id;
+                                                       option.textContent = model.id;
                             modelSelect.appendChild(option);
                         });
 
