@@ -731,7 +731,7 @@
                 }
 
                 const soapData = appointment.soap || { s: '', o: '', a: '', p: '' };
-                const interventions = extractInterventions(soapData);
+                const interventions = soapData.interventions || extractInterventions(soapData);
                 soapContentEl.innerHTML = `
                     <div class="soap-section">
                         <div class="soap-header"><span>Subjective</span><button class="copy-btn" data-target="soapS">Copy</button></div>
@@ -755,7 +755,7 @@
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Interventions</span><button class="copy-btn" data-target="interventions">Copy</button></div>
-                        <textarea id="interventions" class="soap-textarea" readonly>${interventions}</textarea>
+                        <textarea id="interventions" class="soap-textarea">${interventions}</textarea>
                     </div>`;
                 
                 // After rendering, resize all textareas
@@ -1228,9 +1228,14 @@
                 const client = findClient(selectedClientId);
                 const appointment = findAppointment(client, selectedAppointmentId);
                 if (appointment) {
-                    const key = textarea.id.slice(-1).toLowerCase();
                     if (!appointment.soap) appointment.soap = {s:'', o:'', a:'', p:''};
-                    appointment.soap[key] = textarea.value;
+                    
+                    if (textarea.id === 'interventions') {
+                        appointment.soap.interventions = textarea.value;
+                    } else {
+                        const key = textarea.id.slice(-1).toLowerCase();
+                        appointment.soap[key] = textarea.value;
+                    }
                     markDirty();
                 }
             };
