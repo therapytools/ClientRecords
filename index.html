@@ -525,7 +525,7 @@
                         <button id="generateNoteBtn" class="btn" style="padding: 4px 8px; font-size: 0.8rem;" disabled>Generate Note</button>
                     </div>
                     <div class="panel-content">
-                         <textarea id="sessionInfo" placeholder="Select an appointment to enter session details..." disabled></textarea>
+                         <textarea id="sessionInfo" placeholder="Select an appointment to enter session details..." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
                     </div>
                     <div class="panel-footer" id="sessionTimerWrapper" style="display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
@@ -541,7 +541,7 @@
                         <span>Persistent Notes</span>
                     </div>
                     <div class="panel-content">
-                         <textarea id="persistentNotes" placeholder="Select a client to enter persistent notes..." disabled></textarea>
+                         <textarea id="persistentNotes" placeholder="Select a client to enter persistent notes..." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
                     </div>
                 </div>
             </div>
@@ -819,27 +819,27 @@
                 soapContentEl.innerHTML = `
                     <div class="soap-section">
                         <div class="soap-header"><span>Subjective</span><button class="copy-btn" data-target="soapS">Copy</button></div>
-                        <textarea id="soapS" class="soap-textarea" placeholder="• ">${soapData.s || ''}</textarea>
+                        <textarea id="soapS" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${soapData.s || ''}</textarea>
                         ${(soapData.s_suggestion || []).map((s, i) => renderSuggestionBox('s', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Objective</span><button class="copy-btn" data-target="soapO">Copy</button></div>
-                        <textarea id="soapO" class="soap-textarea" placeholder="• ">${soapData.o || ''}</textarea>
+                        <textarea id="soapO" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${soapData.o || ''}</textarea>
                         ${(soapData.o_suggestion || []).map((s, i) => renderSuggestionBox('o', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Assessment</span><button class="copy-btn" data-target="soapA">Copy</button></div>
-                        <textarea id="soapA" class="soap-textarea" placeholder="• ">${soapData.a || ''}</textarea>
+                        <textarea id="soapA" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${soapData.a || ''}</textarea>
                         ${(soapData.a_suggestion || []).map((s, i) => renderSuggestionBox('a', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Plan</span><button class="copy-btn" data-target="soapP">Copy</button></div>
-                        <textarea id="soapP" class="soap-textarea" placeholder="• ">${soapData.p || ''}</textarea>
+                        <textarea id="soapP" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${soapData.p || ''}</textarea>
                         ${(soapData.p_suggestion || []).map((s, i) => renderSuggestionBox('p', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Interventions</span><button class="copy-btn" data-target="interventions">Copy</button></div>
-                        <textarea id="interventions" class="soap-textarea">${interventions}</textarea>
+                        <textarea id="interventions" class="soap-textarea" autocorrect="off" autocapitalize="off" spellcheck="true">${interventions}</textarea>
                     </div>`;
                 
                 // After rendering, resize all textareas
