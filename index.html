@@ -457,7 +457,7 @@
 <body data-theme="light">
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.26</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.27</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -576,6 +576,7 @@
                         <select id="apiProviderSelect" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);">
                             <option value="openwebui">Open WebUI</option>
                             <option value="gemini">Google Gemini</option>
+                            <option value="openai">OpenAI (ChatGPT)</option>
                         </select>
                     </div>
 
@@ -598,6 +599,19 @@
                          <div>
                             <label for="geminiModelInput" style="margin-bottom: 0.25rem; font-weight: 600; display: block;">Gemini Model</label>
                             <select id="geminiModelInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);" disabled>
+                                <option>Enter API Key first</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="openaiSettings" class="hidden">
+                        <div>
+                            <label for="openaiApiKeyInput" style="margin-bottom: 0.25rem; font-weight: 600; display: block;">OpenAI API Key</label>
+                            <input type="password" id="openaiApiKeyInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);">
+                        </div>
+                         <div>
+                            <label for="openaiModelInput" style="margin-bottom: 0.25rem; font-weight: 600; display: block;">OpenAI Model</label>
+                            <select id="openaiModelInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);" disabled>
                                 <option>Enter API Key first</option>
                             </select>
                         </div>
@@ -670,6 +684,9 @@
             const geminiSettings = document.getElementById('geminiSettings');
             const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
             const geminiModelInput = document.getElementById('geminiModelInput');
+            const openaiSettings = document.getElementById('openaiSettings');
+            const openaiApiKeyInput = document.getElementById('openaiApiKeyInput');
+            const openaiModelInput = document.getElementById('openaiModelInput');
             const connectApiBtn = document.getElementById('connectApiBtn');
             const apiStatus = document.getElementById('apiStatus');
             const modelSelect = document.getElementById('modelSelect');
@@ -688,6 +705,7 @@
             let serverAddress = null;
             let apiKey = null;
             let geminiApiKey = null;
+            let openaiApiKey = null;
             let selectedModel = null;
             let sessionTimerInterval = null;
             const getInitialData = () => ({ clients: [], archivedClients: [] });
@@ -816,25 +834,52 @@
 
                 const soapData = appointment.soap || { s: '', o: '', a: '', p: '' };
                 const interventions = soapData.interventions || extractInterventions(soapData);
+                
+                // Preserve existing textarea content before re-rendering
+                const existingContent = {};
+                ['s', 'o', 'a', 'p'].forEach(type => {
+                    const textarea = document.getElementById(`soap${type.toUpperCase()}`);
+                    if (textarea) {
+                        existingContent[type] = textarea.value;
+                    }
+                });
+                
+                // Determine what content to show based on suggestions
+                const getContentForSection = (type) => {
+                    // If we have existing content from user interactions, use that
+                    if (existingContent[type] !== undefined) {
+                        return existingContent[type];
+                    }
+                    
+                    const suggestions = soapData[`${type}_suggestion`] || [];
+                    const content = soapData[type] || '';
+                    
+                    // If there are suggestions, don't show the base content until user decides
+                    if (suggestions.length > 0) {
+                        return '';
+                    }
+                    return content;
+                };
+                
                 soapContentEl.innerHTML = `
                     <div class="soap-section">
                         <div class="soap-header"><span>Subjective</span><button class="copy-btn" data-target="soapS">Copy</button></div>
-                        <textarea id="soapS" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${soapData.s || ''}</textarea>
+                        <textarea id="soapS" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${getContentForSection('s')}</textarea>
                         ${(soapData.s_suggestion || []).map((s, i) => renderSuggestionBox('s', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Objective</span><button class="copy-btn" data-target="soapO">Copy</button></div>
-                        <textarea id="soapO" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${soapData.o || ''}</textarea>
+                        <textarea id="soapO" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${getContentForSection('o')}</textarea>
                         ${(soapData.o_suggestion || []).map((s, i) => renderSuggestionBox('o', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Assessment</span><button class="copy-btn" data-target="soapA">Copy</button></div>
-                        <textarea id="soapA" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${soapData.a || ''}</textarea>
+                        <textarea id="soapA" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${getContentForSection('a')}</textarea>
                         ${(soapData.a_suggestion || []).map((s, i) => renderSuggestionBox('a', s, i)).join('')}
                     </div>
                     <div class="soap-section">
                         <div class="soap-header"><span>Plan</span><button class="copy-btn" data-target="soapP">Copy</button></div>
-                        <textarea id="soapP" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${soapData.p || ''}</textarea>
+                        <textarea id="soapP" class="soap-textarea" placeholder="• " autocorrect="off" autocapitalize="off" spellcheck="true">${getContentForSection('p')}</textarea>
                         ${(soapData.p_suggestion || []).map((s, i) => renderSuggestionBox('p', s, i)).join('')}
                     </div>
                     <div class="soap-section">
@@ -860,7 +905,7 @@
                     <button class="suggestion-decline">Decline</button>
                 `;
 
-                // For S and O, we are replacing text, so show a different interface
+                // For S and O sections: always show original vs suggested format if it's an object
                 if (['s', 'o'].includes(type) && typeof suggestion === 'object' && suggestion.original && suggestion.suggested) {
                     suggestionTitle = 'Clinical Language Suggestion:';
                     suggestionContent = `
@@ -881,6 +926,29 @@
                     `;
                 }
 
+                // For A and P sections: check if it's a rephrase or new recommendation
+                if (['a', 'p'].includes(type)) {
+                    if (typeof suggestion === 'object' && suggestion.original && suggestion.suggested) {
+                        // It's a rephrase suggestion - show original vs suggested
+                        suggestionTitle = 'Rephrase Suggestion:';
+                        suggestionContent = `
+                            <div><strong>Original:</strong> ${suggestion.original}</div>
+                            <div style="margin-top: 4px;"><strong>Suggested:</strong> ${suggestion.suggested}</div>
+                        `;
+                        actionsHtml = `
+                            <button class="suggestion-decline">Keep Original</button>
+                            <button class="suggestion-accept-replace">Use Suggestion</button>
+                        `;
+                    } else {
+                        // It's a new recommendation - show accept/decline
+                        suggestionTitle = 'New Recommendation:';
+                        suggestionContent = `<strong>${suggestionTitle}</strong> ${suggestion}`;
+                        actionsHtml = `
+                            <button class="suggestion-accept">Accept</button>
+                            <button class="suggestion-decline">Decline</button>
+                        `;
+                    }
+                }
 
                 return `
                     <div class="suggestion-box" data-suggestion-type="${type}" data-suggestion-index="${index}">
@@ -1390,22 +1458,31 @@
 
                 const suggestionKey = `${type}_suggestion`;
                 const suggestionData = appointment.soap[suggestionKey]?.[index];
+                const textarea = document.getElementById(`soap${type.toUpperCase()}`);
 
                 if (isAccepted && suggestionData) {
-                    const textarea = document.getElementById(`soap${type.toUpperCase()}`);
-                    
                     if (replace && typeof suggestionData === 'object' && suggestionData.original && suggestionData.suggested) {
-                        // New object-based replacement
-                        const originalText = formatBulletPoints(suggestionData.original);
-                        const suggestedText = formatBulletPoints(suggestionData.suggested);
-                        textarea.value = textarea.value.replace(originalText, suggestedText);
-
+                        // Object-based replacement (for rephrases)
+                        const currentText = textarea.value.trim();
+                        const newText = formatBulletPoints(suggestionData.suggested);
+                        
+                        if (currentText.length === 0 || currentText === '•') {
+                            textarea.value = newText;
+                        } else {
+                            textarea.value = `${currentText}\n${newText}`;
+                        }
                     } else if (replace) {
-                        // Legacy string-based replacement (replaces whole field)
-                        textarea.value = formatBulletPoints(suggestionData);
-
+                        // Legacy string-based replacement - append instead of replace
+                        const currentText = textarea.value.trim();
+                        const newText = formatBulletPoints(suggestionData);
+                        
+                        if (currentText.length === 0 || currentText === '•') {
+                            textarea.value = newText;
+                        } else {
+                            textarea.value = `${currentText}\n${newText}`;
+                        }
                     } else {
-                        // Append the suggestion (for A and P)
+                        // Append the suggestion (for new recommendations)
                         const suggestionText = (typeof suggestionData === 'object' ? suggestionData.suggested : suggestionData) || '';
                         const currentText = textarea.value.trim();
                         const newText = `• ${suggestionText.replace(/^•\s*/, '')}`;
@@ -1416,16 +1493,33 @@
                             textarea.value = `${currentText}\n${newText}`;
                         }
                     }
-                    // Manually trigger input event to resize and save
-                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                } else if (!isAccepted) {
+                    // User declined
+                    if (typeof suggestionData === 'object' && suggestionData.original) {
+                        // For rephrases - add the original content
+                        const currentText = textarea.value.trim();
+                        const originalText = formatBulletPoints(suggestionData.original);
+                        
+                        if (currentText.length === 0 || currentText === '•') {
+                            textarea.value = originalText;
+                        } else {
+                            textarea.value = `${currentText}\n${originalText}`;
+                        }
+                    }
+                    // For new recommendations that are declined, we do nothing (don't add anything)
                 }
 
-                // Remove the specific suggestion from the array and re-render
+                // Remove the specific suggestion from the array
                 if (Array.isArray(appointment.soap[suggestionKey])) {
                     appointment.soap[suggestionKey].splice(index, 1);
                 }
                 
+                // Manually trigger input event to resize and save
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                
                 markDirty();
+                
+                // Re-render the SOAP section to update suggestion indices and remove the handled suggestion
                 renderSoap();
             };
 
@@ -1445,8 +1539,15 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - These suggestions should improve clinical precision and professional language without adding new information.
 - The suggestions should be returned in four JSON keys: \`s_suggestion\`, \`o_suggestion\`, \`a_suggestion\`, and \`p_suggestion\`.
 - \`s_suggestion\` & \`o_suggestion\`: For Subjective and Objective, if you have suggestions, the value for this key MUST be an array of JSON objects, like: \`[{"original": "[the exact original text to be replaced]", "suggested": "[the new suggested text]"}]\`. The "original" text must be a direct, verbatim quote of one of the bullet points from the corresponding "s" or "o" section you generated.
-- \`a_suggestion\` & \`p_suggestion\`: For Assessment and Plan, these should be an array of brief, one-sentence suggestions as strings. Example: ["Client appears to be making progress toward treatment goals related to anxiety."].
+- \`a_suggestion\` & \`p_suggestion\`: For Assessment and Plan, these can be either:
+  - For rephrasing existing content: an array of JSON objects like: \`[{"original": "[exact original text]", "suggested": "[improved text]"}]\`
+  - For new recommendations: an array of strings like: \`["Additional recommendation text"]\`
 - If you have no suggestion for any section, return an empty array \`[]\` for that key.
+
+**IMPORTANT: Content Display Rules**
+- For sections with suggestions: DO NOT include the original content in the main section keys (s, o, a, p). Only put content that has NO suggestions in these keys.
+- Only content without any suggestions should appear in the main s/o/a/p keys.
+- All content that has suggestions (whether rephrases or new recommendations) should ONLY appear in the suggestion arrays.
 
 **CRITICAL INSTRUCTIONS:**
 - **THE GOLDEN RULE:** ONLY use information explicitly provided in the "Session Information" text. Do not use any information from the example output below, which is for formatting reference only.
@@ -1479,6 +1580,8 @@ Your entire response MUST be a single, raw, and syntactically correct JSON objec
                     await generateSoapNoteWithOpenWebUI();
                 } else if (apiProvider === 'gemini') {
                     await generateSoapNoteWithGemini();
+                } else if (apiProvider === 'openai') {
+                    await generateSoapNoteWithOpenAI();
                 } else {
                     alert('Invalid API provider selected.');
                 }
@@ -1723,6 +1826,181 @@ ${sessionInfoEl.value}
                     await connectToOpenWebUI();
                 } else if (apiProvider === 'gemini') {
                     await connectToGemini();
+                } else if (apiProvider === 'openai') {
+                    await connectToOpenAI();
+                }
+            };
+
+            const generateSoapNoteWithOpenAI = async () => {
+                if (!selectedModel || !openaiApiKey) {
+                    alert('Please connect to OpenAI with an API key and model first.');
+                    return;
+                }
+
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                if (!client || !appointment || !sessionInfoEl.value.trim()) {
+                    alert('Please select a client and appointment, and enter some session information.');
+                    return;
+                }
+
+                generateNoteBtn.disabled = true;
+                generateNoteBtn.textContent = 'Generating...';
+
+                const userPrompt = `
+- **Session Information (This Session):**
+${sessionInfoEl.value}
+`;
+
+                const payload = {
+                    model: selectedModel,
+                    messages: [
+                        { "role": "system", "content": systemPrompt },
+                        { "role": "user", "content": userPrompt }
+                    ],
+                    response_format: { "type": "json_object" }
+                };
+
+                try {
+                    const url = 'https://api.openai.com/v1/chat/completions';
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${openaiApiKey}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        const error = new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+                        error.response = response;
+                        throw error;
+                    }
+
+                    const result = await response.json();
+                    if (!result || !result.choices || !result.choices[0].message.content) {
+                         throw new Error("The OpenAI API returned an invalid or empty response.");
+                    }
+
+                    let content = result.choices[0].message.content;
+                    let soapData = JSON.parse(content);
+
+                    for (const key in soapData) {
+                        if (typeof soapData[key] === 'string' && !key.endsWith('_suggestion')) {
+                            soapData[key] = formatBulletPoints(soapData[key]);
+                        }
+                    }
+
+                    if (typeof soapData.s !== 'string' || typeof soapData.o !== 'string' || typeof soapData.a !== 'string' || typeof soapData.p !== 'string') {
+                        throw new Error(`AI response was not in the expected JSON format (missing s, o, a, or p keys).`);
+                    }
+
+                    if (!appointment.soap) appointment.soap = {};
+                    appointment.soap.s = soapData.s;
+                    appointment.soap.o = soapData.o;
+                    appointment.soap.a = soapData.a;
+                    appointment.soap.p = soapData.p;
+                    appointment.soap.s_suggestion = soapData.s_suggestion || [];
+                    appointment.soap.o_suggestion = soapData.o_suggestion || [];
+                    appointment.soap.a_suggestion = soapData.a_suggestion || [];
+                    appointment.soap.p_suggestion = soapData.p_suggestion || [];
+                    markDirty();
+                    renderSoap();
+
+                } catch (error) {
+                    console.error('OpenAI SOAP Note Generation Error:', error);
+                    alert(`Failed to generate SOAP note with OpenAI. Please check your API Key, Model Name, and the console for details.\nError: ${error.message}`);
+                } finally {
+                    generateNoteBtn.disabled = false;
+                    generateNoteBtn.textContent = 'Generate Note';
+                }
+            };
+
+            const connectToOpenAI = async () => {
+                const key = openaiApiKeyInput.value.trim();
+                if (!key) {
+                    alert('Please provide an OpenAI API Key.');
+                    return;
+                }
+
+                apiStatus.textContent = 'Connecting...';
+                apiStatus.style.color = 'orange';
+                openaiModelInput.innerHTML = '<option>Loading models...</option>';
+                openaiModelInput.disabled = true;
+
+                try {
+                    const url = 'https://api.openai.com/v1/models';
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${key}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Failed to fetch models: ${response.status} - ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+
+                    // Filter for chat models that support JSON mode
+                    const models = data.data
+                        .filter(m => m.id.includes('gpt'))
+                        .map(m => m.id)
+                        .sort((a, b) => {
+                            // Prioritize GPT-4 models, then GPT-3.5
+                            if (a.includes('gpt-4') && !b.includes('gpt-4')) return -1;
+                            if (!a.includes('gpt-4') && b.includes('gpt-4')) return 1;
+                            return a.localeCompare(b);
+                        });
+
+                    if (models.length === 0) {
+                        throw new Error("No compatible OpenAI models found.");
+                    }
+
+                    openaiModelInput.innerHTML = '';
+                    models.forEach(modelId => {
+                        const option = document.createElement('option');
+                        option.value = modelId;
+                        option.textContent = modelId;
+                        openaiModelInput.appendChild(option);
+                    });
+
+                    openaiApiKey = key;
+                    
+                    const savedModel = localStorage.getItem('openaiModel');
+                    if (savedModel && models.includes(savedModel)) {
+                        openaiModelInput.value = savedModel;
+                    } else if (models.includes('gpt-4o-mini')) {
+                        openaiModelInput.value = 'gpt-4o-mini';
+                    } else if (models.includes('gpt-4o')) {
+                        openaiModelInput.value = 'gpt-4o';
+                    } else {
+                        openaiModelInput.value = models[0];
+                    }
+                    
+                    selectedModel = openaiModelInput.value;
+                    openaiModelInput.disabled = false;
+
+                    localStorage.setItem('apiProvider', 'openai');
+                    localStorage.setItem('openaiApiKey', openaiApiKey);
+                    localStorage.setItem('openaiModel', selectedModel);
+
+                    apiStatus.textContent = 'Connected';
+                    apiStatus.style.color = 'green';
+
+                } catch (error) {
+                    console.error('OpenAI connection error:', error);
+                    apiStatus.textContent = 'Failed';
+                    apiStatus.style.color = 'red';
+                    openaiModelInput.innerHTML = '<option>Connection Failed</option>';
+                    openaiApiKey = null;
+                    selectedModel = null;
+                    alert(`Failed to connect to OpenAI. Check your API key and network connection.\nError: ${error.message}`);
+                } finally {
+                    fullRender();
                 }
             };
 
@@ -2265,13 +2543,26 @@ This error cannot be fixed within this application's code; it requires a configu
                     openwebuiSettings.classList.remove('hidden');
                     modelSelectWrapper.classList.remove('hidden');
                     geminiSettings.classList.add('hidden');
-                } else { // gemini
+                    openaiSettings.classList.add('hidden');
+                } else if (provider === 'gemini') {
                     openwebuiSettings.classList.add('hidden');
                     modelSelectWrapper.classList.add('hidden');
                     geminiSettings.classList.remove('hidden');
+                    openaiSettings.classList.add('hidden');
+                } else if (provider === 'openai') {
+                    openwebuiSettings.classList.add('hidden');
+                    modelSelectWrapper.classList.add('hidden');
+                    geminiSettings.classList.add('hidden');
+                    openaiSettings.classList.remove('hidden');
                 }
             };
             apiProviderSelect.addEventListener('change', toggleProviderSettings);
+
+            openaiModelInput.addEventListener('change', (e) => {
+                selectedModel = e.target.value;
+                localStorage.setItem('openaiModel', selectedModel);
+                fullRender();
+            });
 
             startTimerBtn.addEventListener('click', () => {
                 const appointment = findAppointment(findClient(selectedClientId), selectedAppointmentId);
