@@ -388,6 +388,12 @@
             opacity: 0;
         }
 
+        /* Goals Section Scrolling */
+        .goals-section .panel-content {
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
         /* Goals and Objectives Styling */
         .goal-item {
             background: var(--item-bg);
@@ -1848,7 +1854,7 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
             const processAndStoreSoapData = (soapData, appointment) => {
                  if (!appointment.soap) appointment.soap = {};
 
-                 // NEW: Process and store AI-generated interventions
+                 // Process and store AI-generated interventions
                  appointment.soap.interventions = soapData.i ? formatBulletPoints(soapData.i) : 'No interventions identified.';
 
                  ['s', 'o', 'a', 'p'].forEach(key => {
@@ -1856,30 +1862,36 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
                      const suggestions = soapData[suggestionKey] || [];
                      const fullText = soapData[key] ? formatBulletPoints(soapData[key]) : '';
 
-                     // If there are no suggestions, just use the full text.
+                     // FIXED: Only add content that's NOT part of suggestions
+                     // All suggestion content (both replacements and new additions) should be presented for user approval
                      if (suggestions.length === 0) {
+                         // No suggestions - use all the generated content
                          appointment.soap[key] = fullText;
                      } else {
-                         // Identify all "original" texts from replacement suggestions.
-                         const originalsToWithhold = suggestions
-                             .filter(s => typeof s === 'object' && s.original)
-                             .map(s => s.original.trim());
+                         // There are suggestions - only include content that's NOT in any suggestions
+                         const allSuggestionTexts = suggestions.map(s => {
+                             if (typeof s === 'object' && s.original) {
+                                 // For replacement suggestions, withhold the original text
+                                 return s.original.replace(/^•\s*/, '').trim();
+                             } else {
+                                 // For new suggestions, withhold the suggestion text itself
+                                 return s.replace(/^•\s*/, '').trim();
+                             }
+                         });
 
-                         // Split the full generated text into bullet points.
-                         const allBulletPoints = fullText.split('\n').map(line => line.trim());
+                         // Split the full generated text into bullet points
+                         const allBulletPoints = fullText.split('\n').map(line => line.trim()).filter(line => line !== '');
 
-                         // Filter out the bullet points that are part of a suggestion.
+                         // Only include bullet points that are NOT part of any suggestion
                          const immediateTextPoints = allBulletPoints.filter(point => {
-                             if (point === '') return false; // Ignore empty lines
-                             // A point should be included if it's NOT in the withhold list.
-                             const trimmedPoint = point.replace(/^•\s*/, '');
-                             return !originalsToWithhold.some(o => o.replace(/^•\s*/, '') === trimmedPoint);
+                             const trimmedPoint = point.replace(/^•\s*/, '').trim();
+                             return !allSuggestionTexts.some(suggestionText => suggestionText === trimmedPoint);
                          });
 
                          appointment.soap[key] = immediateTextPoints.join('\n');
                      }
                      
-                     // Always store the full list of suggestions.
+                     // Always store the full list of suggestions for user approval
                      appointment.soap[suggestionKey] = suggestions;
                  });
              };
