@@ -375,9 +375,26 @@
         }
 
         .collapsible-content.collapsed {
-            flex-basis: 0 !important;
-            min-height: 0 !important;
-            opacity: 0;
+            flex-basis: 50px !important;
+            min-height: 50px !important;
+            max-height: 50px !important;
+            flex-grow: 0;
+            flex-shrink: 0;
+            overflow: hidden; /* Ensure no content spills over */
+        }
+
+        /* Pinning styles for collapsed sections */
+        .collapsible-content.collapsed.pinned {
+            order: 999; /* Pin to bottom */
+        }
+
+        /* Ensure wrapper containers also collapse properly */
+        .session-section:has(.collapsible-content.collapsed) {
+            flex-basis: 50px !important;
+            min-height: 50px !important;
+            max-height: 50px !important;
+            flex-grow: 0;
+            flex-shrink: 0;
         }
 
         .collapsible-content .panel-content {
@@ -386,6 +403,7 @@
 
         .collapsible-content.collapsed .panel-content {
             opacity: 0;
+            display: none;
         }
 
         /* Goals Section Scrolling */
@@ -687,7 +705,16 @@
                          </div>
                      </div>
                  </div>
-                 <div class="resizer-y" id="resizer-session-goals"></div>
+                 <div class="resizer-y" id="resizer-session-notes"></div>
+                 <div id="notesWrapper" class="session-section persistent-notes-section" style="flex-basis: 33.33%;">
+                     <div class="panel-header collapsible-header" data-target="notesContent">
+                         <span>Persistent Notes <span class="collapse-icon">▼</span></span>
+                     </div>
+                     <div id="notesContent" class="panel-content collapsible-content">
+                         <textarea id="persistentNotes" placeholder="Select a client to enter persistent notes..." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
+                     </div>
+                 </div>
+                 <div class="resizer-y" id="resizer-notes-goals"></div>
                  <div id="goalsWrapper" class="session-section goals-section" style="flex-basis: 33.33%;">
                      <div class="panel-header collapsible-header" data-target="goalsContent">
                          <span>Treatment Goals <span class="collapse-icon">▼</span></span>
@@ -695,15 +722,6 @@
                      </div>
                      <div id="goalsContent" class="panel-content collapsible-content" id="goalsList">
                          <div class="no-selection">Select a client to manage goals</div>
-                     </div>
-                 </div>
-                 <div class="resizer-y" id="resizer-goals-notes"></div>
-                 <div id="notesWrapper" class="session-section persistent-notes-section" style="flex-basis: 33.33%;">
-                     <div class="panel-header collapsible-header" data-target="notesContent">
-                         <span>Persistent Notes <span class="collapse-icon">▼</span></span>
-                     </div>
-                     <div id="notesContent" class="panel-content collapsible-content">
-                         <textarea id="persistentNotes" placeholder="Select a client to enter persistent notes..." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
                      </div>
                  </div>
             </div>
@@ -2833,15 +2851,22 @@ This error cannot be fixed within this application's code; it requires a configu
                     const isCollapsed = content.classList.contains('collapsed');
                     
                     if (isCollapsed) {
-                        // Expand
-                        content.classList.remove('collapsed');
+                        // Expand - restore original size and remove pinning
+                        content.classList.remove('collapsed', 'pinned');
                         icon.classList.remove('collapsed');
                         wrapper.style.flexBasis = '33.33%';
+                        wrapper.style.minHeight = '';
+                        wrapper.style.maxHeight = '';
+                        wrapper.style.order = ''; // Reset order
                     } else {
-                        // Collapse
-                        content.classList.add('collapsed');
+                        // Collapse - add pinning class and force minimal size
+                        content.classList.add('collapsed', 'pinned');
                         icon.classList.add('collapsed');
-                        wrapper.style.flexBasis = '50px'; // Height of header only
+                        wrapper.style.flexBasis = '50px';
+                        wrapper.style.minHeight = '50px';
+                        wrapper.style.maxHeight = '50px';
+                        // Order is now handled by CSS class
+                        wrapper.style.order = ''; // Clear inline order to let CSS handle it
                     }
                     
                     // Save collapsed state
@@ -2864,9 +2889,14 @@ This error cannot be fixed within this application's code; it requires a configu
                     const goalsIcon = document.querySelector('[data-target="goalsContent"] .collapse-icon');
                     const goalsWrapper = document.getElementById('goalsWrapper');
                     
-                    goalsContent?.classList.add('collapsed');
+                    goalsContent?.classList.add('collapsed', 'pinned');
                     goalsIcon?.classList.add('collapsed');
-                    if (goalsWrapper) goalsWrapper.style.flexBasis = '50px';
+                    if (goalsWrapper) {
+                        goalsWrapper.style.flexBasis = '50px';
+                        goalsWrapper.style.minHeight = '50px';
+                        goalsWrapper.style.maxHeight = '50px';
+                        goalsWrapper.style.order = ''; // Clear order to let CSS handle it
+                    }
                 }
 
                 if (notesCollapsed) {
@@ -2874,9 +2904,14 @@ This error cannot be fixed within this application's code; it requires a configu
                     const notesIcon = document.querySelector('[data-target="notesContent"] .collapse-icon');
                     const notesWrapper = document.getElementById('notesWrapper');
                     
-                    notesContent?.classList.add('collapsed');
+                    notesContent?.classList.add('collapsed', 'pinned');
                     notesIcon?.classList.add('collapsed');
-                    if (notesWrapper) notesWrapper.style.flexBasis = '50px';
+                    if (notesWrapper) {
+                        notesWrapper.style.flexBasis = '50px';
+                        notesWrapper.style.minHeight = '50px';
+                        notesWrapper.style.maxHeight = '50px';
+                        notesWrapper.style.order = ''; // Clear order to let CSS handle it
+                    }
                 }
             };
 
@@ -3010,8 +3045,8 @@ This error cannot be fixed within this application's code; it requires a configu
             makeResizable(document.getElementById('resizer1'), document.getElementById('panelClients'), document.getElementById('panelAppointments'));
             makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'));
             makeResizable(document.getElementById('resizer3'), document.getElementById('panelSession'), document.getElementById('panelSoap'));
-            makeResizable(document.getElementById('resizer-session-goals'), document.getElementById('sessionInfoWrapper'), document.getElementById('goalsWrapper'), 'y');
-            makeResizable(document.getElementById('resizer-goals-notes'), document.getElementById('goalsWrapper'), document.getElementById('notesWrapper'), 'y');
+            makeResizable(document.getElementById('resizer-session-notes'), document.getElementById('sessionInfoWrapper'), document.getElementById('notesWrapper'), 'y');
+            makeResizable(document.getElementById('resizer-notes-goals'), document.getElementById('notesWrapper'), document.getElementById('goalsWrapper'), 'y');
 
         });
     </script>
