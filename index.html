@@ -344,6 +344,152 @@
         .persistent-notes-section .panel-header {
              background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
         }
+        
+        .goals-section .panel-header {
+             background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        }
+
+        /* Collapsible Section Styles */
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible-header:hover {
+            opacity: 0.9;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsible-content.collapsed {
+            flex-basis: 0 !important;
+            min-height: 0 !important;
+            opacity: 0;
+        }
+
+        .collapsible-content .panel-content {
+            transition: opacity 0.2s ease;
+        }
+
+        .collapsible-content.collapsed .panel-content {
+            opacity: 0;
+        }
+
+        /* Goals and Objectives Styling */
+        .goal-item {
+            background: var(--item-bg);
+            margin-bottom: 12px;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #8e44ad;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .goal-title {
+            font-weight: 600;
+            color: var(--text-color-primary);
+            flex-grow: 1;
+            margin-right: 8px;
+        }
+
+        .goal-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .goal-item:hover .goal-actions {
+            opacity: 1;
+        }
+
+        .goal-status {
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .goal-status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .goal-status.completed {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .goal-status.discontinued {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .objective-list {
+            margin-top: 8px;
+            padding-left: 16px;
+        }
+
+        .objective-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .objective-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .objective-text {
+            flex-grow: 1;
+            color: var(--text-color-primary);
+        }
+
+        .objective-text.completed {
+            text-decoration: line-through;
+            color: var(--text-color-secondary);
+        }
+
+        .add-objective-btn {
+            background: none;
+            border: 1px dashed #8e44ad;
+            color: #8e44ad;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .add-objective-btn:hover {
+            background: rgba(142, 68, 173, 0.1);
+        }
 
         .soap-section { margin-bottom: 15px; }
         .soap-header {
@@ -519,7 +665,7 @@
 
             <!-- Session & Notes Panel -->
             <div class="panel session-panel" id="panelSession">
-                 <div id="sessionInfoWrapper" class="session-section" style="flex-basis: 50%;">
+                 <div id="sessionInfoWrapper" class="session-section" style="flex-basis: 33.33%;">
                      <div class="panel-header">
                          <span>Session Information</span>
                          <button id="generateNoteBtn" class="btn" style="padding: 4px 8px; font-size: 0.8rem;" disabled>Generate Note</button>
@@ -535,12 +681,22 @@
                          </div>
                      </div>
                  </div>
-                 <div class="resizer-y" id="resizer-session-notes"></div>
-                 <div id="notesWrapper" class="session-section persistent-notes-section" style="flex-basis: 50%;">
-                     <div class="panel-header">
-                         <span>Persistent Notes</span>
+                 <div class="resizer-y" id="resizer-session-goals"></div>
+                 <div id="goalsWrapper" class="session-section goals-section" style="flex-basis: 33.33%;">
+                     <div class="panel-header collapsible-header" data-target="goalsContent">
+                         <span>Treatment Goals <span class="collapse-icon">▼</span></span>
+                         <button id="addGoalBtn" class="add-btn" disabled>+</button>
                      </div>
-                     <div class="panel-content">
+                     <div id="goalsContent" class="panel-content collapsible-content" id="goalsList">
+                         <div class="no-selection">Select a client to manage goals</div>
+                     </div>
+                 </div>
+                 <div class="resizer-y" id="resizer-goals-notes"></div>
+                 <div id="notesWrapper" class="session-section persistent-notes-section" style="flex-basis: 33.33%;">
+                     <div class="panel-header collapsible-header" data-target="notesContent">
+                         <span>Persistent Notes <span class="collapse-icon">▼</span></span>
+                     </div>
+                     <div id="notesContent" class="panel-content collapsible-content">
                          <textarea id="persistentNotes" placeholder="Select a client to enter persistent notes..." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
                      </div>
                  </div>
@@ -694,6 +850,9 @@
             const generateNoteBtn = document.getElementById('generateNoteBtn');
             const fileInput = document.getElementById('fileInput');
             const themeToggleBtn = document.getElementById('themeToggleBtn');
+            // Goals Elements
+            const goalsListEl = document.getElementById('goalsContent');
+            const addGoalBtn = document.getElementById('addGoalBtn');
 
             // App State
             let data = { clients: [], archivedClients: [] };
@@ -777,9 +936,56 @@
                     renderSessionTimer(appointment);
                 }
 
+                renderGoals();
                 renderSoap();
                 
                 generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
+            };
+
+            const renderGoals = () => {
+                const client = findClient(selectedClientId);
+                const goalsContentEl = document.getElementById('goalsContent');
+                addGoalBtn.disabled = !client;
+                
+                if (!client) {
+                    goalsContentEl.innerHTML = '<div class="no-selection">Select a client to manage goals</div>';
+                    return;
+                }
+
+                if (!client.goals) {
+                    client.goals = [];
+                }
+
+                if (client.goals.length === 0) {
+                    goalsContentEl.innerHTML = '<div class="no-selection">Click + to add a treatment goal</div>';
+                    return;
+                }
+
+                goalsContentEl.innerHTML = client.goals.map(goal => `
+                    <div class="goal-item" data-goal-id="${goal.id}">
+                        <div class="goal-header">
+                            <div class="goal-title">${goal.title}</div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="goal-status ${goal.status}">${goal.status.charAt(0).toUpperCase() + goal.status.slice(1)}</div>
+                                <div class="goal-actions">
+                                    <button class="action-btn edit-btn" title="Edit Goal">✏️</button>
+                                    <button class="action-btn archive-btn" title="Change Status">⚡</button>
+                                    <button class="action-btn delete-btn" title="Delete Goal">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="objective-list">
+                            ${(goal.objectives || []).map(obj => `
+                                <div class="objective-item" data-objective-id="${obj.id}">
+                                    <input type="checkbox" class="objective-checkbox" ${obj.completed ? 'checked' : ''}>
+                                    <span class="objective-text ${obj.completed ? 'completed' : ''}">${obj.text}</span>
+                                    <button class="action-btn delete-btn" title="Delete Objective" style="opacity: 0; width: 16px; height: 16px; font-size: 10px;">×</button>
+                                </div>
+                            `).join('')}
+                            <button class="add-objective-btn" data-goal-id="${goal.id}">+ Add Objective</button>
+                        </div>
+                    </div>
+                `).join('');
             };
             
             const renderSessionTimer = (appointment) => {
@@ -958,6 +1164,138 @@
                 fullRender();
             };
 
+            const addGoal = () => {
+                const client = findClient(selectedClientId);
+                if (!client) return;
+                
+                const title = prompt("Enter goal title:");
+                if (!title || !title.trim()) return;
+                
+                const newGoal = {
+                    id: crypto.randomUUID(),
+                    title: title.trim(),
+                    status: 'active',
+                    objectives: [],
+                    dateCreated: new Date().toISOString()
+                };
+                
+                if (!client.goals) client.goals = [];
+                client.goals.push(newGoal);
+                markDirty();
+                renderGoals();
+            };
+
+            const addObjective = (goalId) => {
+                const client = findClient(selectedClientId);
+                if (!client) return;
+                
+                const goal = client.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                
+                const text = prompt("Enter objective:");
+                if (!text || !text.trim()) return;
+                
+                const newObjective = {
+                    id: crypto.randomUUID(),
+                    text: text.trim(),
+                    completed: false,
+                    dateCreated: new Date().toISOString()
+                };
+                
+                if (!goal.objectives) goal.objectives = [];
+                goal.objectives.push(newObjective);
+                markDirty();
+                renderGoals();
+            };
+
+            const toggleObjective = (goalId, objectiveId) => {
+                const client = findClient(selectedClientId);
+                if (!client) return;
+                
+                const goal = client.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                
+                const objective = goal.objectives.find(o => o.id === objectiveId);
+                if (!objective) return;
+                
+                objective.completed = !objective.completed;
+                if (objective.completed) {
+                    objective.dateCompleted = new Date().toISOString();
+                } else {
+                    delete objective.dateCompleted;
+                }
+                
+                markDirty();
+                renderGoals();
+            };
+
+            const deleteGoal = (goalId) => {
+                const client = findClient(selectedClientId);
+                if (!client) return;
+                
+                const goalIndex = client.goals.findIndex(g => g.id === goalId);
+                if (goalIndex === -1) return;
+                
+                const goal = client.goals[goalIndex];
+                if (confirm(`Are you sure you want to delete the goal "${goal.title}"?`)) {
+                    client.goals.splice(goalIndex, 1);
+                    markDirty();
+                    renderGoals();
+                }
+            };
+
+            const deleteObjective = (goalId, objectiveId) => {
+                const client = findClient(selectedClientId);
+                if (!client) return;
+                
+                const goal = client.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                
+                const objIndex = goal.objectives.findIndex(o => o.id === objectiveId);
+                if (objIndex === -1) return;
+                
+                goal.objectives.splice(objIndex, 1);
+                markDirty();
+                renderGoals();
+            };
+
+            const changeGoalStatus = (goalId) => {
+                const client = findClient(selectedClientId);
+                if (!client) return;
+                
+                const goal = client.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                
+                const statuses = ['active', 'completed', 'discontinued'];
+                const currentIndex = statuses.indexOf(goal.status);
+                const nextIndex = (currentIndex + 1) % statuses.length;
+                
+                goal.status = statuses[nextIndex];
+                if (goal.status === 'completed') {
+                    goal.dateCompleted = new Date().toISOString();
+                } else {
+                    delete goal.dateCompleted;
+                }
+                
+                markDirty();
+                renderGoals();
+            };
+
+            const editGoal = (goalId) => {
+                const client = findClient(selectedClientId);
+                if (!client) return;
+                
+                const goal = client.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                
+                const newTitle = prompt("Edit goal title:", goal.title);
+                if (newTitle && newTitle.trim() && newTitle.trim() !== goal.title) {
+                    goal.title = newTitle.trim();
+                    markDirty();
+                    renderGoals();
+                }
+            };
+
             const addClient = () => {
                 const name = prompt("Enter new client's name:");
                 if (!name || !name.trim()) return;
@@ -965,7 +1303,8 @@
                     id: crypto.randomUUID(),
                     name: name.trim(),
                     persistentNotes: '',
-                    appointments: []
+                    appointments: [],
+                    goals: []
                 };
                 data.clients.push(newClient);
                 selectClient(newClient.id);
@@ -1464,7 +1803,10 @@
 Analyze the "Session Information" text provided by the user. Categorize every piece of information into one of the four SOAP sections based on the strict definitions below.
 
 - **Subjective (S):** Information reported by the client (e.g., feelings, goals, history). This is for the client's voice and perspective.
-- **Objective (O):** Everything that *happens* in the therapy session. This includes all therapeutic interventions, actions taken, connections made, and reflections or psychoeducation provided by the writer. **Any sentence that describes the writer's actions or speech belongs here.**
+- **Objective (O):** Everything that *happens* in the therapy session. This includes all therapeutic interventions, actions taken, connections made, and reflections or psychoeducation provided by the writer. **Any sentence that describes the writer's actions or speech belongs here.** 
+  
+  **GOLDEN THREAD:** When treatment goals are provided, weave connections between interventions and specific treatment goals/objectives in this section. For example: "Writer provided CBT techniques to address client's anxiety management goal" or "Explored coping strategies related to client's objective of improving emotional regulation." Only make these connections when they are clearly apparent from the session content - don't force connections that aren't naturally there.
+
 - **Assessment (A):** The writer's clinical analysis and observations. This includes notes on progress towards goals and direct observations of the client's state (e.g., "client appeared tired," "client's affect was bright"). This section should NOT contain actions or speech from the session.
 - **Plan (P):** The course of action for future sessions. This includes topics to be addressed, homework, and any modifications to the treatment plan.
 - **Interventions (I):** Identify specific clinical techniques and modalities used during the session. You have more freedom here to interpret the session notes and list the relevant interventions, even if the exact keyword isn't used.
@@ -1481,6 +1823,8 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 
 **CRITICAL INSTRUCTIONS:**
 - **THE GOLDEN RULE:** ONLY use information explicitly provided in the "Session Information" text. Do not use any information from the example output below, which is for formatting reference only.
+- **PRESERVE SHORTHAND:** Do not expand abbreviations or shorthand. Keep "Ct" as "Ct" (not "Client"), "IBS" as "IBS" (not "Irritable Bowel Syndrome"), etc. Do not add expanded forms in parentheses.
+- **CLINICIAN REFERENCE:** Always refer to the clinician as "Writer" (not "the Writer", "the clinician", "therapist", or any other variation).
 - **Example of PERFECT Output (FOR FORMATTING ONLY):**
 {"s":"• Ct said they felt bad.","o":"• Writer talked about coping.","a":"• Ct displays affect congruent with mood.","p":"• Continue to explore themes of loss.","i":"• Psychoeducation\\n• Cognitive Restructuring","s_suggestion":[{"original":"• Ct said they felt bad.","suggested":"• Ct reported experiencing significant distress."}],"o_suggestion":[{"original":"• Writer talked about coping.","suggested":"• Writer provided psychoeducation on coping strategies."}],"a_suggestion":["Client appears to be making progress toward treatment goals related to anxiety."],"p_suggestion":["Continue to utilize CBT techniques to challenge cognitive distortions in the next session."]};
             `;
@@ -1557,9 +1901,23 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
                 generateNoteBtn.disabled = true;
                 generateNoteBtn.textContent = 'Generating...';
 
+                // Gather treatment goals context for Golden Thread
+                let treatmentGoalsContext = '';
+                if (client.goals && client.goals.length > 0) {
+                    const activeGoals = client.goals.filter(g => g.status === 'active');
+                    if (activeGoals.length > 0) {
+                        treatmentGoalsContext = `\n- **Current Treatment Goals:**\n${activeGoals.map(goal => {
+                            const objectives = goal.objectives && goal.objectives.length > 0 
+                                ? goal.objectives.map(obj => `  - ${obj.text} ${obj.completed ? '(Completed)' : '(In Progress)'}`).join('\n')
+                                : '  - No specific objectives defined';
+                            return `  • ${goal.title}\n${objectives}`;
+                        }).join('\n')}\n`;
+                    }
+                }
+
                 const userPrompt = `
 - **Session Information (This Session):**
-${sessionInfoEl.value}
+${sessionInfoEl.value}${treatmentGoalsContext}
 `;
                 const fullPrompt = `${systemPrompt}\n\n**User Input:**\n${userPrompt}`;
 
@@ -1625,7 +1983,21 @@ ${sessionInfoEl.value}
                 generateNoteBtn.disabled = true;
                 generateNoteBtn.textContent = 'Generating...';
 
-                const userPrompt = `- **Session Information (This Session):**\n${sessionInfoEl.value}`;
+                // Gather treatment goals context for Golden Thread
+                let treatmentGoalsContext = '';
+                if (client.goals && client.goals.length > 0) {
+                    const activeGoals = client.goals.filter(g => g.status === 'active');
+                    if (activeGoals.length > 0) {
+                        treatmentGoalsContext = `\n- **Current Treatment Goals:**\n${activeGoals.map(goal => {
+                            const objectives = goal.objectives && goal.objectives.length > 0 
+                                ? goal.objectives.map(obj => `  - ${obj.text} ${obj.completed ? '(Completed)' : '(In Progress)'}`).join('\n')
+                                : '  - No specific objectives defined';
+                            return `  • ${goal.title}\n${objectives}`;
+                        }).join('\n')}\n`;
+                    }
+                }
+
+                const userPrompt = `- **Session Information (This Session):**\n${sessionInfoEl.value}${treatmentGoalsContext}`;
 
                 const payload = {
                     model: selectedModel,
@@ -1689,11 +2061,24 @@ ${sessionInfoEl.value}
                 generateNoteBtn.disabled = true;
                 generateNoteBtn.textContent = 'Generating...';
 
+                // Gather treatment goals context for Golden Thread
+                let treatmentGoalsContext = '';
+                if (client.goals && client.goals.length > 0) {
+                    const activeGoals = client.goals.filter(g => g.status === 'active');
+                    if (activeGoals.length > 0) {
+                        treatmentGoalsContext = `\n- **Current Treatment Goals:**\n${activeGoals.map(goal => {
+                            const objectives = goal.objectives && goal.objectives.length > 0 
+                                ? goal.objectives.map(obj => `  - ${obj.text} ${obj.completed ? '(Completed)' : '(In Progress)'}`).join('\n')
+                                : '  - No specific objectives defined';
+                            return `  • ${goal.title}\n${objectives}`;
+                        }).join('\n')}\n`;
+                    }
+                }
+
                 const userPrompt = `
 - **Client Name:** ${client.name}
 - **Session Information (This Session):**
-${sessionInfoEl.value}
-`;
+${sessionInfoEl.value}${treatmentGoalsContext}`;
 
                 const payload = {
                     model: selectedModel,
@@ -2257,6 +2642,50 @@ This error cannot be fixed within this application's code; it requires a configu
                 renderClients();
             });
             addAppointmentBtn.addEventListener('click', addAppointment);
+            addGoalBtn.addEventListener('click', addGoal);
+
+            // Goals event delegation
+            goalsListEl.addEventListener('click', (e) => {
+                const goalItem = e.target.closest('.goal-item');
+                if (!goalItem) return;
+                
+                const goalId = goalItem.dataset.goalId;
+                
+                if (e.target.classList.contains('add-objective-btn')) {
+                    addObjective(goalId);
+                } else if (e.target.classList.contains('objective-checkbox')) {
+                    const objectiveItem = e.target.closest('.objective-item');
+                    const objectiveId = objectiveItem.dataset.objectiveId;
+                    toggleObjective(goalId, objectiveId);
+                } else if (e.target.closest('.objective-item') && e.target.classList.contains('delete-btn')) {
+                    const objectiveItem = e.target.closest('.objective-item');
+                    const objectiveId = objectiveItem.dataset.objectiveId;
+                    deleteObjective(goalId, objectiveId);
+                } else if (e.target.classList.contains('edit-btn')) {
+                    editGoal(goalId);
+                } else if (e.target.classList.contains('archive-btn')) {
+                    changeGoalStatus(goalId);
+                } else if (e.target.classList.contains('delete-btn')) {
+                    deleteGoal(goalId);
+                }
+            });
+
+            // Show/hide objective delete buttons on hover
+            goalsListEl.addEventListener('mouseover', (e) => {
+                const objectiveItem = e.target.closest('.objective-item');
+                if (objectiveItem) {
+                    const deleteBtn = objectiveItem.querySelector('.delete-btn');
+                    if (deleteBtn) deleteBtn.style.opacity = '1';
+                }
+            });
+
+            goalsListEl.addEventListener('mouseout', (e) => {
+                const objectiveItem = e.target.closest('.objective-item');
+                if (objectiveItem) {
+                    const deleteBtn = objectiveItem.querySelector('.delete-btn');
+                    if (deleteBtn) deleteBtn.style.opacity = '0';
+                }
+            });
             exportBtn.addEventListener('click', exportFile);
             importBtn.addEventListener('click', loadFile);
             eraseAllBtn.addEventListener('click', eraseAllData);
@@ -2334,13 +2763,13 @@ This error cannot be fixed within this application's code; it requires a configu
             const updateThemeButton = () => {
                 const savedTheme = localStorage.getItem('theme') || 'automatic';
                 if (savedTheme === 'dark') {
-                    themeToggleBtn.textContent = '☀️';
+                    themeToggleBtn.textContent = '🌙';
                     themeToggleBtn.title = 'Switch to Automatic Theme';
                 } else if (savedTheme === 'automatic') {
                     themeToggleBtn.textContent = '🔄';
                     themeToggleBtn.title = 'Switch to Light Theme';
                 } else {
-                    themeToggleBtn.textContent = '🌙';
+                    themeToggleBtn.textContent = '☀️';
                     themeToggleBtn.title = 'Switch to Dark Theme';
                 }
             };
@@ -2378,6 +2807,66 @@ This error cannot be fixed within this application's code; it requires a configu
 
             themeToggleBtn.addEventListener('click', cycleTheme);
 
+            // --- Collapsible Sections ---
+            const handleCollapsibleClick = (e) => {
+                const header = e.target.closest('.collapsible-header');
+                if (!header) return;
+
+                const targetId = header.dataset.target;
+                const content = document.getElementById(targetId);
+                const icon = header.querySelector('.collapse-icon');
+                const wrapper = header.parentElement;
+
+                if (content && icon) {
+                    const isCollapsed = content.classList.contains('collapsed');
+                    
+                    if (isCollapsed) {
+                        // Expand
+                        content.classList.remove('collapsed');
+                        icon.classList.remove('collapsed');
+                        wrapper.style.flexBasis = '33.33%';
+                    } else {
+                        // Collapse
+                        content.classList.add('collapsed');
+                        icon.classList.add('collapsed');
+                        wrapper.style.flexBasis = '50px'; // Height of header only
+                    }
+                    
+                    // Save collapsed state
+                    const sectionName = targetId.replace('Content', '');
+                    localStorage.setItem(`${sectionName}Collapsed`, !isCollapsed);
+                    saveColumnSizes(); // Update saved sizes
+                }
+            };
+
+            // Add event listeners for collapsible headers
+            document.addEventListener('click', handleCollapsibleClick);
+
+            // Load collapsed states
+            const loadCollapsedStates = () => {
+                const goalsCollapsed = localStorage.getItem('goalsCollapsed') === 'true';
+                const notesCollapsed = localStorage.getItem('notesCollapsed') === 'true';
+
+                if (goalsCollapsed) {
+                    const goalsContent = document.getElementById('goalsContent');
+                    const goalsIcon = document.querySelector('[data-target="goalsContent"] .collapse-icon');
+                    const goalsWrapper = document.getElementById('goalsWrapper');
+                    
+                    goalsContent?.classList.add('collapsed');
+                    goalsIcon?.classList.add('collapsed');
+                    if (goalsWrapper) goalsWrapper.style.flexBasis = '50px';
+                }
+
+                if (notesCollapsed) {
+                    const notesContent = document.getElementById('notesContent');
+                    const notesIcon = document.querySelector('[data-target="notesContent"] .collapse-icon');
+                    const notesWrapper = document.getElementById('notesWrapper');
+                    
+                    notesContent?.classList.add('collapsed');
+                    notesIcon?.classList.add('collapsed');
+                    if (notesWrapper) notesWrapper.style.flexBasis = '50px';
+                }
+            };
 
             // --- Resizable Panels ---
             function saveColumnSizes() {
@@ -2502,13 +2991,15 @@ This error cannot be fixed within this application's code; it requires a configu
             loadDataFromLocalStorage(); // This now loads API settings too
             loadServerSettings();
             loadColumnSizes();
+            loadCollapsedStates();
             loadTheme();
             fullRender();
             
             makeResizable(document.getElementById('resizer1'), document.getElementById('panelClients'), document.getElementById('panelAppointments'));
             makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'));
             makeResizable(document.getElementById('resizer3'), document.getElementById('panelSession'), document.getElementById('panelSoap'));
-            makeResizable(document.getElementById('resizer-session-notes'), document.getElementById('sessionInfoWrapper'), document.getElementById('notesWrapper'), 'y');
+            makeResizable(document.getElementById('resizer-session-goals'), document.getElementById('sessionInfoWrapper'), document.getElementById('goalsWrapper'), 'y');
+            makeResizable(document.getElementById('resizer-goals-notes'), document.getElementById('goalsWrapper'), document.getElementById('notesWrapper'), 'y');
 
         });
     </script>
