@@ -627,7 +627,7 @@
 <body data-theme="light">
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.31</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.32</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -665,23 +665,44 @@
             <!-- Appointments Panel -->
             <div class="panel appointments-panel" id="panelAppointments">
                 <div class="panel-header">
-                    <span>Appointments</span>
+                    <span>Appointments & Goals</span>
                 </div>
-                <div class="panel-content" id="appointmentList">
-                    <div class="no-selection">Select a client first</div>
+                
+                <!-- Tab Navigation -->
+                <div style="display: flex; border-bottom: 2px solid var(--panel-border); background: var(--panel-bg); flex-shrink: 0;">
+                    <button id="appointmentsTabBtn" class="panel-tab-btn active" style="flex: 1; padding: 12px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-color-primary); border-bottom: 3px solid #3498db;">Appointments</button>
+                    <button id="goalsTabBtn" class="panel-tab-btn" style="flex: 1; padding: 12px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-color-secondary); border-bottom: 3px solid transparent;">Treatment Goals</button>
                 </div>
-                <div class="panel-footer">
-                     <label for="appointmentDateInput" style="font-weight: 600; color: var(--text-color-secondary); font-size: 0.875rem; margin-bottom: 4px; display: block;">Appointment Date</label>
-                     <div style="display: flex; align-items: center; gap: 8px;">
-                         <input type="date" id="appointmentDateInput" style="flex-grow: 1;">
-                         <button class="add-btn" id="addAppointmentBtn" disabled>+</button>
-                         <button id="updateAppointmentDateBtn" class="btn hidden" style="padding: 4px 8px; font-size: 0.8rem;">Update</button>
-                     </div>
+                
+                <!-- Appointments Tab Content -->
+                <div id="appointmentsTabContent" class="panel-content" style="display: flex; flex-direction: column;">
+                    <div id="appointmentList" style="flex-grow: 1; overflow-y: auto;">
+                        <div class="no-selection">Select a client first</div>
+                    </div>
+                    <div class="panel-footer">
+                         <label for="appointmentDateInput" style="font-weight: 600; color: var(--text-color-secondary); font-size: 0.875rem; margin-bottom: 4px; display: block;">Appointment Date</label>
+                         <div style="display: flex; align-items: center; gap: 8px;">
+                             <input type="date" id="appointmentDateInput" style="flex-grow: 1;">
+                             <button class="add-btn" id="addAppointmentBtn" disabled>+</button>
+                             <button id="updateAppointmentDateBtn" class="btn hidden" style="padding: 4px 8px; font-size: 0.8rem;">Update</button>
+                         </div>
+                    </div>
+                     <div class="panel-footer">
+                         <h3 style="color: var(--text-color-secondary); font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem;">Recently Deleted</h3>
+                         <div id="deletedAppointmentsList" class="deleted-list"></div>
+                         <button id="clearDeletedAppointmentsBtn" class="clear-deleted-btn hidden">Clear All</button>
+                    </div>
                 </div>
-                 <div class="panel-footer">
-                     <h3 style="color: var(--text-color-secondary); font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem;">Recently Deleted</h3>
-                     <div id="deletedAppointmentsList" class="deleted-list"></div>
-                     <button id="clearDeletedAppointmentsBtn" class="clear-deleted-btn hidden">Clear All</button>
+                
+                <!-- Goals Tab Content -->
+                <div id="goalsTabContent" class="panel-content" style="display: none; flex-direction: column; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--panel-border); flex-shrink: 0;">
+                        <span style="font-weight: 600; color: var(--text-color-primary);">Client Goals</span>
+                        <button id="addGoalBtnInTab" class="add-btn" disabled>+</button>
+                    </div>
+                    <div id="goalsListInTab" style="flex-grow: 1; overflow-y: auto; padding: 10px;">
+                        <div class="no-selection">Select a client to manage goals</div>
+                    </div>
                 </div>
             </div>
 
@@ -689,7 +710,7 @@
 
             <!-- Session & Notes Panel -->
             <div class="panel session-panel" id="panelSession">
-                 <div id="sessionInfoWrapper" class="session-section" style="flex-basis: 33.33%;">
+                 <div id="sessionInfoWrapper" class="session-section" style="flex-basis: 50%;">
                      <div class="panel-header">
                          <span>Session Information</span>
                          <button id="customInstructionsBtn" class="btn" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 8px;" title="Add custom AI instructions for this note">⚙️ Instructions</button>
@@ -707,22 +728,12 @@
                      </div>
                  </div>
                  <div class="resizer-y" id="resizer-session-notes"></div>
-                 <div id="notesWrapper" class="session-section persistent-notes-section" style="flex-basis: 33.33%;">
+                 <div id="notesWrapper" class="session-section persistent-notes-section" style="flex-basis: 50%;">
                      <div class="panel-header collapsible-header" data-target="notesContent">
                          <span>Persistent Notes <span class="collapse-icon">▼</span></span>
                      </div>
                      <div id="notesContent" class="panel-content collapsible-content">
                          <textarea id="persistentNotes" placeholder="Select a client to enter persistent notes..." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
-                     </div>
-                 </div>
-                 <div class="resizer-y" id="resizer-notes-goals"></div>
-                 <div id="goalsWrapper" class="session-section goals-section" style="flex-basis: 33.33%;">
-                     <div class="panel-header collapsible-header" data-target="goalsContent">
-                         <span>Treatment Goals <span class="collapse-icon">▼</span></span>
-                         <button id="addGoalBtn" class="add-btn" disabled>+</button>
-                     </div>
-                     <div id="goalsContent" class="panel-content collapsible-content" id="goalsList">
-                         <div class="no-selection">Select a client to manage goals</div>
                      </div>
                  </div>
             </div>
@@ -903,8 +914,12 @@
             const fileInput = document.getElementById('fileInput');
             const themeToggleBtn = document.getElementById('themeToggleBtn');
             // Goals Elements
-            const goalsListEl = document.getElementById('goalsContent');
-            const addGoalBtn = document.getElementById('addGoalBtn');
+            const goalsListInTabEl = document.getElementById('goalsListInTab');
+            const addGoalBtnInTab = document.getElementById('addGoalBtnInTab');
+            const appointmentsTabBtn = document.getElementById('appointmentsTabBtn');
+            const goalsTabBtn = document.getElementById('goalsTabBtn');
+            const appointmentsTabContent = document.getElementById('appointmentsTabContent');
+            const goalsTabContent = document.getElementById('goalsTabContent');
 
             // App State
             let data = { clients: [], archivedClients: [] };
@@ -1000,11 +1015,10 @@
 
             const renderGoals = () => {
                 const client = findClient(selectedClientId);
-                const goalsContentEl = document.getElementById('goalsContent');
-                addGoalBtn.disabled = !client;
+                addGoalBtnInTab.disabled = !client;
                 
                 if (!client) {
-                    goalsContentEl.innerHTML = '<div class="no-selection">Select a client to manage goals</div>';
+                    goalsListInTabEl.innerHTML = '<div class="no-selection">Select a client to manage goals</div>';
                     return;
                 }
 
@@ -1013,11 +1027,11 @@
                 }
 
                 if (client.goals.length === 0) {
-                    goalsContentEl.innerHTML = '<div class="no-selection">Click + to add a treatment goal</div>';
+                    goalsListInTabEl.innerHTML = '<div class="no-selection">Click + to add a treatment goal</div>';
                     return;
                 }
 
-                goalsContentEl.innerHTML = client.goals.map(goal => `
+                goalsListInTabEl.innerHTML = client.goals.map(goal => `
                     <div class="goal-item" data-goal-id="${goal.id}">
                         <div class="goal-header">
                             <div class="goal-title">${goal.title}</div>
@@ -2723,10 +2737,29 @@ This error cannot be fixed within this application's code; it requires a configu
                 renderClients();
             });
             addAppointmentBtn.addEventListener('click', addAppointment);
-            addGoalBtn.addEventListener('click', addGoal);
+            addGoalBtnInTab.addEventListener('click', addGoal);
+
+            // Tab switching functionality
+            appointmentsTabBtn.addEventListener('click', () => {
+                appointmentsTabBtn.style.color = 'var(--text-color-primary)';
+                appointmentsTabBtn.style.borderBottomColor = '#3498db';
+                goalsTabBtn.style.color = 'var(--text-color-secondary)';
+                goalsTabBtn.style.borderBottomColor = 'transparent';
+                appointmentsTabContent.style.display = 'flex';
+                goalsTabContent.style.display = 'none';
+            });
+
+            goalsTabBtn.addEventListener('click', () => {
+                goalsTabBtn.style.color = 'var(--text-color-primary)';
+                goalsTabBtn.style.borderBottomColor = '#3498db';
+                appointmentsTabBtn.style.color = 'var(--text-color-secondary)';
+                appointmentsTabBtn.style.borderBottomColor = 'transparent';
+                goalsTabContent.style.display = 'flex';
+                appointmentsTabContent.style.display = 'none';
+            });
 
             // Goals event delegation
-            goalsListEl.addEventListener('click', (e) => {
+            goalsListInTabEl.addEventListener('click', (e) => {
                 const goalItem = e.target.closest('.goal-item');
                 if (!goalItem) return;
                 
@@ -2752,7 +2785,7 @@ This error cannot be fixed within this application's code; it requires a configu
             });
 
             // Show/hide objective delete buttons on hover
-            goalsListEl.addEventListener('mouseover', (e) => {
+            goalsListInTabEl.addEventListener('mouseover', (e) => {
                 const objectiveItem = e.target.closest('.objective-item');
                 if (objectiveItem) {
                     const deleteBtn = objectiveItem.querySelector('.delete-btn');
@@ -2760,7 +2793,7 @@ This error cannot be fixed within this application's code; it requires a configu
                 }
             });
 
-            goalsListEl.addEventListener('mouseout', (e) => {
+            goalsListInTabEl.addEventListener('mouseout', (e) => {
                 const objectiveItem = e.target.closest('.objective-item');
                 if (objectiveItem) {
                     const deleteBtn = objectiveItem.querySelector('.delete-btn');
