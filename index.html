@@ -2996,23 +2996,7 @@ This error cannot be fixed within this application's code; it requires a configu
 
             // Load collapsed states
             const loadCollapsedStates = () => {
-                const goalsCollapsed = localStorage.getItem('goalsCollapsed') === 'true';
                 const notesCollapsed = localStorage.getItem('notesCollapsed') === 'true';
-
-                if (goalsCollapsed) {
-                    const goalsContent = document.getElementById('goalsContent');
-                    const goalsIcon = document.querySelector('[data-target="goalsContent"] .collapse-icon');
-                    const goalsWrapper = document.getElementById('goalsWrapper');
-                    
-                    goalsContent?.classList.add('collapsed', 'pinned');
-                    goalsIcon?.classList.add('collapsed');
-                    if (goalsWrapper) {
-                        goalsWrapper.style.flexBasis = '50px';
-                        goalsWrapper.style.minHeight = '50px';
-                        goalsWrapper.style.maxHeight = '50px';
-                        goalsWrapper.style.order = ''; // Clear order to let CSS handle it
-                    }
-                }
 
                 if (notesCollapsed) {
                     const notesContent = document.getElementById('notesContent');
@@ -3161,7 +3145,6 @@ This error cannot be fixed within this application's code; it requires a configu
             makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'));
             makeResizable(document.getElementById('resizer3'), document.getElementById('panelSession'), document.getElementById('panelSoap'));
             makeResizable(document.getElementById('resizer-session-notes'), document.getElementById('sessionInfoWrapper'), document.getElementById('notesWrapper'), 'y');
-            makeResizable(document.getElementById('resizer-notes-goals'), document.getElementById('notesWrapper'), document.getElementById('goalsWrapper'), 'y');
 
         });
     </script>
