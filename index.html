@@ -627,7 +627,7 @@
 <body data-theme="light">
     <div class="container">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.30</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v.0.0.31</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -692,6 +692,7 @@
                  <div id="sessionInfoWrapper" class="session-section" style="flex-basis: 33.33%;">
                      <div class="panel-header">
                          <span>Session Information</span>
+                         <button id="customInstructionsBtn" class="btn" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 8px;" title="Add custom AI instructions for this note">⚙️ Instructions</button>
                          <button id="generateNoteBtn" class="btn" style="padding: 4px 8px; font-size: 0.8rem;" disabled>Generate Note</button>
                      </div>
                      <div class="panel-content">
@@ -740,6 +741,26 @@
         </div>
     </div>
     
+    <!-- Custom Instructions Modal -->
+    <div id="customInstructionsModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--modal-header-border);">
+                <h2 style="font-size: 1.5rem; font-weight: bold;">Custom AI Instructions</h2>
+                <button id="closeCustomInstructionsBtn" style="font-size: 2rem; background: none; border: none; cursor: pointer; color: inherit;">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label for="customInstructionsInput" style="margin-bottom: 0.5rem; font-weight: 600; display: block;">Special Instructions for This Note:</label>
+                <textarea id="customInstructionsInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 12px; width: 100%; background-color: var(--input-bg); color: var(--input-text); font-family: inherit; font-size: 14px; min-height: 150px; resize: vertical;" placeholder="E.g., Focus on anxiety management in the assessment, or include specific CBT techniques used..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button id="saveCustomInstructionsBtn" class="btn save-btn" style="flex-grow: 1;">Save Instructions</button>
+                <button id="clearCustomInstructionsBtn" class="btn" style="flex-grow: 1; background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);">Clear Instructions</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal-overlay hidden">
         <div class="modal-content">
@@ -856,6 +877,13 @@
             const exportBtn = document.getElementById('exportBtn');
             const importBtn = document.getElementById('importBtn');
             const eraseAllBtn = document.getElementById('eraseAllBtn');
+            // Custom Instructions Modal Elements
+            const customInstructionsBtn = document.getElementById('customInstructionsBtn');
+            const customInstructionsModal = document.getElementById('customInstructionsModal');
+            const closeCustomInstructionsBtn = document.getElementById('closeCustomInstructionsBtn');
+            const customInstructionsInput = document.getElementById('customInstructionsInput');
+            const saveCustomInstructionsBtn = document.getElementById('saveCustomInstructionsBtn');
+            const clearCustomInstructionsBtn = document.getElementById('clearCustomInstructionsBtn');
             // AI Integration Elements
             const apiProviderSelect = document.getElementById('apiProviderSelect');
             const openwebuiSettings = document.getElementById('openwebuiSettings');
@@ -891,6 +919,7 @@
             let openaiApiKey = null;
             let selectedModel = null;
             let sessionTimerInterval = null;
+            let customInstructions = ''; // Store custom instructions for current appointment
             const getInitialData = () => ({ clients: [], archivedClients: [] });
 
             // --- Data Management ---
@@ -951,6 +980,9 @@
                 sessionInfoEl.disabled = !appointment;
                 sessionInfoEl.value = appointment ? appointment.sessionInfo || '' : '';
                 sessionInfoEl.placeholder = appointment ? "Enter session details..." : "Select an appointment to begin...";
+                
+                // Load custom instructions for this appointment
+                customInstructions = appointment ? appointment.customInstructions || '' : '';
                 
                 updateAppointmentDateBtn.classList.toggle('hidden', !appointment);
                 addAppointmentBtn.classList.toggle('hidden', !!appointment);
@@ -1647,11 +1679,29 @@
                     
                     const currentLineStart = text.lastIndexOf('\n', start - 1) + 1;
                     const currentLine = text.substring(currentLineStart, start);
+                    const restOfLine = text.substring(start, text.indexOf('\n', start) === -1 ? text.length : text.indexOf('\n', start));
 
-                    if (currentLine.trim() === '•') {
+                    // Check if current line is just bullet with optional spaces
+                    const isJustBullet = currentLine.match(/^•\s*$/);
+                    
+                    // NEW: Check if cursor is right after bullet+space with content following
+                    const hasBulletAndSpace = currentLine.match(/^•\s+$/);
+                    const hasContentAfter = restOfLine.trim() !== '';
+
+                    if (isJustBullet && !hasContentAfter) {
+                        // Empty bullet point line with nothing after - remove it
                         textarea.value = text.substring(0, currentLineStart) + text.substring(end);
                         textarea.selectionStart = textarea.selectionEnd = currentLineStart;
+                    } else if (currentLineStart === 0 && currentLine.trim() === '') {
+                        // At very beginning with no content - just add bullet
+                        textarea.value = '• ' + text.substring(end);
+                        textarea.selectionStart = textarea.selectionEnd = 2;
+                    } else if (hasBulletAndSpace && hasContentAfter) {
+                        // User is at "• |content" - insert new bullet above
+                        textarea.value = text.substring(0, currentLineStart) + '• \n' + text.substring(currentLineStart);
+                        textarea.selectionStart = textarea.selectionEnd = currentLineStart + 3;
                     } else {
+                        // Normal case - create new line with bullet point
                         textarea.value = text.substring(0, start) + '\n• ' + text.substring(end);
                         textarea.selectionStart = textarea.selectionEnd = start + 3;
                     }
@@ -1948,6 +1998,7 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
                 const userPrompt = `
 - **Session Information (This Session):**
 ${sessionInfoEl.value}${treatmentGoalsContext}
+${customInstructions ? `\n- **Special Instructions for This Note:**\n${customInstructions}` : ''}
 `;
                 const fullPrompt = `${systemPrompt}\n\n**User Input:**\n${userPrompt}`;
 
@@ -2027,7 +2078,7 @@ ${sessionInfoEl.value}${treatmentGoalsContext}
                     }
                 }
 
-                const userPrompt = `- **Session Information (This Session):**\n${sessionInfoEl.value}${treatmentGoalsContext}`;
+                const userPrompt = `- **Session Information (This Session):**\n${sessionInfoEl.value}${treatmentGoalsContext}${customInstructions ? `\n- **Special Instructions for This Note:**\n${customInstructions}` : ''}`;
 
                 const payload = {
                     model: selectedModel,
@@ -2108,7 +2159,7 @@ ${sessionInfoEl.value}${treatmentGoalsContext}
                 const userPrompt = `
 - **Client Name:** ${client.name}
 - **Session Information (This Session):**
-${sessionInfoEl.value}${treatmentGoalsContext}`;
+${sessionInfoEl.value}${treatmentGoalsContext}${customInstructions ? `\n- **Special Instructions for This Note:**\n${customInstructions}` : ''}`;
 
                 const payload = {
                     model: selectedModel,
@@ -2731,6 +2782,37 @@ This error cannot be fixed within this application's code; it requires a configu
                 if(e.target.id === 'settingsModal') {
                     settingsModal.classList.add('hidden');
                 }
+            });
+            customInstructionsBtn.addEventListener('click', () => {
+                customInstructionsModal.classList.remove('hidden');
+                customInstructionsInput.value = customInstructions;
+                customInstructionsInput.focus();
+            });
+            closeCustomInstructionsBtn.addEventListener('click', () => customInstructionsModal.classList.add('hidden'));
+            customInstructionsModal.addEventListener('click', (e) => {
+                if(e.target.id === 'customInstructionsModal') {
+                    customInstructionsModal.classList.add('hidden');
+                }
+            });
+            saveCustomInstructionsBtn.addEventListener('click', () => {
+                customInstructions = customInstructionsInput.value;
+                customInstructionsModal.classList.add('hidden');
+                markDirty();
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                if (appointment) {
+                    appointment.customInstructions = customInstructions;
+                }
+            });
+            clearCustomInstructionsBtn.addEventListener('click', () => {
+                customInstructionsInput.value = '';
+                customInstructions = '';
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                if (appointment) {
+                    delete appointment.customInstructions;
+                }
+                markDirty();
             });
             modelSelect.addEventListener('change', (e) => {
                 selectedModel = e.target.value;
