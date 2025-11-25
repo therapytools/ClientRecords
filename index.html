@@ -3133,7 +3133,12 @@ This error cannot be fixed within this application's code; it requires a configu
                 applyTheme(savedTheme);
             };
 
-            appointmentDateInput.value = new Date().toISOString().split('T')[0];
+            // Set appointment date to today (local timezone, not UTC)
+            const today = new Date();
+            const localDateString = today.getFullYear() + '-' + 
+                String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(today.getDate()).padStart(2, '0');
+            appointmentDateInput.value = localDateString;
             loadDataFromLocalStorage(); // This now loads API settings too
             loadServerSettings();
             loadColumnSizes();
