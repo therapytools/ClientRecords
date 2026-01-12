@@ -631,6 +631,7 @@
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
+            <button id="informedConsentBtn" class="btn">Informed Consent</button>
             <button id="manualSaveBtn" class="btn save-btn">Save Now</button>
             <button id="settingsBtn" class="btn settings-btn">Settings</button>
             <button id="themeToggleBtn" class="btn theme-btn" title="Toggle Theme">🌙</button>
@@ -854,6 +855,21 @@
         </div>
     </div>
 
+    <div id="informedConsentModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--modal-header-border);">
+                <h2 style="font-size: 1.5rem; font-weight: bold;">Informed Consent</h2>
+                <button id="closeConsentBtn" style="font-size: 2rem; background: none; border: none; cursor: pointer; color: inherit;">&times;</button>
+            </div>
+            <div style="max-height: 60vh; overflow-y: auto; margin-bottom: 1.5rem; line-height: 1.6;">
+                <p>What we discuss here is confidential, with legal limits. I may need to break confidentiality if there is a risk of serious harm to you or others, suspected abuse of a child, elderly, or vulnerable adult, or if records are legally required. Sessions are billed at the agreed fee, and insurance is billed when applicable. You are responsible for any copays, deductibles, or denied claims. Appointments cancelled with less than 24 hours' notice, or missed entirely, are charged the full session fee. I wait up to ten minutes for scheduled sessions before a session is considered missed. Email is used for scheduling and administrative communication only, not emergencies. If you are in crisis, please contact 988 or call 911. Do you have any questions before we continue?</p>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button id="closeConsentBtnBottom" class="btn" style="background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);">Close</button>
+            </div>
+        </div>
+    </div>
+
     <input type="file" id="fileInput" class="hidden" accept="application/json">
 
     <script>
@@ -885,6 +901,10 @@
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsModal = document.getElementById('settingsModal');
             const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+            const informedConsentBtn = document.getElementById('informedConsentBtn');
+            const informedConsentModal = document.getElementById('informedConsentModal');
+            const closeConsentBtn = document.getElementById('closeConsentBtn');
+            const closeConsentBtnBottom = document.getElementById('closeConsentBtnBottom');
             const manualSaveBtn = document.getElementById('manualSaveBtn');
             const exportBtn = document.getElementById('exportBtn');
             const importBtn = document.getElementById('importBtn');
@@ -2887,6 +2907,14 @@ This error cannot be fixed within this application's code; it requires a configu
             settingsModal.addEventListener('click', (e) => {
                 if(e.target.id === 'settingsModal') {
                     settingsModal.classList.add('hidden');
+                }
+            });
+            informedConsentBtn.addEventListener('click', () => informedConsentModal.classList.remove('hidden'));
+            closeConsentBtn.addEventListener('click', () => informedConsentModal.classList.add('hidden'));
+            closeConsentBtnBottom.addEventListener('click', () => informedConsentModal.classList.add('hidden'));
+            informedConsentModal.addEventListener('click', (e) => {
+                if(e.target.id === 'informedConsentModal') {
+                    informedConsentModal.classList.add('hidden');
                 }
             });
             customInstructionsBtn.addEventListener('click', () => {
