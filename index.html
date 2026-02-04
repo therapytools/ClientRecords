@@ -632,6 +632,7 @@
                 <span id="saveStatus"></span>
             </div>
             <button id="informedConsentBtn" class="btn">Informed Consent</button>
+            <button id="cssrsBtn" class="btn">CSSRS</button>
             <button id="manualSaveBtn" class="btn save-btn">Save Now</button>
             <button id="settingsBtn" class="btn settings-btn">Settings</button>
             <button id="themeToggleBtn" class="btn theme-btn" title="Toggle Theme">🌙</button>
@@ -902,6 +903,7 @@
             const settingsModal = document.getElementById('settingsModal');
             const closeSettingsBtn = document.getElementById('closeSettingsBtn');
             const informedConsentBtn = document.getElementById('informedConsentBtn');
+            const cssrsBtn = document.getElementById('cssrsBtn');
             const informedConsentModal = document.getElementById('informedConsentModal');
             const closeConsentBtn = document.getElementById('closeConsentBtn');
             const closeConsentBtnBottom = document.getElementById('closeConsentBtnBottom');
@@ -2908,6 +2910,9 @@ This error cannot be fixed within this application's code; it requires a configu
                 if(e.target.id === 'settingsModal') {
                     settingsModal.classList.add('hidden');
                 }
+            });
+            cssrsBtn.addEventListener('click', () => {
+                window.open('../CSSRS.html', 'cssrsPopup', 'width=900,height=700,resizable=yes,scrollbars=yes');
             });
             informedConsentBtn.addEventListener('click', () => informedConsentModal.classList.remove('hidden'));
             closeConsentBtn.addEventListener('click', () => informedConsentModal.classList.add('hidden'));
