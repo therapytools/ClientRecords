@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CSSRS</title>
+  <style>
+    :root{
+      --border:#111;
+      --gray:#d9d9d9;
+      --yellow:#fff36a;
+      --orange:#f6b21a;
+      --red:#e97d7a;
+      --ink:#000;
+    }
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      color:var(--ink);
+      background:#f5f5f5;
+    }
+    .wrap{
+      max-width: 720px;
+      margin: 16px auto;
+      padding: 0 9px 20px;
+    }
+    .card{
+      background:#fff;
+      border: 2px solid var(--border);
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+    .titlebar{
+      background: var(--gray);
+      border-bottom: 2px solid var(--border);
+      font-weight: 900;
+      font-size: 18px;
+      letter-spacing: .5px;
+      padding: 8px 9px;
+      text-align: left;
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    td, th{
+      border: 2px solid var(--border);
+      vertical-align: top;
+      padding: 10px;
+    }
+    .topbar{
+      background: var(--gray);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 6px;
+    }
+    .topbar-right{
+      text-align:center;
+      font-weight:700;
+      width: 20%;
+      font-size: 12px;
+    }
+    .qcell{
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.12;
+    }
+    .qnum{
+      font-weight: 900;
+      margin-right: 6px;
+    }
+    .instr{
+      background: var(--gray);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .risk{
+      text-align:center;
+      font-weight: 900;
+      font-size: 20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100%;
+      min-height: 66px;
+    }
+    .risk.yellow{ background: var(--yellow); }
+    .risk.orange{ background: var(--orange); }
+    .risk.red{ background: var(--red); }
+    .subhdr{
+      background: var(--gray);
+      font-weight: 900;
+      font-size: 15px;
+      padding: 6px;
+    }
+    .minihead{
+      background:#fff;
+      font-weight: 900;
+      text-align:center;
+      font-size: 14px;
+      padding: 8px 6px;
+    }
+    .q6text{
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.12;
+    }
+    .examples{
+      font-size: 14px;
+      font-style: italic;
+      margin-top: 8px;
+      line-height: 1.25;
+      font-weight: 600;
+    }
+    .follow{
+      font-size: 16px;
+      font-weight: 900;
+      margin-top: 8px;
+    }
+    .controls{
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .risk select{
+      width: 100%;
+      min-width: 0;
+      text-align: center;
+      font-weight: 900;
+    }
+    .risk .label{
+      display:block;
+      margin: 0 0 6px 0;
+      text-align:center;
+    }
+    .q6right{
+      padding:0;
+      height:100%;
+      position: relative;
+    }
+    .q6row, .q6row > td{
+      height:100%;
+    }
+    .q6grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr;
+      position: absolute;
+      inset: 0;
+      align-items: stretch;
+    }
+    .q6rightcol{
+      border-left: 2px solid var(--border);
+    }
+    .q6body{
+      border-top: 2px solid var(--border);
+      height:100%;
+    }
+    .hidden{
+      display:none;
+    }
+    select, input[type="text"]{
+      font-size: 14px;
+      padding: 8px 10px;
+      border: 2px solid #222;
+      border-radius: 8px;
+      background:#fff;
+      min-width: 170px;
+    }
+    .label{
+      font-size: 13px;
+      font-weight: 800;
+      margin-right: 6px;
+    }
+
+    .risk-indicator{
+      margin-top: 14px;
+      border-top: 2px solid var(--border);
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      background:#fff;
+    }
+    .risk-pill{
+      padding: 8px 12px;
+      border: 2px solid var(--border);
+      font-weight: 900;
+      min-width: 120px;
+      text-align:center;
+    }
+    .risk-pill.low{ background: var(--yellow); }
+    .risk-pill.mod{ background: var(--orange); }
+    .risk-pill.high{ background: var(--red); }
+    .risk-note{
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .answers{
+      margin-top: 18px;
+      background:#fff;
+      border: 2px solid var(--border);
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      padding: 14px;
+    }
+    .answers h2{
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    textarea{
+      width:100%;
+      min-height: 190px;
+      border: 2px solid #222;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 14px;
+      line-height: 1.35;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .btnrow{
+      margin-top: 10px;
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    button{
+      border: 2px solid #111;
+      background:#fff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 900;
+      cursor:pointer;
+    }
+    button:active{ transform: translateY(1px); }
+    .status{
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 760px){
+      .qcell{ font-size: 20px; }
+      .q6text{ font-size: 22px; }
+      .risk-indicator{ flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="card" role="region" aria-label="CSSRS">
+      <div class="titlebar">CSSRS</div>
+      <table aria-label="CSSRS table">
+        <colgroup>
+          <col style="width: 80%">
+          <col style="width: 20%">
+        </colgroup>
+
+        <tr>
+          <td class="topbar">Always ask questions 1 and 2.</td>
+          <td class="topbar topbar-right">Past Month</td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="qcell"><span class="qnum">1)</span>Have you wished you were dead or wished you could go to sleep and not wake up?</div>
+          </td>
+          <td class="risk yellow" aria-label="Past Month color block">
+            <select id="q1" aria-label="Question 1 answer">
+              <option value=""></option>
+              <option value="YES">YES</option>
+              <option value="NO">NO</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="qcell"><span class="qnum">2)</span>Have you actually had any thoughts about killing yourself?</div>
+          </td>
+          <td class="risk yellow" aria-label="Past Month color block">
+            <select id="q2" aria-label="Question 2 answer">
+              <option value=""></option>
+              <option value="YES">YES</option>
+              <option value="NO">NO</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="instr" colspan="2">
+            If <strong>YES</strong> to 2, ask questions 3, 4, 5 and 6.<br/>
+            If <strong>NO</strong> to 2, skip to question 6.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="qcell"><span class="qnum">3)</span>Have you been thinking about how you might do this?</div>
+          </td>
+          <td class="risk orange" aria-label="Past Month orange block">
+            <select id="q3" aria-label="Question 3 answer">
+              <option value=""></option>
+              <option value="YES">YES</option>
+              <option value="NO">NO</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="qcell"><span class="qnum">4)</span>Have you had these thoughts and had some intention of acting on them?</div>
+          </td>
+          <td class="risk red" aria-label="High Risk">
+            <select id="q4" aria-label="Question 4 answer">
+              <option value=""></option>
+              <option value="YES">YES</option>
+              <option value="NO">NO</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <div class="qcell"><span class="qnum">5)</span>Have you started to work out or worked out the details of how to kill yourself? Did you intend to carry out this plan?</div>
+          </td>
+          <td class="risk red" aria-label="High Risk">
+            <select id="q5" aria-label="Question 5 answer">
+              <option value=""></option>
+              <option value="YES">YES</option>
+              <option value="NO">NO</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="subhdr">Always Ask Question 6</td>
+          <td class="q6right" rowspan="2">
+            <div class="q6grid" aria-label="Question 6 header and responses">
+              <div class="minihead">Lifetime</div>
+              <div class="minihead q6rightcol">Past 3 Months</div>
+              <div class="risk orange q6body" aria-label="Lifetime orange block">
+                <select id="q6" aria-label="Question 6 answer">
+                  <option value=""></option>
+                  <option value="YES">YES</option>
+                  <option value="NO">NO</option>
+                </select>
+              </div>
+              <div class="risk red q6body q6rightcol" aria-label="Past 3 Months high risk">
+                <select id="q6_3mo" aria-label="Question 6 within past 3 months answer">
+                  <option value=""></option>
+                  <option value="YES">YES</option>
+                  <option value="NO">NO</option>
+                </select>
+                <div id="q6_3mo_na" class="hidden">N/A</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="q6row">
+          <td>
+            <div class="q6text"><span class="qnum">6)</span>Have you done anything, started to do anything, or prepared to do anything to end your life?</div>
+            <div class="examples">
+              Examples: Took pills, tried to shoot yourself, cut yourself, tried to hang yourself; or collected pills, obtained a gun, gave away valuables, wrote a will or suicide note, took out pills but didn’t swallow any, held a gun but changed your mind or it was grabbed from your hand, went to the roof but didn’t jump, etc.
+            </div>
+            <div class="follow">If yes, was this within the past 3 months?</div>
+          </td>
+        </tr>
+      </table>
+
+      <div class="risk-indicator" aria-label="Risk level indicator">
+        <div class="label">Risk level:</div>
+        <div id="riskPill" class="risk-pill">Not set</div>
+        <div id="riskNote" class="risk-note"></div>
+      </div>
+    </div>
+
+    <div class="answers" aria-label="Compiled answers">
+      <h2>Clinical Note (copyable)</h2>
+      <textarea id="compiled" readonly>Complete all required fields to generate clinical note.</textarea>
+      <div class="btnrow">
+        <button id="copyBtn" type="button">Copy</button>
+        <button id="clearBtn" type="button">Clear</button>
+        <span class="status" id="status" aria-live="polite"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const ids = ["q1","q2","q3","q4","q5","q6","q6_3mo"];
+    const el = (id) => document.getElementById(id);
+
+    function valOrBlank(v){ return (v && v.trim()) ? v.trim() : ""; }
+
+    function setDisabled(id, disabled){
+      const node = el(id);
+      node.disabled = disabled;
+      if (disabled) node.value = "";
+    }
+
+    function applySkipLogic(){
+      const a2 = valOrBlank(el("q2").value);
+      const skip = (a2 === "NO");
+      setDisabled("q3", skip);
+      setDisabled("q4", skip);
+      setDisabled("q5", skip);
+
+      const a6 = valOrBlank(el("q6").value);
+      const skip6m = (a6 !== "YES");
+      setDisabled("q6_3mo", skip6m);
+      el("q6_3mo").classList.toggle("hidden", skip6m);
+      el("q6_3mo_na").classList.toggle("hidden", !skip6m);
+    }
+
+    function deriveRisk(){
+      const a1 = valOrBlank(el("q1").value);
+      const a2 = valOrBlank(el("q2").value);
+      const a3 = valOrBlank(el("q3").value);
+      const a4 = valOrBlank(el("q4").value);
+      const a5 = valOrBlank(el("q5").value);
+      const a6 = valOrBlank(el("q6").value);
+      const a6m = valOrBlank(el("q6_3mo").value);
+
+      let high = false;
+      let moderate = false;
+      let low = false;
+
+      // Base rules: Q2 does not change risk (still low). Q3 YES => moderate, Q3 NO => low.
+      if (a3 === "YES") moderate = true;
+      else if (a3 === "NO") low = true;
+
+      // If Q4 or Q5 YES => high. If NO, do not change prior level.
+      if (a4 === "YES" || a5 === "YES"){
+        high = true;
+        moderate = false;
+        low = false;
+      }
+
+      // Q6 only modifies risk when Lifetime (Q6) is YES.
+      if (a6 === "YES"){
+        if (a6m === "YES"){
+          high = true;
+          moderate = false;
+          low = false;
+        } else if (!high){
+          moderate = true;
+          low = false;
+        }
+      }
+
+      if (!high && !moderate){
+        low = true;
+      }
+
+      if (high) return { level: "High", cls: "high", note: "Positive intent/plan and/or recent behavior." };
+      if (moderate) return { level: "Moderate", cls: "mod", note: "Ideation present without intent/plan or behavior." };
+      if (low) return { level: "Low", cls: "low", note: "No intent/plan or behavior endorsed." };
+      return { level: "Not set", cls: "", note: "" };
+    }
+
+    function updateRiskUI(){
+      const risk = deriveRisk();
+      const pill = el("riskPill");
+      const note = el("riskNote");
+
+      pill.textContent = risk.level;
+      pill.className = "risk-pill" + (risk.cls ? " " + risk.cls : "");
+      note.textContent = risk.note;
+    }
+
+    function isComplete(){
+      const a1 = valOrBlank(el("q1").value);
+      const a2 = valOrBlank(el("q2").value);
+      const a3 = valOrBlank(el("q3").value);
+      const a4 = valOrBlank(el("q4").value);
+      const a5 = valOrBlank(el("q5").value);
+      const a6 = valOrBlank(el("q6").value);
+      const a6m = valOrBlank(el("q6_3mo").value);
+
+      if (!a1 || !a2 || !a6) return false;
+      if (a2 === "YES" && (!a3 || !a4 || !a5)) return false;
+      if (a6 === "YES" && !a6m) return false;
+      if (a6 === "NO") return true;
+      return true;
+    }
+
+    function buildCompiled(){
+      if (!isComplete()){
+        el("compiled").value = "Complete all required fields to generate clinical note.";
+        return;
+      }
+
+      const a1 = valOrBlank(el("q1").value);
+      const a2 = valOrBlank(el("q2").value);
+      const a3 = valOrBlank(el("q3").value);
+      const a4 = valOrBlank(el("q4").value);
+      const a5 = valOrBlank(el("q5").value);
+      const a6 = valOrBlank(el("q6").value);
+      const a6m = valOrBlank(el("q6_3mo").value);
+      const risk = deriveRisk();
+
+      const lines = [];
+
+      lines.push("CSSRS (Past Month) - Responses");
+      lines.push("1) Have you wished you were dead or wished you could go to sleep and not wake up? Answer: " + (a1 || ""));
+      lines.push("2) Have you actually had any thoughts about killing yourself? Answer: " + (a2 || ""));
+
+      if (a2 === "YES"){
+        lines.push("3) Have you been thinking about how you might do this? Answer: " + (a3 || ""));
+        lines.push("4) Have you had these thoughts and had some intention of acting on them? Answer: " + (a4 || ""));
+        lines.push("5) Have you started to work out or worked out the details of how to kill yourself? Did you intend to carry out this plan? Answer: " + (a5 || ""));
+      }
+
+      lines.push("6) Have you done anything, started to do anything, or prepared to do anything to end your life? Answer: " + (a6 || ""));
+      if (a6 === "YES"){
+        lines.push("   If yes, was this within the past 3 months? Answer: " + (a6m || ""));
+      } else {
+        lines.push("   If yes, was this within the past 3 months? Answer: N/A");
+      }
+      lines.push("");
+      lines.push("Risk level: " + risk.level);
+      if (risk.note) lines.push("Risk note: " + risk.note);
+
+      el("compiled").value = lines.join("\n");
+    }
+
+    async function copyCompiled(){
+      const text = el("compiled").value;
+      if (!text.trim()){
+        el("status").textContent = "Nothing to copy.";
+        return;
+      }
+      try{
+        await navigator.clipboard.writeText(text);
+        el("status").textContent = "Copied.";
+      }catch(e){
+        el("compiled").focus();
+        el("compiled").select();
+        el("status").textContent = "Clipboard blocked. Selected text instead (press Ctrl/Cmd+C).";
+      }
+    }
+
+    function clearAll(){
+      ids.forEach(id => el(id).value = "");
+      el("status").textContent = "";
+      applySkipLogic();
+      updateRiskUI();
+      buildCompiled();
+    }
+
+    ids.forEach(id => el(id).addEventListener("change", () => {
+      applySkipLogic();
+      updateRiskUI();
+      buildCompiled();
+    }));
+    document.getElementById("copyBtn").addEventListener("click", copyCompiled);
+    document.getElementById("clearBtn").addEventListener("click", clearAll);
+
+    applySkipLogic();
+    updateRiskUI();
+    buildCompiled();
+  </script>
+</body>
+</html>
