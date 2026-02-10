@@ -1934,10 +1934,12 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 - In addition to the main SOAP content, you will provide clinical language suggestions for all four sections when appropriate stronger clinical terminology is available.
 - These suggestions should improve clinical precision and professional language without adding new information.
 - The suggestions should be returned in four JSON keys: \`s_suggestion\`, \`o_suggestion\`, \`a_suggestion\`, and \`p_suggestion\`.
-- For any section (S, O, A, P), the value for its suggestion key (e.g., \`s_suggestion\`) MUST be an array that can contain two types of items:
+- For any section (S, O, A, P), the value for its suggestion key (e.g., \`s_suggestion\`) MUST be an array that can contain three types of items:
     1.  A JSON object for suggesting a *revision* to text you've already placed in the corresponding section: \`{"original": "[the exact original text to be replaced]", "suggested": "[the new suggested text]"}\`. The "original" text must be a direct, verbatim quote of one of the bullet points from the corresponding section you generated.
     2.  A simple string for suggesting a *new idea* not already in that section. Example: "Consider exploring coping mechanisms for social anxiety."
-- A mixed example for an \`a_suggestion\` key would look like: \`[{"original": "• Ct is tired.", "suggested": "• Ct presented with fatigue."}, "Recommend weekly check-ins."]\`
+    3.  A standalone interpretive insight (no prefix text required) that infers what likely happened in session, assuming interventions when needed and leaning on Narrative/Psychodynamic modalities. These insights do not reference an "original" bullet and should read like complete clinical statements (e.g., "Writer reframed Ct's trauma narrative using Narrative exposure techniques to reinforce agency.").
+- A mixed example for an \`a_suggestion\` key would look like: \`[{"original": "• Ct is tired.", "suggested": "• Ct presented with fatigue."}, "Recommend weekly check-ins.", "Writer linked Ct's family narrative to psychodynamic themes of loss, highlighting unresolved grief patterns."]\`
+- Objective (\`o_suggestion\`) MUST include 7–10 interpretive insights of this type. Plan (\`p_suggestion\`) MUST include exactly 3 interpretive insights. Other sections may include or omit these insights as appropriate.
 - If you have no suggestion for any section, return an empty array \`[]\` for that key.
 
 **CRITICAL INSTRUCTIONS:**
