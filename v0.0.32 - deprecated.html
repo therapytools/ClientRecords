@@ -279,7 +279,7 @@
             opacity: 0;
             transition: opacity 0.2s ease-in-out;
         }
-        .client-item:hover .action-buttons, .appointment-item:hover .action-buttons, .note-item:hover .action-buttons, .intake-item:hover .action-buttons {
+        .client-item:hover .action-buttons, .appointment-item:hover .action-buttons {
             opacity: 1;
         }
         .action-btn {
@@ -309,52 +309,6 @@
             border-left-color: var(--appointment-item-active-border, #9c27b0);
         }
         .appointment-date { font-weight: 600; color: var(--text-color-primary); }
-
-        .note-item {
-            background: var(--item-bg); margin-bottom: 8px; padding: 10px;
-            border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
-            border-left: 4px solid #16a085; position: relative;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .note-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        }
-        .note-item.active {
-            background: #e8f8f5;
-            border-left-color: #138d75;
-        }
-        [data-theme="dark"] .note-item.active {
-            background: #2f4a45;
-            border-left-color: #35c9a5;
-        }
-        .note-name { font-weight: 600; color: var(--text-color-primary); }
-        .intake-item {
-            background: var(--item-bg); margin-bottom: 8px; padding: 10px;
-            border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
-            border-left: 4px solid #d35400; position: relative;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .intake-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        }
-        .intake-item.active {
-            background: #fdf2e9;
-            border-left-color: #ba4a00;
-        }
-        [data-theme="dark"] .intake-item.active {
-            background: #4a3a2d;
-            border-left-color: #f5b041;
-        }
-        .list-subheader {
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            color: var(--text-color-secondary);
-            margin: 8px 0 6px;
-            text-transform: uppercase;
-        }
 
         /* Session and SOAP Panels */
         textarea {
@@ -605,99 +559,6 @@
         .suggestion-accept-replace { color: #27ae60; border-color: #27ae60; }
         .suggestion-decline { color: #e74c3c; border-color: #e74c3c; }
 
-        .audit-box {
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 10px;
-            background: var(--panel-bg);
-            margin-top: 8px;
-        }
-        .audit-summary {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-        .audit-badge {
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-        }
-        .audit-badge.pass {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .audit-badge.fail {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        [data-theme="dark"] .audit-badge.pass {
-            background: #1f4438;
-            color: #a7f3d0;
-        }
-        [data-theme="dark"] .audit-badge.fail {
-            background: #4b2a2a;
-            color: #fecaca;
-        }
-        .audit-items {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            font-size: 0.86rem;
-        }
-        .audit-item-pass { color: #1f7a57; }
-        .audit-item-fail { color: #c0392b; }
-        .audit-remediation {
-            margin-top: 10px;
-            font-size: 0.84rem;
-            color: var(--text-color-secondary);
-        }
-        .audit-remediation ul {
-            margin: 6px 0 0 18px;
-            padding: 0;
-        }
-        .audit-proofing-block {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid var(--panel-border);
-        }
-        #regularSessionFields {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            min-height: 0;
-            overflow-y: auto;
-        }
-        #sessionInfo {
-            width: 100%;
-            height: 20lh;
-            min-height: 20lh;
-            resize: vertical;
-            flex: 0 0 auto;
-        }
-        .audit-proofing-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
-        .audit-proofing-field label {
-            font-size: 0.8rem;
-            color: var(--text-color-secondary);
-            font-weight: 600;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .audit-proofing-field textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
         .no-selection {
             color: var(--text-color-secondary); text-align: center;
             margin-top: 50px; font-style: italic;
@@ -760,59 +621,6 @@
             color: var(--modal-text);
         }
 
-        .guide-modal-content {
-            max-width: min(980px, 92vw);
-            max-height: 88vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .guide-scroll {
-            overflow-y: auto;
-            line-height: 1.55;
-            padding-right: 6px;
-        }
-
-        .guide-scroll h3 {
-            margin: 1rem 0 0.5rem;
-            font-size: 1.15rem;
-        }
-
-        .guide-scroll h4 {
-            margin: 0.75rem 0 0.4rem;
-            font-size: 1rem;
-        }
-
-        .guide-scroll ul {
-            margin: 0.4rem 0 0.8rem 1.2rem;
-        }
-
-        .guide-scroll li {
-            margin-bottom: 0.3rem;
-        }
-
-        .guide-callout {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-left: 4px solid var(--item-border-color);
-            border-radius: 8px;
-            padding: 10px 12px;
-            margin: 0.75rem 0;
-        }
-
-        .guide-example {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 10px 12px;
-            margin-bottom: 0.6rem;
-        }
-
-        .guide-checklist {
-            list-style: none;
-            margin-left: 0;
-        }
-
 
     </style>
 </head>
@@ -825,7 +633,6 @@
             </div>
             <button id="informedConsentBtn" class="btn">Informed Consent</button>
             <button id="cssrsBtn" class="btn">CSSRS</button>
-            <button id="soapAuditGuideBtn" class="btn">SOAP Audit Guide</button>
             <button id="manualSaveBtn" class="btn save-btn">Save Now</button>
             <button id="settingsBtn" class="btn settings-btn">Settings</button>
             <button id="themeToggleBtn" class="btn theme-btn" title="Toggle Theme">🌙</button>
@@ -881,15 +688,6 @@
                              <button id="addAppointmentBtn" class="btn save-btn" style="flex: 1; padding: 8px;">+ Add Appointment</button>
                              <button id="updateAppointmentDateBtn" class="btn" style="flex: 1; padding: 8px;">Update Appointment Date</button>
                          </div>
-                         <button id="addIntakeBtn" class="btn" style="width: 100%; margin-top: 8px; padding: 8px; background: linear-gradient(135deg, #d35400 0%, #ba4a00 100%);">+ Add Intake Session</button>
-                         <div style="margin-top: 12px; border-top: 1px solid var(--panel-border); padding-top: 10px;">
-                             <label for="noteNameInput" style="font-weight: 600; color: var(--text-color-secondary); font-size: 0.875rem; margin-bottom: 4px; display: block;">Notes</label>
-                             <input type="text" id="noteNameInput" placeholder="Enter note name" style="width: 100%; margin-bottom: 8px; padding: 8px; border: 1px solid var(--input-border); border-radius: 4px; font-size: 14px; font-family: inherit; background-color: var(--input-bg); color: var(--input-text);">
-                             <div style="display: flex; align-items: center; gap: 8px;">
-                                 <button id="addNoteBtn" class="btn" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #16a085 0%, #138d75 100%);">+ Add Note</button>
-                                 <button id="renameNoteBtn" class="btn" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);" disabled>Rename Selected</button>
-                             </div>
-                         </div>
                     </div>
                      <div class="panel-footer">
                          <h3 style="color: var(--text-color-secondary); font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem;">Recently Deleted</h3>
@@ -921,38 +719,7 @@
                          <button id="generateNoteBtn" class="btn" style="padding: 4px 8px; font-size: 0.8rem;" disabled>Generate Note</button>
                      </div>
                      <div class="panel-content">
-                         <div id="regularSessionFields">
                          <textarea id="sessionInfo" placeholder="Select an appointment to enter session details..." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
-                         <div id="auditProofingBlock" class="audit-proofing-block">
-                             <div style="font-size: 0.85rem; color: var(--text-color-secondary); font-weight: 700; margin-bottom: 6px;">Audit-Proofing</div>
-                             <div class="audit-proofing-grid">
-                                 <div class="audit-proofing-field">
-                                     <label for="auditProofSymptoms">Symptom Pattern / Severity Context</label>
-                                     <textarea id="auditProofSymptoms" placeholder="Add symptom trend, frequency, intensity, and client-reported changes." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
-                                 </div>
-                                 <div class="audit-proofing-field">
-                                     <label for="auditProofFunctional">Functional Impact</label>
-                                     <textarea id="auditProofFunctional" placeholder="Document work/school/relationship/sleep/parenting or daily functioning impact." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
-                                 </div>
-                                 <div class="audit-proofing-field">
-                                     <label for="auditProofProgress">Progress / Response to Treatment</label>
-                                     <textarea id="auditProofProgress" placeholder="Describe measurable progress, barriers, and response to interventions." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
-                                 </div>
-                                 <div class="audit-proofing-field">
-                                     <label for="auditProofGoal">Treatment Goal Alignment</label>
-                                     <textarea id="auditProofGoal" placeholder="Link this session to active treatment goals/objectives and progress toward them." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
-                                 </div>
-                                 <div class="audit-proofing-field">
-                                     <label for="auditProofNecessity">Medical Necessity Rationale</label>
-                                     <textarea id="auditProofNecessity" placeholder="State why continued skilled treatment is needed at this level of care." disabled autocorrect="off" autocapitalize="off" spellcheck="true"></textarea>
-                                 </div>
-                             </div>
-                         </div>
-                         </div>
-                         <div id="intakeSessionBlock" class="audit-proofing-block hidden">
-                             <div style="font-size: 0.85rem; color: var(--text-color-secondary); font-weight: 700; margin-bottom: 6px;">Intake Session Prompts</div>
-                             <div id="intakeFieldsContainer" class="audit-proofing-grid"></div>
-                         </div>
                      </div>
                      <div class="panel-footer" id="sessionTimerWrapper" style="display: none;">
                          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
@@ -1104,310 +871,6 @@
         </div>
     </div>
 
-    <div id="soapAuditGuideModal" class="modal-overlay hidden">
-        <div class="modal-content guide-modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--modal-header-border);">
-                <h2 style="font-size: 1.5rem; font-weight: bold;">Audit-Ready SOAP Documentation Guide</h2>
-                <button id="closeSoapAuditGuideBtn" style="font-size: 2rem; background: none; border: none; cursor: pointer; color: inherit;">&times;</button>
-            </div>
-
-            <div class="guide-scroll">
-                <p style="margin-bottom: 0.6rem;">Comprehensive, audit-ready guidance for writing mental health SOAP notes that reduce risk of clawbacks, recoupments, and audit findings. Structured for outpatient behavioral health, with principles that apply broadly.</p>
-
-                <h3>Core Principles That Protect Against Clawbacks</h3>
-                <p>Audits typically look for:</p>
-                <ul>
-                    <li>Medical necessity</li>
-                    <li>Clear link between symptoms and treatment</li>
-                    <li>Measurable progress or clinical rationale</li>
-                    <li>Appropriate level of care</li>
-                    <li>Time documentation that matches billing</li>
-                    <li>Consistency between diagnosis, treatment plan, and note</li>
-                    <li>Compliance with payer requirements</li>
-                    <li>No cloning or copy-paste patterns</li>
-                    <li>Legible, specific documentation</li>
-                    <li>Support for continued treatment</li>
-                </ul>
-
-                <div class="guide-callout">
-                    <strong>Central question every note must answer:</strong><br>
-                    Why was this service medically necessary today?
-                </div>
-
-                <h3>Required Elements in Every SOAP Note</h3>
-
-                <h4>S – Subjective</h4>
-                <p>This section documents:</p>
-                <ul>
-                    <li>Client’s report of symptoms</li>
-                    <li>Functional impact</li>
-                    <li>Relevant changes since last session</li>
-                    <li>Medication changes</li>
-                    <li>Safety concerns</li>
-                    <li>Client’s perspective on progress</li>
-                </ul>
-                <p>Must include:</p>
-                <ul>
-                    <li>Symptom description</li>
-                    <li>Duration or frequency when relevant</li>
-                    <li>Severity when relevant</li>
-                    <li>Functional impairment</li>
-                    <li>Direct quotes when helpful</li>
-                </ul>
-                <div class="guide-example">
-                    <strong>Example (Strong)</strong><br>
-                    Client reports increased anxiety over the past week, describing daily panic symptoms lasting 20–30 minutes. Sleep has decreased to 4–5 hours per night. Client states, “I am avoiding meetings because I feel like I will lose control.” Reports decreased work performance and difficulty concentrating.
-                </div>
-                <div class="guide-example">
-                    <strong>Example (Weak)</strong><br>
-                    Client reports feeling anxious.<br>
-                    <strong>Why weak:</strong> lacks severity, duration, and functional impact.
-                </div>
-
-                <h4>O – Objective</h4>
-                <p>This section documents observable data. Includes:</p>
-                <ul>
-                    <li>Appearance</li>
-                    <li>Behavior</li>
-                    <li>Mood and affect (clinician observed)</li>
-                    <li>Orientation</li>
-                    <li>Speech</li>
-                    <li>Thought process</li>
-                    <li>Risk assessment findings</li>
-                    <li>Engagement level</li>
-                </ul>
-                <p>Must include:</p>
-                <ul>
-                    <li>Mental status indicators</li>
-                    <li>Safety assessment when clinically indicated</li>
-                    <li>Any measurable data used (scales, scores)</li>
-                </ul>
-                <div class="guide-example">
-                    <strong>Example</strong><br>
-                    Client appeared fatigued with constricted affect. Speech was coherent and goal-directed. No psychosis observed. Oriented x4. Denies suicidal ideation, plan, or intent. Engaged throughout session.
-                </div>
-                <div class="guide-example">
-                    <strong>Standardized measure example</strong><br>
-                    GAD-7 score increased from 11 to 16 since last assessment.
-                </div>
-
-                <h4>A – Assessment</h4>
-                <p>This is the most important section for audits. It must demonstrate:</p>
-                <ul>
-                    <li>Clinical interpretation</li>
-                    <li>Progress toward goals</li>
-                    <li>Ongoing medical necessity</li>
-                    <li>Response to treatment</li>
-                    <li>Risk level</li>
-                    <li>Diagnostic justification if relevant</li>
-                </ul>
-                <p>Must include:</p>
-                <ul>
-                    <li>Progress or lack of progress</li>
-                    <li>Why continued treatment is needed</li>
-                    <li>Connection to diagnosis</li>
-                    <li>Clinical reasoning</li>
-                </ul>
-                <div class="guide-example">
-                    <strong>Strong Example</strong><br>
-                    Symptoms remain consistent with Generalized Anxiety Disorder, currently moderate to severe. Increased avoidance behaviors are interfering with occupational functioning. Client has demonstrated partial progress in cognitive restructuring skills but continues to require structured intervention to reduce functional impairment. Continued weekly therapy is medically necessary to prevent further deterioration.
-                </div>
-                <div class="guide-example">
-                    <strong>Weak Example</strong><br>
-                    Client is doing okay. Continue treatment.<br>
-                    <strong>Why weak:</strong> no medical necessity, no progress detail.
-                </div>
-
-                <h4>P – Plan</h4>
-                <p>Must include:</p>
-                <ul>
-                    <li>Interventions used in session</li>
-                    <li>Response to interventions</li>
-                    <li>Homework or between-session tasks</li>
-                    <li>Next session plan</li>
-                    <li>Referrals if applicable</li>
-                    <li>Risk follow-up if needed</li>
-                    <li>Coordination of care if done</li>
-                </ul>
-                <p><strong>Must Align With Treatment Plan:</strong> Each session should clearly relate to at least one active treatment goal.</p>
-                <div class="guide-example">
-                    <strong>Strong Example</strong><br>
-                    Continued CBT targeting cognitive distortions related to workplace anxiety. Client practiced thought record exercise in session. Assigned daily tracking of avoidance behaviors. Will continue weekly sessions. Next session to focus on exposure hierarchy development.
-                </div>
-
-                <h3>Medical Necessity Requirements</h3>
-                <p>To withstand audits, notes should demonstrate:</p>
-                <ul>
-                    <li>Active symptoms</li>
-                    <li>Functional impairment</li>
-                    <li>Treatment addressing diagnosis</li>
-                    <li>Skilled intervention required</li>
-                    <li>Not appropriate for self-help or lower level of care</li>
-                </ul>
-
-                <h4>Include Functional Impact</h4>
-                <p>Auditors often deny claims when notes lack impairment. Examples of functional impairment:</p>
-                <ul>
-                    <li>Work interference</li>
-                    <li>Relationship strain</li>
-                    <li>Sleep disruption</li>
-                    <li>Academic difficulty</li>
-                    <li>Parenting impairment</li>
-                    <li>Avoidance behavior</li>
-                    <li>Emotional dysregulation</li>
-                    <li>Safety concerns</li>
-                </ul>
-
-                <h3>Time Documentation</h3>
-                <ul>
-                    <li>If billing time-based codes, document start and end time OR total time.</li>
-                    <li>Match documentation to billing code requirements.</li>
-                    <li>Include psychotherapy time separate from other services when applicable.</li>
-                    <li>Avoid rounding inconsistently.</li>
-                </ul>
-                <div class="guide-example">
-                    <strong>Example</strong><br>
-                    53-minute psychotherapy session conducted from 10:02 AM to 10:55 AM.
-                </div>
-
-                <h3>Risk Assessment Documentation</h3>
-                <p>Document when clinically appropriate:</p>
-                <ul>
-                    <li>Suicidal ideation</li>
-                    <li>Homicidal ideation</li>
-                    <li>Self-harm risk</li>
-                    <li>Protective factors</li>
-                    <li>Level of risk</li>
-                    <li>Safety plan if needed</li>
-                </ul>
-                <p>Even if negative, document it.</p>
-                <div class="guide-example">
-                    <strong>Example</strong><br>
-                    Client denies suicidal or homicidal ideation. No self-harm behaviors reported. Protective factors include supportive spouse and children. Risk assessed as low.
-                </div>
-
-                <h3>Link to Treatment Plan</h3>
-                <p>Every session should:</p>
-                <ul>
-                    <li>Reference at least one goal</li>
-                    <li>Show progress toward measurable objectives</li>
-                    <li>Document interventions tied to goals</li>
-                </ul>
-                <div class="guide-example">
-                    <strong>Example</strong><br>
-                    Treatment Plan Goal: Reduce panic attacks from 4 per week to 1 per week within 8 weeks.<br>
-                    SOAP Note Assessment: Client reports decrease from 4 to 2 panic episodes weekly, indicating measurable progress toward treatment goal.
-                </div>
-                <p>Auditors look for this alignment.</p>
-
-                <h3>Common Audit Red Flags</h3>
-                <p>Avoid:</p>
-                <ul>
-                    <li>Copy and paste notes</li>
-                    <li>Identical wording across sessions</li>
-                    <li>Vague descriptions</li>
-                    <li>Missing diagnosis in note</li>
-                    <li>No evidence of progress</li>
-                    <li>No functional impairment</li>
-                    <li>No intervention described</li>
-                    <li>Inconsistent time documentation</li>
-                    <li>Overly brief notes for high-level billing</li>
-                    <li>Using psychotherapy codes without documenting therapy techniques</li>
-                    <li>Billing family sessions without documenting client involvement</li>
-                </ul>
-
-                <h3>Special Considerations</h3>
-                <h4>Telehealth</h4>
-                <p>Document:</p>
-                <ul>
-                    <li>Platform used</li>
-                    <li>Client location</li>
-                    <li>Consent</li>
-                    <li>Privacy confirmation</li>
-                </ul>
-                <div class="guide-example">
-                    <strong>Example</strong><br>
-                    Session conducted via secure telehealth platform. Client confirmed private location in home.
-                </div>
-
-                <h4>Medication Coordination</h4>
-                <p>If applicable:</p>
-                <ul>
-                    <li>Document collaboration</li>
-                    <li>Note ROI if needed</li>
-                    <li>Record communication summary</li>
-                </ul>
-
-                <h4>Crisis Sessions</h4>
-                <p>Must document:</p>
-                <ul>
-                    <li>Risk assessment</li>
-                    <li>Safety planning</li>
-                    <li>Increased level of care reasoning</li>
-                    <li>Time spent</li>
-                    <li>Follow-up plan</li>
-                </ul>
-                <div class="guide-example">
-                    <strong>Example</strong><br>
-                    Include risk assessment findings, safety planning steps taken, rationale for level of care, duration of crisis work, and explicit follow-up actions.
-                </div>
-
-                <h3>Example of a Fully Auditable SOAP Note</h3>
-                <div class="guide-example">
-                    <strong>S:</strong><br>
-                    Client reports ongoing workplace anxiety with increased avoidance of meetings. States panic symptoms occur 3 times per week lasting approximately 20 minutes. Reports sleep disruption and difficulty concentrating. Describes fear of negative evaluation.
-                </div>
-                <div class="guide-example">
-                    <strong>O:</strong><br>
-                    Client appeared tense with anxious affect. Speech clear and organized. Oriented x4. No psychotic symptoms observed. Denies suicidal or homicidal ideation. Engaged throughout session.
-                </div>
-                <div class="guide-example">
-                    <strong>A:</strong><br>
-                    Symptoms consistent with Generalized Anxiety Disorder. Functional impairment present in occupational setting. Partial progress noted in cognitive restructuring skills. Continued weekly psychotherapy is medically necessary to reduce symptom severity and restore work functioning.
-                </div>
-                <div class="guide-example">
-                    <strong>P:</strong><br>
-                    Provided CBT focused on cognitive distortions. Practiced thought record in session. Assigned daily tracking of avoidance behaviors. Continue weekly sessions. Reassess symptom scale in two weeks.
-                </div>
-
-                <h3>Documentation Checklist for Every Note</h3>
-                <p>Before signing, confirm:</p>
-                <ul class="guide-checklist">
-                    <li>☐ Diagnosis supported</li>
-                    <li>☐ Symptoms described with detail</li>
-                    <li>☐ Functional impairment documented</li>
-                    <li>☐ Intervention clearly stated</li>
-                    <li>☐ Client response recorded</li>
-                    <li>☐ Medical necessity explained</li>
-                    <li>☐ Progress toward goals documented</li>
-                    <li>☐ Risk assessed when appropriate</li>
-                    <li>☐ Time documented accurately</li>
-                    <li>☐ Note is individualized</li>
-                    <li>☐ No copy-paste language</li>
-                    <li>☐ Plan aligns with treatment plan</li>
-                </ul>
-
-                <h3>Best Practices to Reduce Audit Risk</h3>
-                <ul>
-                    <li>Write notes immediately after session.</li>
-                    <li>Tie every session to a treatment goal.</li>
-                    <li>Use measurable language.</li>
-                    <li>Document change over time.</li>
-                    <li>Avoid excessive brevity.</li>
-                    <li>Avoid unnecessary narrative.</li>
-                    <li>Keep diagnosis consistent with treatment focus.</li>
-                    <li>Update treatment plan regularly.</li>
-                    <li>Use standardized measures periodically.</li>
-                    <li>Ensure billing code matches documentation depth.</li>
-                </ul>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; margin-top: 0.9rem;">
-                <button id="closeSoapAuditGuideBtnBottom" class="btn" style="background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);">Close</button>
-            </div>
-        </div>
-    </div>
-
     <input type="file" id="fileInput" class="hidden" accept="application/json">
 
     <script>
@@ -1418,12 +881,8 @@
             const sortClientsBtn = document.getElementById('sortClientsBtn');
             const appointmentListEl = document.getElementById('appointmentList');
             const addAppointmentBtn = document.getElementById('addAppointmentBtn');
-            const addIntakeBtn = document.getElementById('addIntakeBtn');
             const appointmentDateInput = document.getElementById('appointmentDateInput');
             const updateAppointmentDateBtn = document.getElementById('updateAppointmentDateBtn');
-            const noteNameInput = document.getElementById('noteNameInput');
-            const addNoteBtn = document.getElementById('addNoteBtn');
-            const renameNoteBtn = document.getElementById('renameNoteBtn');
             const deletedClientsListEl = document.getElementById('deletedClientsList');
             const clearDeletedClientsBtn = document.getElementById('clearDeletedClientsBtn');
             const archivedClientsListEl = document.getElementById('archivedClientsList');
@@ -1431,15 +890,6 @@
             const clearDeletedAppointmentsBtn = document.getElementById('clearDeletedAppointmentsBtn');
             const persistentNotesEl = document.getElementById('persistentNotes');
             const sessionInfoEl = document.getElementById('sessionInfo');
-            const auditProofSymptomsEl = document.getElementById('auditProofSymptoms');
-            const auditProofFunctionalEl = document.getElementById('auditProofFunctional');
-            const auditProofProgressEl = document.getElementById('auditProofProgress');
-            const auditProofGoalEl = document.getElementById('auditProofGoal');
-            const auditProofNecessityEl = document.getElementById('auditProofNecessity');
-            const regularSessionFieldsEl = document.getElementById('regularSessionFields');
-            const auditProofingBlockEl = document.getElementById('auditProofingBlock');
-            const intakeSessionBlockEl = document.getElementById('intakeSessionBlock');
-            const intakeFieldsContainerEl = document.getElementById('intakeFieldsContainer');
             const soapContentEl = document.getElementById('soapContent');
             const autoSaveIndicator = document.getElementById('autoSaveIndicator');
             const saveStatus = document.getElementById('saveStatus');
@@ -1454,13 +904,9 @@
             const closeSettingsBtn = document.getElementById('closeSettingsBtn');
             const informedConsentBtn = document.getElementById('informedConsentBtn');
             const cssrsBtn = document.getElementById('cssrsBtn');
-            const soapAuditGuideBtn = document.getElementById('soapAuditGuideBtn');
             const informedConsentModal = document.getElementById('informedConsentModal');
             const closeConsentBtn = document.getElementById('closeConsentBtn');
             const closeConsentBtnBottom = document.getElementById('closeConsentBtnBottom');
-            const soapAuditGuideModal = document.getElementById('soapAuditGuideModal');
-            const closeSoapAuditGuideBtn = document.getElementById('closeSoapAuditGuideBtn');
-            const closeSoapAuditGuideBtnBottom = document.getElementById('closeSoapAuditGuideBtnBottom');
             const manualSaveBtn = document.getElementById('manualSaveBtn');
             const exportBtn = document.getElementById('exportBtn');
             const importBtn = document.getElementById('importBtn');
@@ -1501,11 +947,9 @@
 
             // App State
             let data = { clients: [], archivedClients: [] };
-            let deletedItems = { clients: [], appointments: [], notes: [] };
+            let deletedItems = { clients: [], appointments: [] };
             let selectedClientId = null;
             let selectedAppointmentId = null;
-            let selectedNoteId = null;
-            let selectedIntakeId = null;
             let isDirty = false;
             let apiProvider = 'openwebui';
             let serverAddress = null;
@@ -1516,261 +960,10 @@
             let sessionTimerInterval = null;
             let customInstructions = ''; // Store custom instructions for current appointment
             const getInitialData = () => ({ clients: [], archivedClients: [] });
-            const intakePromptFields = [
-                { key: 'presentingProblem', label: 'Presenting Problem' },
-                { key: 'riskAssessment', label: 'Risk Assessment' },
-                { key: 'objectiveContent', label: 'Objective Content' },
-                { key: 'identification', label: 'Identification' },
-                { key: 'historyPresentingProblem', label: 'History of Presenting Problem' },
-                { key: 'psychiatricHistory', label: 'Psychiatric History' },
-                { key: 'traumaHistory', label: 'Trauma History' },
-                { key: 'familyPsychHistory', label: 'Family Psychiatric History' },
-                { key: 'medicalConditionsHistory', label: 'Medical Conditions and History' },
-                { key: 'currentMedications', label: 'Current Medications' },
-                { key: 'substanceUse', label: 'Substance Use' },
-                { key: 'familyHistory', label: 'Family History' },
-                { key: 'socialHistory', label: 'Social History' },
-                { key: 'spiritualCulturalFactors', label: 'Spiritual/Cultural Factors' },
-                { key: 'developmentalHistory', label: 'Developmental History' },
-                { key: 'educationalVocationalHistory', label: 'Educational/Vocational History' },
-                { key: 'legalHistory', label: 'Legal History' },
-                { key: 'snap', label: 'SNAP' },
-                { key: 'otherImportantInformation', label: 'Other Important Information' },
-                { key: 'plan', label: 'Plan' },
-                { key: 'diagnosis', label: 'Diagnosis' }
-            ];
 
             // --- Data Management ---
             const findClient = id => data.clients.find(c => c.id === id) || data.archivedClients.find(c => c.id === id);
             const findAppointment = (client, id) => client?.appointments.find(a => a.id === id);
-            const findNote = (client, id) => client?.notes?.find(n => n.id === id);
-            const findIntakeSession = (client, id) => client?.intakeSessions?.find(i => i.id === id);
-
-            const normalizeClientData = () => {
-                const allClients = [...(data.clients || []), ...(data.archivedClients || [])];
-                allClients.forEach(client => {
-                    if (!Array.isArray(client.appointments)) client.appointments = [];
-                    if (!Array.isArray(client.notes)) client.notes = [];
-                    if (!Array.isArray(client.intakeSessions)) client.intakeSessions = [];
-                    if (!Array.isArray(client.goals)) client.goals = [];
-                });
-
-                if (!deletedItems || typeof deletedItems !== 'object') {
-                    deletedItems = { clients: [], appointments: [], notes: [] };
-                }
-                if (!Array.isArray(deletedItems.clients)) deletedItems.clients = [];
-                if (!Array.isArray(deletedItems.appointments)) deletedItems.appointments = [];
-                if (!Array.isArray(deletedItems.notes)) deletedItems.notes = [];
-            };
-
-            const containsAny = (text, patterns) => patterns.some(pattern => pattern.test(text));
-
-            const getAuditProofingData = (appointment) => {
-                if (!appointment) {
-                    return {
-                        symptoms: '',
-                        functionalImpact: '',
-                        progressResponse: '',
-                        goalAlignment: '',
-                        medicalNecessity: ''
-                    };
-                }
-
-                const raw = appointment.auditProofing;
-                if (!raw) {
-                    return {
-                        symptoms: '',
-                        functionalImpact: '',
-                        progressResponse: '',
-                        goalAlignment: '',
-                        medicalNecessity: ''
-                    };
-                }
-
-                if (typeof raw === 'string') {
-                    return {
-                        symptoms: '',
-                        functionalImpact: '',
-                        progressResponse: raw,
-                        goalAlignment: '',
-                        medicalNecessity: ''
-                    };
-                }
-
-                return {
-                    symptoms: raw.symptoms || '',
-                    functionalImpact: raw.functionalImpact || '',
-                    progressResponse: raw.progressResponse || '',
-                    goalAlignment: raw.goalAlignment || '',
-                    medicalNecessity: raw.medicalNecessity || ''
-                };
-            };
-
-            const saveAuditProofingField = (fieldKey, value) => {
-                const client = findClient(selectedClientId);
-                const appointment = findAppointment(client, selectedAppointmentId);
-                if (!appointment) return;
-
-                const current = getAuditProofingData(appointment);
-                current[fieldKey] = value;
-                appointment.auditProofing = current;
-                delete appointment.auditCheck;
-                markDirty();
-                generateNoteBtn.disabled = !hasAppointmentGenerationInput(appointment);
-            };
-
-            const renderIntakeFields = (intakeSession) => {
-                if (!intakeFieldsContainerEl) return;
-
-                intakeFieldsContainerEl.innerHTML = '';
-                if (!intakeSession) return;
-
-                if (!intakeSession.fields || typeof intakeSession.fields !== 'object') {
-                    intakeSession.fields = {};
-                }
-
-                intakePromptFields.forEach(field => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'audit-proofing-field';
-
-                    const label = document.createElement('label');
-                    label.setAttribute('for', `intake-${field.key}`);
-                    label.textContent = field.label;
-
-                    const textarea = document.createElement('textarea');
-                    textarea.id = `intake-${field.key}`;
-                    textarea.className = 'intake-field-input';
-                    textarea.dataset.intakeKey = field.key;
-                    textarea.value = intakeSession.fields[field.key] || '';
-                    textarea.placeholder = `Enter ${field.label.toLowerCase()}...`;
-
-                    wrapper.appendChild(label);
-                    wrapper.appendChild(textarea);
-                    intakeFieldsContainerEl.appendChild(wrapper);
-                });
-            };
-
-            const hasAppointmentGenerationInput = (appointment) => {
-                if (!appointment) return false;
-                const hasSessionInfo = !!(appointment.sessionInfo || '').trim();
-                const auditProofing = getAuditProofingData(appointment);
-                const hasAuditProofing = Object.values(auditProofing).some(value => !!(value || '').trim());
-                return hasSessionInfo || hasAuditProofing;
-            };
-
-            const runSoapAuditCheck = (client, appointment) => {
-                const soap = appointment?.soap || {};
-                const sectionText = {
-                    s: (soap.s || '').trim(),
-                    o: (soap.o || '').trim(),
-                    a: (soap.a || '').trim(),
-                    p: (soap.p || '').trim(),
-                    i: (soap.interventions || '').trim()
-                };
-
-                const auditProofing = getAuditProofingData(appointment);
-                const auditProofingText = `${auditProofing.symptoms}\n${auditProofing.functionalImpact}\n${auditProofing.progressResponse}\n${auditProofing.goalAlignment}\n${auditProofing.medicalNecessity}`.toLowerCase();
-
-                const fullText = `${sectionText.s}\n${sectionText.o}\n${sectionText.a}\n${sectionText.p}\n${sectionText.i}`.toLowerCase();
-                const sessionText = (appointment?.sessionInfo || '').toLowerCase();
-                const combined = `${fullText}\n${sessionText}\n${auditProofingText}`;
-
-                const checks = [
-                    {
-                        label: 'Subjective includes symptom detail',
-                        pass: sectionText.s.length >= 20 && containsAny(sectionText.s.toLowerCase(), [/anx|depress|panic|sleep|mood|stress|irritab|fear|sad|worry|symptom/]),
-                        remedy: 'Add symptom frequency/intensity language (for example, how often and how severe symptoms were this session).'
-                    },
-                    {
-                        label: 'Subjective includes functional impact',
-                        pass: containsAny(`${sectionText.s.toLowerCase()}\n${auditProofingText}`, [/work|school|relationship|parent|sleep|concentrat|avoid|function|impair/]),
-                        remedy: 'Describe where symptoms impacted functioning (work, school, relationships, sleep, parenting, or daily tasks).'
-                    },
-                    {
-                        label: 'Objective includes observable/MSE data',
-                        pass: sectionText.o.length >= 20 && containsAny(sectionText.o.toLowerCase(), [/affect|mood|speech|oriented|orientation|appearance|behavior|thought|engaged|observed|denies/]),
-                        remedy: 'Include at least 1–2 observed findings (appearance, affect, speech, orientation, thought process, engagement).'
-                    },
-                    {
-                        label: 'Assessment states medical necessity/progress',
-                        pass: sectionText.a.length >= 20 && containsAny(`${sectionText.a.toLowerCase()}\n${auditProofingText}`, [/medically necessary|continued|progress|partial|interfer|impair|deteriorat|required|diagnos|consistent with/]),
-                        remedy: 'Add one sentence explaining why continued skilled treatment is needed now and what progress/remaining barriers were observed.'
-                    },
-                    {
-                        label: 'Plan includes intervention + next step',
-                        pass: sectionText.p.length >= 20 && containsAny(sectionText.p.toLowerCase(), [/continue|next session|follow-up|homework|assign|reassess|weekly|referral|coordinate|safety plan/]),
-                        remedy: 'Add a concrete next-step plan (homework/follow-up/reassessment target) and tie it to ongoing symptoms.'
-                    },
-                    {
-                        label: 'Interventions documented',
-                        pass: sectionText.i.length >= 12 && sectionText.i.toLowerCase() !== 'no interventions identified.',
-                        remedy: 'List techniques used today (for example CBT, reframing, exposure, grounding, psychoeducation) and client response.'
-                    },
-                    {
-                        label: 'Treatment-goal alignment documented',
-                        pass: (client?.goals || []).length === 0 || containsAny(combined, [/goal|objective|toward|progress toward|treatment plan|cbt|exposure|coping/]),
-                        remedy: 'Reference at least one active goal/objective and state progress (or barriers) toward that target.'
-                    },
-                    {
-                        label: 'All SOAP sections completed',
-                        pass: sectionText.s.length > 3 && sectionText.o.length > 3 && sectionText.a.length > 3 && sectionText.p.length > 3,
-                        remedy: 'Complete S, O, A, and P with individualized content before finalizing.'
-                    }
-                ];
-
-                const criticalLabels = new Set([
-                    'All SOAP sections completed',
-                    'Assessment states medical necessity/progress',
-                    'Subjective includes functional impact'
-                ]);
-
-                const passedCount = checks.filter(check => check.pass).length;
-                const score = Math.round((passedCount / checks.length) * 100);
-                const failedCritical = checks.filter(check => !check.pass && criticalLabels.has(check.label));
-                const likelyPass = score >= 80 && failedCritical.length === 0;
-
-                return {
-                    score,
-                    likelyPass,
-                    checks,
-                    opportunities: checks.filter(check => !check.pass).map(check => check.remedy),
-                    timestamp: new Date().toISOString(),
-                    summary: likelyPass
-                        ? 'Likely audit-ready based on configured SOAP criteria.'
-                        : 'This note can be strengthened for stronger audit support. Suggested refinements are listed below.'
-                };
-            };
-
-            const renderAuditResults = (auditResult) => {
-                if (!auditResult) {
-                    return `
-                        <div class="audit-box">
-                            <div style="font-size: 0.85rem; color: var(--text-color-secondary);">Run the audit check to evaluate this SOAP note against the audit guide criteria.</div>
-                        </div>
-                    `;
-                }
-
-                return `
-                    <div class="audit-box">
-                        <div class="audit-summary">
-                            <span><strong>Audit Score:</strong> ${auditResult.score}%</span>
-                            <span class="audit-badge ${auditResult.likelyPass ? 'pass' : 'fail'}">${auditResult.likelyPass ? 'Likely Pass' : 'Needs Revision'}</span>
-                        </div>
-                        <div style="font-size: 0.84rem; margin-bottom: 6px; color: var(--text-color-secondary);">${auditResult.summary}</div>
-                        <ul class="audit-items">
-                            ${auditResult.checks.map(check => `<li class="${check.pass ? 'audit-item-pass' : 'audit-item-fail'}">${check.pass ? '✓' : '✗'} ${check.label}</li>`).join('')}
-                        </ul>
-                        ${auditResult.opportunities && auditResult.opportunities.length > 0 ? `
-                            <div class="audit-remediation">
-                                <strong>Ways to strengthen this note:</strong>
-                                <ul>
-                                    ${auditResult.opportunities.map(item => `<li>${item}</li>`).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            };
             
             // --- UI Rendering ---
             const renderClients = () => {
@@ -1795,128 +988,43 @@
 
             const renderAppointments = () => {
                 const client = findClient(selectedClientId);
-                addAppointmentBtn.disabled = !client;
-                addIntakeBtn.disabled = !client;
-                addNoteBtn.disabled = !client;
+                addAppointmentBtn.disabled = false;
                 if (!client) {
                     appointmentListEl.innerHTML = '<div class="no-selection">Select a client first</div>';
                     return;
                 }
-
-                if (!Array.isArray(client.notes)) client.notes = [];
-                if (!Array.isArray(client.intakeSessions)) client.intakeSessions = [];
                 const appointments = (client.appointments || []).sort((a, b) => new Date(b.date) - new Date(a.date));
-                const notes = (client.notes || []).slice().sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
-                const intakeSessions = (client.intakeSessions || []).slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-                if (appointments.length === 0 && intakeSessions.length === 0 && notes.length === 0) {
-                    appointmentListEl.innerHTML = '<div class="no-selection">Click + to add appointment, intake session, or note</div>';
+                if (appointments.length === 0) {
+                    appointmentListEl.innerHTML = '<div class="no-selection">Click + to add appointment</div>';
                     return;
                 }
-
-                const appointmentsHtml = appointments.length > 0 ? `
-                    <div class="list-subheader">Appointments</div>
-                    ${appointments.map(appt => `
-                        <div class="appointment-item ${appt.id === selectedAppointmentId ? 'active' : ''}" data-appointment-id="${appt.id}">
-                            <div class="appointment-date">${new Date(appt.date).toLocaleDateString()}</div>
-                            <div class="action-buttons">
-                                <button class="action-btn delete-btn" title="Delete Appointment">×</button>
-                            </div>
+                appointmentListEl.innerHTML = appointments.map(appt => `
+                    <div class="appointment-item ${appt.id === selectedAppointmentId ? 'active' : ''}" data-appointment-id="${appt.id}">
+                        <div class="appointment-date">${new Date(appt.date).toLocaleDateString()}</div>
+                        <div class="action-buttons">
+                            <button class="action-btn delete-btn" title="Delete Appointment">×</button>
                         </div>
-                    `).join('')}
-                ` : '';
-
-                const notesHtml = notes.length > 0 ? `
-                    <div class="list-subheader">Notes</div>
-                    ${notes.map(note => `
-                        <div class="note-item ${note.id === selectedNoteId ? 'active' : ''}" data-note-id="${note.id}">
-                            <div class="note-name">📝 ${note.name}</div>
-                            <div class="action-buttons">
-                                <button class="action-btn edit-btn" title="Rename Note">✏️</button>
-                                <button class="action-btn delete-btn" title="Delete Note">×</button>
-                            </div>
-                        </div>
-                    `).join('')}
-                ` : '';
-
-                const intakeHtml = intakeSessions.length > 0 ? `
-                    <div class="list-subheader">Intake Sessions</div>
-                    ${intakeSessions.map(intake => `
-                        <div class="intake-item ${intake.id === selectedIntakeId ? 'active' : ''}" data-intake-id="${intake.id}">
-                            <div class="note-name">📋 Intake Session ${new Date(intake.createdAt).toLocaleDateString()}</div>
-                            <div class="action-buttons">
-                                <button class="action-btn delete-btn" title="Delete Intake Session">×</button>
-                            </div>
-                        </div>
-                    `).join('')}
-                ` : '';
-
-                appointmentListEl.innerHTML = `${appointmentsHtml}${intakeHtml}${notesHtml}`;
+                    </div>
+                `).join('');
             };
 
             const renderDetails = () => {
                 const client = findClient(selectedClientId);
                 const appointment = client ? findAppointment(client, selectedAppointmentId) : null;
-                const note = client ? findNote(client, selectedNoteId) : null;
-                const intakeSession = client ? findIntakeSession(client, selectedIntakeId) : null;
                 
                 persistentNotesEl.disabled = !client;
                 persistentNotesEl.value = client ? client.persistentNotes || '' : '';
                 persistentNotesEl.placeholder = client ? "Enter persistent notes for this client..." : "Select a client to enter persistent notes...";
 
-                sessionInfoEl.disabled = !appointment && !note;
-                sessionInfoEl.value = appointment
-                    ? appointment.sessionInfo || ''
-                    : (note ? note.sessionInfo || '' : '');
-                sessionInfoEl.placeholder = appointment
-                    ? "Enter session details..."
-                    : (note ? "Enter freeform note details..." : "Select an appointment or note to begin...");
-
-                const isNoteMode = !appointment && !!note && !intakeSession;
-                if (appointment || isNoteMode) {
-                    sessionInfoEl.rows = 20;
-                    sessionInfoEl.style.minHeight = '20lh';
-                    sessionInfoEl.style.resize = 'vertical';
-                    sessionInfoEl.style.width = '100%';
-                    sessionInfoEl.style.flex = isNoteMode ? '1 1 auto' : '0 0 auto';
-                } else {
-                    sessionInfoEl.rows = 8;
-                    sessionInfoEl.style.minHeight = '';
-                    sessionInfoEl.style.resize = 'vertical';
-                    sessionInfoEl.style.width = '100%';
-                    sessionInfoEl.style.flex = '0 0 auto';
-                }
-
-                regularSessionFieldsEl.classList.toggle('hidden', !!intakeSession);
-                intakeSessionBlockEl.classList.toggle('hidden', !intakeSession);
-                auditProofingBlockEl.classList.toggle('hidden', !appointment);
-                renderIntakeFields(intakeSession);
-
-                const auditProofing = getAuditProofingData(appointment);
-                [
-                    auditProofSymptomsEl,
-                    auditProofFunctionalEl,
-                    auditProofProgressEl,
-                    auditProofGoalEl,
-                    auditProofNecessityEl
-                ].forEach(field => {
-                    field.disabled = !appointment;
-                });
-                auditProofSymptomsEl.value = appointment ? auditProofing.symptoms : '';
-                auditProofFunctionalEl.value = appointment ? auditProofing.functionalImpact : '';
-                auditProofProgressEl.value = appointment ? auditProofing.progressResponse : '';
-                auditProofGoalEl.value = appointment ? auditProofing.goalAlignment : '';
-                auditProofNecessityEl.value = appointment ? auditProofing.medicalNecessity : '';
+                sessionInfoEl.disabled = !appointment;
+                sessionInfoEl.value = appointment ? appointment.sessionInfo || '' : '';
+                sessionInfoEl.placeholder = appointment ? "Enter session details..." : "Select an appointment to begin...";
                 
                 // Load custom instructions for this appointment
                 customInstructions = appointment ? appointment.customInstructions || '' : '';
-                customInstructionsBtn.disabled = !appointment;
                 
                 updateAppointmentDateBtn.disabled = !appointment;
-                addAppointmentBtn.disabled = !client;
-                addIntakeBtn.disabled = !client;
-                renameNoteBtn.disabled = !note;
-                noteNameInput.disabled = !client;
+                addAppointmentBtn.disabled = false;
 
                 sessionTimerWrapper.style.display = appointment ? 'block' : 'none';
                 if (appointment) {
@@ -1926,7 +1034,7 @@
                 renderGoals();
                 renderSoap();
                 
-                generateNoteBtn.disabled = !appointment || !hasAppointmentGenerationInput(appointment);
+                generateNoteBtn.disabled = !appointment || !selectedModel || !sessionInfoEl.value.trim();
             };
 
             const renderGoals = () => {
@@ -2018,25 +1126,14 @@
             const renderSoap = () => {
                 const client = findClient(selectedClientId);
                 const appointment = client ? findAppointment(client, selectedAppointmentId) : null;
-                const note = client ? findNote(client, selectedNoteId) : null;
-                const intakeSession = client ? findIntakeSession(client, selectedIntakeId) : null;
 
                 if (!appointment) {
-                    if (intakeSession) {
-                        soapContentEl.innerHTML = '<div class="no-selection">Selected item is an Intake Session. Intake sessions do not qualify for generated SOAP notes.</div>';
-                        return;
-                    }
-                    if (note) {
-                        soapContentEl.innerHTML = '<div class="no-selection">Selected item is a Note. SOAP note generation and SOAP editing are disabled for Notes.</div>';
-                        return;
-                    }
                     soapContentEl.innerHTML = '<div class="no-selection">Select an appointment to begin</div>';
                     return;
                 }
 
                 const soapData = appointment.soap || { s: '', o: '', a: '', p: '' };
                 const interventions = soapData.interventions || 'No interventions identified.';
-                const auditResult = appointment.auditCheck || null;
                 soapContentEl.innerHTML = `
                     <div class="soap-section">
                         <div class="soap-header"><span>Subjective</span><button class="copy-btn" data-target="soapS">Copy</button></div>
@@ -2061,10 +1158,6 @@
                     <div class="soap-section">
                         <div class="soap-header"><span>Interventions</span><button class="copy-btn" data-target="interventions">Copy</button></div>
                         <textarea id="interventions" class="soap-textarea" autocorrect="off" autocapitalize="off" spellcheck="true">${interventions}</textarea>
-                    </div>
-                    <div class="soap-section">
-                        <div class="soap-header"><span>Audit Check</span><button id="runSoapAuditBtn" class="copy-btn">Run Audit Check</button></div>
-                        ${renderAuditResults(auditResult)}
                     </div>`;
                 
                 // After rendering, resize all textareas
@@ -2156,30 +1249,12 @@
             const selectClient = (id) => {
                 selectedClientId = id;
                 selectedAppointmentId = null;
-                selectedNoteId = null;
-                selectedIntakeId = null;
                 clearInterval(sessionTimerInterval); // Stop timer when switching clients
                 fullRender();
             };
 
             const selectAppointment = (id) => {
                 selectedAppointmentId = id;
-                selectedNoteId = null;
-                selectedIntakeId = null;
-                fullRender();
-            };
-
-            const selectNote = (id) => {
-                selectedNoteId = id;
-                selectedAppointmentId = null;
-                selectedIntakeId = null;
-                fullRender();
-            };
-
-            const selectIntakeSession = (id) => {
-                selectedIntakeId = id;
-                selectedAppointmentId = null;
-                selectedNoteId = null;
                 fullRender();
             };
 
@@ -2323,8 +1398,6 @@
                     name: name.trim(),
                     persistentNotes: '',
                     appointments: [],
-                    intakeSessions: [],
-                    notes: [],
                     goals: []
                 };
                 data.clients.push(newClient);
@@ -2355,64 +1428,6 @@
                 selectAppointment(newAppointment.id);
                 markDirty();
             };
-
-            const addNote = () => {
-                const client = findClient(selectedClientId);
-                if (!client) return;
-
-                const name = noteNameInput.value.trim();
-                if (!name) {
-                    alert('Please enter a note name.');
-                    return;
-                }
-
-                if (!Array.isArray(client.notes)) client.notes = [];
-                const newNote = {
-                    id: crypto.randomUUID(),
-                    name,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                client.notes.push(newNote);
-                noteNameInput.value = '';
-                selectNote(newNote.id);
-                markDirty();
-            };
-
-            const addIntakeSession = () => {
-                const client = findClient(selectedClientId);
-                if (!client) return;
-
-                if (!Array.isArray(client.intakeSessions)) client.intakeSessions = [];
-                const newIntakeSession = {
-                    id: crypto.randomUUID(),
-                    createdAt: new Date().toISOString(),
-                    fields: {}
-                };
-
-                client.intakeSessions.push(newIntakeSession);
-                selectIntakeSession(newIntakeSession.id);
-                markDirty();
-            };
-
-            const renameSelectedNote = () => {
-                const client = findClient(selectedClientId);
-                const note = findNote(client, selectedNoteId);
-                if (!note) {
-                    alert('Select a note to rename.');
-                    return;
-                }
-
-                const proposedName = noteNameInput.value.trim();
-                const newName = proposedName || prompt('Rename note:', note.name);
-                if (!newName || !newName.trim()) return;
-
-                note.name = newName.trim();
-                note.updatedAt = new Date().toISOString();
-                noteNameInput.value = note.name;
-                markDirty();
-                fullRender();
-            };
             
             clientListEl.addEventListener('click', (e) => {
                 const clientItem = e.target.closest('.client-item');
@@ -2433,8 +1448,6 @@
                         if (selectedClientId === clientId) {
                             selectedClientId = null;
                             selectedAppointmentId = null;
-                            selectedNoteId = null;
-                            selectedIntakeId = null;
                         }
                         markDirty();
                         fullRender();
@@ -2448,8 +1461,6 @@
                     if (selectedClientId === clientId) {
                         selectedClientId = null;
                         selectedAppointmentId = null;
-                        selectedNoteId = null;
-                        selectedIntakeId = null;
                     }
                     markDirty();
                     fullRender();
@@ -2518,71 +1529,9 @@
 
             appointmentListEl.addEventListener('click', (e) => {
                  const appointmentItem = e.target.closest('.appointment-item');
-                 const intakeItem = e.target.closest('.intake-item');
-                 const noteItem = e.target.closest('.note-item');
-                 if (!appointmentItem && !noteItem && !intakeItem) {
-                     selectedAppointmentId = null;
-                     selectedNoteId = null;
-                     selectedIntakeId = null;
-                     fullRender();
+                 if (!appointmentItem) {
+                     selectAppointment(null);
                      return;
-                 }
-
-                 if (intakeItem) {
-                    const intakeId = intakeItem.dataset.intakeId;
-                    const client = findClient(selectedClientId);
-                    if (!client) return;
-
-                    if (e.target.classList.contains('delete-btn')) {
-                        const intakeIndex = (client.intakeSessions || []).findIndex(i => i.id === intakeId);
-                        if (intakeIndex > -1 && confirm('Delete this intake session?')) {
-                            client.intakeSessions.splice(intakeIndex, 1);
-                            if (selectedIntakeId === intakeId) selectedIntakeId = null;
-                            markDirty();
-                            fullRender();
-                        }
-                        return;
-                    }
-
-                    selectIntakeSession(intakeId);
-                    return;
-                 }
-
-                 if (noteItem) {
-                    const noteId = noteItem.dataset.noteId;
-                    const client = findClient(selectedClientId);
-                    if (!client) return;
-
-                    if (e.target.classList.contains('delete-btn')) {
-                        const noteIndex = (client.notes || []).findIndex(n => n.id === noteId);
-                        if (noteIndex > -1 && confirm('Delete this note?')) {
-                            const [removedNote] = client.notes.splice(noteIndex, 1);
-                            deletedItems.notes.push({ ...removedNote, clientId: client.id });
-                            if (selectedNoteId === noteId) selectedNoteId = null;
-                            markDirty();
-                            fullRender();
-                        }
-                        return;
-                    }
-
-                    if (e.target.classList.contains('edit-btn')) {
-                        const note = findNote(client, noteId);
-                        if (!note) return;
-                        const newName = prompt('Rename note:', note.name);
-                        if (newName && newName.trim() && newName.trim() !== note.name) {
-                            note.name = newName.trim();
-                            note.updatedAt = new Date().toISOString();
-                            noteNameInput.value = note.name;
-                            markDirty();
-                            fullRender();
-                        }
-                        return;
-                    }
-
-                    selectNote(noteId);
-                    const selectedNote = findNote(client, noteId);
-                    noteNameInput.value = selectedNote?.name || '';
-                    return;
                  }
 
                  const appointmentId = appointmentItem.dataset.appointmentId;
@@ -2740,10 +1689,8 @@
             const handleBulletedInput = (e, saveDataCallback) => {
                 const textarea = e.target;
 
-                const shouldAutoResize = textarea.id !== 'sessionInfo';
-                if (shouldAutoResize) {
-                    textarea.style.height = 'auto';
-                }
+                // When user types, reset height to allow auto-resizing again
+                textarea.style.height = 'auto';
                 
                 // If textarea is empty or doesn't start with a bullet, add one
                 if (textarea.value.length > 0 && !textarea.value.startsWith('•')) {
@@ -2752,9 +1699,8 @@
                     textarea.selectionStart = textarea.selectionEnd = cursorPos + 2;
                 }
                 
-                if (shouldAutoResize) {
-                    autoResizeTextarea(textarea);
-                }
+                // Auto-resize
+                autoResizeTextarea(textarea);
 
                 // Save changes using the provided callback
                 saveDataCallback(textarea);
@@ -2820,17 +1766,11 @@
             const saveSessionInfo = (textarea) => {
                 const client = findClient(selectedClientId);
                 const appointment = findAppointment(client, selectedAppointmentId);
-                const note = findNote(client, selectedNoteId);
                 if (appointment) {
                     appointment.sessionInfo = textarea.value;
-                    delete appointment.auditCheck;
-                    markDirty();
-                } else if (note) {
-                    note.sessionInfo = textarea.value;
-                    note.updatedAt = new Date().toISOString();
                     markDirty();
                 }
-                generateNoteBtn.disabled = !appointment || !hasAppointmentGenerationInput(appointment);
+                generateNoteBtn.disabled = !appointment || !selectedModel || !textarea.value.trim();
             };
 
             const saveSoapNote = (textarea) => {
@@ -2845,58 +1785,19 @@
                         const key = textarea.id.slice(-1).toLowerCase();
                         appointment.soap[key] = textarea.value;
                     }
-                    delete appointment.auditCheck;
                     markDirty();
                 }
             };
 
             // --- Attach Bullet Point Handlers ---
-            sessionInfoEl.addEventListener('input', (e) => {
-                const client = findClient(selectedClientId);
-                const appointment = findAppointment(client, selectedAppointmentId);
-                if (appointment) {
-                    handleBulletedInput(e, saveSessionInfo);
-                } else {
-                    saveSessionInfo(e.target);
-                }
-            });
-            sessionInfoEl.addEventListener('keydown', (e) => {
-                const client = findClient(selectedClientId);
-                const appointment = findAppointment(client, selectedAppointmentId);
-                if (appointment) {
-                    handleBulletedKeyDown(e);
-                }
-            });
+            sessionInfoEl.addEventListener('input', (e) => handleBulletedInput(e, saveSessionInfo));
+            sessionInfoEl.addEventListener('keydown', handleBulletedKeyDown);
             sessionInfoEl.addEventListener('focus', (e) => {
-                const client = findClient(selectedClientId);
-                const appointment = findAppointment(client, selectedAppointmentId);
-                if (!appointment) return;
                 const textarea = e.target;
                 if (textarea.value.length === 0) {
                     textarea.value = '• ';
                     textarea.selectionStart = textarea.selectionEnd = 2;
                 }
-            });
-
-            auditProofSymptomsEl.addEventListener('input', () => saveAuditProofingField('symptoms', auditProofSymptomsEl.value));
-            auditProofFunctionalEl.addEventListener('input', () => saveAuditProofingField('functionalImpact', auditProofFunctionalEl.value));
-            auditProofProgressEl.addEventListener('input', () => saveAuditProofingField('progressResponse', auditProofProgressEl.value));
-            auditProofGoalEl.addEventListener('input', () => saveAuditProofingField('goalAlignment', auditProofGoalEl.value));
-            auditProofNecessityEl.addEventListener('input', () => saveAuditProofingField('medicalNecessity', auditProofNecessityEl.value));
-
-            intakeFieldsContainerEl.addEventListener('input', (e) => {
-                if (!e.target.matches('.intake-field-input')) return;
-
-                const client = findClient(selectedClientId);
-                const intakeSession = findIntakeSession(client, selectedIntakeId);
-                if (!intakeSession) return;
-
-                if (!intakeSession.fields || typeof intakeSession.fields !== 'object') {
-                    intakeSession.fields = {};
-                }
-
-                intakeSession.fields[e.target.dataset.intakeKey] = e.target.value;
-                markDirty();
             });
 
             soapContentEl.addEventListener('input', (e) => {
@@ -2919,18 +1820,6 @@
                 }
             });
             soapContentEl.addEventListener('click', (e) => {
-                 if (e.target.id === 'runSoapAuditBtn') {
-                     const client = findClient(selectedClientId);
-                     const appointment = findAppointment(client, selectedAppointmentId);
-                     if (!client || !appointment) {
-                        alert('Select an appointment before running an audit check.');
-                        return;
-                     }
-                     appointment.auditCheck = runSoapAuditCheck(client, appointment);
-                     markDirty();
-                     renderSoap();
-                     return;
-                 }
                  if (e.target.classList.contains('copy-btn')) {
                      const targetId = e.target.dataset.target;
                      const textarea = document.getElementById(targetId);
@@ -3062,10 +1951,6 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
             `;
 
             const generateSoapNote = async () => {
-                if (selectedNoteId || selectedIntakeId) {
-                    alert('SOAP note generation is only available for appointments, not Notes or Intake Sessions.');
-                    return;
-                }
                 if (!selectedModel) {
                     alert('Please connect to a provider and select a model in Settings.');
                     return;
@@ -3083,7 +1968,6 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
             
             const processAndStoreSoapData = (soapData, appointment) => {
                  if (!appointment.soap) appointment.soap = {};
-                  delete appointment.auditCheck;
 
                  // Process and store AI-generated interventions
                  appointment.soap.interventions = soapData.i ? formatBulletPoints(soapData.i) : 'No interventions identified.';
@@ -3136,8 +2020,8 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
 
                 const client = findClient(selectedClientId);
                 const appointment = findAppointment(client, selectedAppointmentId);
-                if (!client || !appointment || !hasAppointmentGenerationInput(appointment)) {
-                    alert('Please select a client and appointment, and enter session information and/or audit-proofing details.');
+                if (!client || !appointment || !sessionInfoEl.value.trim()) {
+                    alert('Please select a client and appointment, and enter some session information.');
                     return;
                 }
 
@@ -3157,21 +2041,10 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
                         }).join('\n')}\n`;
                     }
                 }
-                const auditProofing = getAuditProofingData(appointment);
-                const auditProofingLines = [
-                    auditProofing.symptoms ? `  - Symptom Pattern / Severity Context: ${auditProofing.symptoms}` : null,
-                    auditProofing.functionalImpact ? `  - Functional Impact: ${auditProofing.functionalImpact}` : null,
-                    auditProofing.progressResponse ? `  - Progress / Response to Treatment: ${auditProofing.progressResponse}` : null,
-                    auditProofing.goalAlignment ? `  - Treatment Goal Alignment: ${auditProofing.goalAlignment}` : null,
-                    auditProofing.medicalNecessity ? `  - Medical Necessity Rationale: ${auditProofing.medicalNecessity}` : null
-                ].filter(Boolean);
-                const auditProofingContext = auditProofingLines.length > 0
-                    ? `\n- **Audit-Proofing:**\n${auditProofingLines.join('\n')}`
-                    : '';
 
                 const userPrompt = `
 - **Session Information (This Session):**
-${sessionInfoEl.value}${treatmentGoalsContext}${auditProofingContext}
+${sessionInfoEl.value}${treatmentGoalsContext}
 ${customInstructions ? `\n- **Special Instructions for This Note:**\n${customInstructions}` : ''}
 `;
                 const fullPrompt = `${systemPrompt}\n\n**User Input:**\n${userPrompt}`;
@@ -3230,8 +2103,8 @@ ${customInstructions ? `\n- **Special Instructions for This Note:**\n${customIns
 
                 const client = findClient(selectedClientId);
                 const appointment = findAppointment(client, selectedAppointmentId);
-                if (!client || !appointment || !hasAppointmentGenerationInput(appointment)) {
-                    alert('Please select a client and appointment, and enter session information and/or audit-proofing details.');
+                if (!client || !appointment || !sessionInfoEl.value.trim()) {
+                    alert('Please select a client and appointment, and enter some session information.');
                     return;
                 }
 
@@ -3251,19 +2124,8 @@ ${customInstructions ? `\n- **Special Instructions for This Note:**\n${customIns
                         }).join('\n')}\n`;
                     }
                 }
-                const auditProofing = getAuditProofingData(appointment);
-                const auditProofingLines = [
-                    auditProofing.symptoms ? `  - Symptom Pattern / Severity Context: ${auditProofing.symptoms}` : null,
-                    auditProofing.functionalImpact ? `  - Functional Impact: ${auditProofing.functionalImpact}` : null,
-                    auditProofing.progressResponse ? `  - Progress / Response to Treatment: ${auditProofing.progressResponse}` : null,
-                    auditProofing.goalAlignment ? `  - Treatment Goal Alignment: ${auditProofing.goalAlignment}` : null,
-                    auditProofing.medicalNecessity ? `  - Medical Necessity Rationale: ${auditProofing.medicalNecessity}` : null
-                ].filter(Boolean);
-                const auditProofingContext = auditProofingLines.length > 0
-                    ? `\n- **Audit-Proofing:**\n${auditProofingLines.join('\n')}`
-                    : '';
 
-                const userPrompt = `- **Session Information (This Session):**\n${sessionInfoEl.value}${treatmentGoalsContext}${auditProofingContext}${customInstructions ? `\n- **Special Instructions for This Note:**\n${customInstructions}` : ''}`;
+                const userPrompt = `- **Session Information (This Session):**\n${sessionInfoEl.value}${treatmentGoalsContext}${customInstructions ? `\n- **Special Instructions for This Note:**\n${customInstructions}` : ''}`;
 
                 const payload = {
                     model: selectedModel,
@@ -3319,8 +2181,8 @@ ${customInstructions ? `\n- **Special Instructions for This Note:**\n${customIns
 
                 const client = findClient(selectedClientId);
                 const appointment = findAppointment(client, selectedAppointmentId);
-                if (!client || !appointment || !hasAppointmentGenerationInput(appointment)) {
-                    alert('Please select a client and appointment, and enter session information and/or audit-proofing details.');
+                if (!client || !appointment || !sessionInfoEl.value.trim()) {
+                    alert('Please select a client and appointment, and enter some session information.');
                     return;
                 }
 
@@ -3340,22 +2202,11 @@ ${customInstructions ? `\n- **Special Instructions for This Note:**\n${customIns
                         }).join('\n')}\n`;
                     }
                 }
-                const auditProofing = getAuditProofingData(appointment);
-                const auditProofingLines = [
-                    auditProofing.symptoms ? `  - Symptom Pattern / Severity Context: ${auditProofing.symptoms}` : null,
-                    auditProofing.functionalImpact ? `  - Functional Impact: ${auditProofing.functionalImpact}` : null,
-                    auditProofing.progressResponse ? `  - Progress / Response to Treatment: ${auditProofing.progressResponse}` : null,
-                    auditProofing.goalAlignment ? `  - Treatment Goal Alignment: ${auditProofing.goalAlignment}` : null,
-                    auditProofing.medicalNecessity ? `  - Medical Necessity Rationale: ${auditProofing.medicalNecessity}` : null
-                ].filter(Boolean);
-                const auditProofingContext = auditProofingLines.length > 0
-                    ? `\n- **Audit-Proofing:**\n${auditProofingLines.join('\n')}`
-                    : '';
 
                 const userPrompt = `
 - **Client Name:** ${client.name}
 - **Session Information (This Session):**
-${sessionInfoEl.value}${treatmentGoalsContext}${auditProofingContext}${customInstructions ? `\n- **Special Instructions for This Note:**\n${customInstructions}` : ''}`;
+${sessionInfoEl.value}${treatmentGoalsContext}${customInstructions ? `\n- **Special Instructions for This Note:**\n${customInstructions}` : ''}`;
 
                 const payload = {
                     model: selectedModel,
@@ -3824,7 +2675,7 @@ This error cannot be fixed within this application's code; it requires a configu
 
             const saveDataToLocalStorage = () => {
                 try {
-                    const state = { data, deletedItems, selectedClientId, selectedAppointmentId, selectedNoteId, selectedIntakeId };
+                    const state = { data, deletedItems, selectedClientId, selectedAppointmentId };
                     const dataStr = JSON.stringify(state);
                     localStorage.setItem('clientData', dataStr);
                     isDirty = false;
@@ -3845,12 +2696,9 @@ This error cannot be fixed within this application's code; it requires a configu
                         const state = JSON.parse(dataStr);
                         data = state.data || getInitialData();
                         if (!data.archivedClients) data.archivedClients = [];
-                        deletedItems = state.deletedItems || { clients: [], appointments: [], notes: [] };
+                        deletedItems = state.deletedItems || { clients: [], appointments: [] };
                         selectedClientId = state.selectedClientId || null;
                         selectedAppointmentId = state.selectedAppointmentId || null;
-                        selectedNoteId = state.selectedNoteId || null;
-                        selectedIntakeId = state.selectedIntakeId || null;
-                        normalizeClientData();
 
                         // Load API settings
                         const savedProvider = localStorage.getItem('apiProvider');
@@ -3869,14 +2717,14 @@ This error cannot be fixed within this application's code; it requires a configu
                         console.error("Failed to load from localStorage", e);
                         alert("Error loading data from storage. Data might be corrupt. Starting fresh.");
                         data = getInitialData();
-                        deletedItems = { clients: [], appointments: [], notes: [] };
+                        deletedItems = { clients: [], appointments: [] };
                     }
                 }
             };
 
             const exportFile = () => {
                 try {
-                    const stateToSave = { data, deletedItems, selectedClientId, selectedAppointmentId, selectedNoteId, selectedIntakeId };
+                    const stateToSave = { data, deletedItems, selectedClientId, selectedAppointmentId };
                     const stateJSON = JSON.stringify(stateToSave, null, 2);
                     const blob = new Blob([stateJSON], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
@@ -3929,13 +2777,10 @@ This error cannot be fixed within this application's code; it requires a configu
                         deletedItems = state.deletedItems;
                         selectedClientId = state.selectedClientId || null;
                         selectedAppointmentId = state.selectedAppointmentId || null;
-                        selectedNoteId = state.selectedNoteId || null;
-                        selectedIntakeId = state.selectedIntakeId || null;
 
                         if (!data.archivedClients) {
                             data.archivedClients = [];
                         }
-                        normalizeClientData();
 
                         isDirty = false;
                         saveDataToLocalStorage();
@@ -3958,11 +2803,9 @@ This error cannot be fixed within this application's code; it requires a configu
                 const userInput = prompt(`This action will permanently erase all client data from this browser. This cannot be undone.\n\nTo confirm, please type "${confirmationText}" in the box below.`);
                 if (userInput === confirmationText) {
                     data = getInitialData();
-                    deletedItems = { clients: [], appointments: [], notes: [] };
+                    deletedItems = { clients: [], appointments: [] };
                     selectedClientId = null;
                     selectedAppointmentId = null;
-                    selectedNoteId = null;
-                    selectedIntakeId = null;
                     isDirty = false;
                     localStorage.removeItem('clientData');
                     localStorage.removeItem('serverAddress');
@@ -3990,19 +2833,6 @@ This error cannot be fixed within this application's code; it requires a configu
                 renderClients();
             });
             addAppointmentBtn.addEventListener('click', addAppointment);
-            addIntakeBtn.addEventListener('click', addIntakeSession);
-            addNoteBtn.addEventListener('click', addNote);
-            renameNoteBtn.addEventListener('click', renameSelectedNote);
-            noteNameInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (selectedNoteId) {
-                        renameSelectedNote();
-                    } else {
-                        addNote();
-                    }
-                }
-            });
             addGoalBtnInTab.addEventListener('click', addGoal);
 
             // Tab switching functionality
@@ -4094,14 +2924,6 @@ This error cannot be fixed within this application's code; it requires a configu
                     informedConsentModal.classList.add('hidden');
                 }
             });
-            soapAuditGuideBtn.addEventListener('click', () => soapAuditGuideModal.classList.remove('hidden'));
-            closeSoapAuditGuideBtn.addEventListener('click', () => soapAuditGuideModal.classList.add('hidden'));
-            closeSoapAuditGuideBtnBottom.addEventListener('click', () => soapAuditGuideModal.classList.add('hidden'));
-            soapAuditGuideModal.addEventListener('click', (e) => {
-                if (e.target.id === 'soapAuditGuideModal') {
-                    soapAuditGuideModal.classList.add('hidden');
-                }
-            });
             customInstructionsBtn.addEventListener('click', () => {
                 customInstructionsModal.classList.remove('hidden');
                 customInstructionsInput.value = customInstructions;
@@ -4175,7 +2997,6 @@ This error cannot be fixed within this application's code; it requires a configu
                 if (appointment) {
                     appointment.startTime = new Date().toISOString();
                     appointment.endTime = null; // Clear end time if starting again
-                    delete appointment.auditCheck;
                     markDirty();
                     renderSessionTimer(appointment);
                 }
@@ -4186,7 +3007,6 @@ This error cannot be fixed within this application's code; it requires a configu
                 if (appointment && appointment.startTime) { // Can only stop if started
                     appointment.endTime = new Date().toISOString();
                     clearInterval(sessionTimerInterval);
-                    delete appointment.auditCheck;
                     markDirty();
                     renderSessionTimer(appointment);
                 }
@@ -4428,7 +3248,6 @@ This error cannot be fixed within this application's code; it requires a configu
                 String(today.getDate()).padStart(2, '0');
             appointmentDateInput.value = localDateString;
             loadDataFromLocalStorage(); // This now loads API settings too
-            normalizeClientData();
             loadServerSettings();
             loadColumnSizes();
             loadCollapsedStates();
