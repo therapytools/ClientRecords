@@ -1203,6 +1203,7 @@
                         <select id="apiProviderSelect" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);">
                             <option value="openwebui">Open WebUI</option>
                             <option value="gemini">Google Gemini</option>
+                            <option value="vertex">Google Vertex AI</option>
                             <option value="openai">OpenAI</option>
                         </select>
                     </div>
@@ -1227,6 +1228,27 @@
                             <label for="geminiModelInput" style="margin-bottom: 0.25rem; font-weight: 600; display: block;">Gemini Model</label>
                             <select id="geminiModelInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);" disabled>
                                 <option>Enter API Key first</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="vertexSettings" class="hidden">
+                        <div>
+                            <label for="vertexProjectIdInput" style="margin-bottom: 0.25rem; font-weight: 600; display: block;">Vertex Project ID</label>
+                            <input type="text" id="vertexProjectIdInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);" placeholder="e.g., my-gcp-project">
+                        </div>
+                        <div>
+                            <label for="vertexLocationInput" style="margin-bottom: 0.25rem; font-weight: 600; display: block;">Vertex Location</label>
+                            <input type="text" id="vertexLocationInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);" value="us-central1" placeholder="e.g., us-central1">
+                        </div>
+                        <div>
+                            <label for="vertexAccessTokenInput" style="margin-bottom: 0.25rem; font-weight: 600; display: block;">Vertex Credential</label>
+                            <input type="password" id="vertexAccessTokenInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);" placeholder="API key (AIza...) or OAuth2 token">
+                        </div>
+                        <div>
+                            <label for="vertexModelInput" style="margin-bottom: 0.25rem; font-weight: 600; display: block;">Vertex Model</label>
+                            <select id="vertexModelInput" style="border: 1px solid var(--input-border); border-radius: 6px; padding: 8px; width: 100%; background-color: var(--input-bg); color: var(--input-text);" disabled>
+                                <option>Connect first</option>
                             </select>
                         </div>
                     </div>
@@ -1762,6 +1784,11 @@
             const geminiSettings = document.getElementById('geminiSettings');
             const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
             const geminiModelInput = document.getElementById('geminiModelInput');
+            const vertexSettings = document.getElementById('vertexSettings');
+            const vertexProjectIdInput = document.getElementById('vertexProjectIdInput');
+            const vertexLocationInput = document.getElementById('vertexLocationInput');
+            const vertexAccessTokenInput = document.getElementById('vertexAccessTokenInput');
+            const vertexModelInput = document.getElementById('vertexModelInput');
             const openaiSettings = document.getElementById('openaiSettings');
             const openaiApiKeyInput = document.getElementById('openaiApiKeyInput');
             const openaiModelInput = document.getElementById('openaiModelInput');
@@ -1793,6 +1820,9 @@
             let serverAddress = null;
             let apiKey = null;
             let geminiApiKey = null;
+            let vertexProjectId = null;
+            let vertexLocation = 'us-central1';
+            let vertexAccessToken = null;
             let openaiApiKey = null;
             let selectedModel = null;
             let sessionTimerInterval = null;
@@ -1801,6 +1831,21 @@
             let generatedGoalsDraft = [];
             let goalGeneratorModalities = [];
             let goalGeneratorModalityOther = '';
+            const isLikelyGoogleApiKey = (value) => /^AIza[0-9A-Za-z\-_]{20,}$/.test((value || '').trim());
+            const getVertexAuthConfig = (credential) => {
+                const normalized = (credential || '').trim();
+                if (!normalized) return { headers: {}, query: '' };
+                if (isLikelyGoogleApiKey(normalized)) {
+                    return {
+                        headers: {},
+                        query: `?key=${encodeURIComponent(normalized)}`
+                    };
+                }
+                return {
+                    headers: { 'Authorization': `Bearer ${normalized}` },
+                    query: ''
+                };
+            };
             const DEFAULT_INTERVENTION_BANK = [
                 'Acceptance', 'Career Counseling', 'CBT: Behavioral Activation', 'CBT: Cognitive Challenging', 'CBT: Cognitive Reframing',
                 'CBT: Cognitive Restructuring', 'CBT: Identifying/Challenging Cognitive Distortions', 'CBT: Mindfulness Training',
@@ -2538,6 +2583,39 @@ Requirements:
                     if (!response.ok) {
                         const errorText = await response.text();
                         throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+                    }
+                    const result = await response.json();
+                    const content = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    return extractJsonObject(content);
+                }
+
+                if (apiProvider === 'vertex') {
+                    if (!vertexProjectId || !vertexLocation || !vertexAccessToken) throw new Error('Please connect Vertex in Settings first.');
+                    const usingApiKey = isLikelyGoogleApiKey(vertexAccessToken);
+                    const payload = usingApiKey
+                        ? {
+                            contents: [{ parts: [{ text: `${goalGenerationSystemPrompt}\n\n${userPrompt}` }] }],
+                            generationConfig: { response_mime_type: 'application/json' }
+                        }
+                        : {
+                            contents: [{ parts: [{ text: `${goalGenerationSystemPrompt}\n\n${userPrompt}` }] }],
+                            generationConfig: { responseMimeType: 'application/json' }
+                        };
+                    const auth = getVertexAuthConfig(vertexAccessToken);
+                    const url = usingApiKey
+                        ? `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent${auth.query}`
+                        : `https://${vertexLocation}-aiplatform.googleapis.com/v1/projects/${vertexProjectId}/locations/${vertexLocation}/publishers/google/models/${selectedModel}:generateContent${auth.query}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...auth.headers
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Vertex API error: ${response.status} - ${errorText}`);
                     }
                     const result = await response.json();
                     const content = result?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -4158,6 +4236,8 @@ Analyze the "Session Information" text provided by the user. Categorize every pi
                     await generateSoapNoteWithOpenWebUI();
                 } else if (apiProvider === 'gemini') {
                     await generateSoapNoteWithGemini();
+                } else if (apiProvider === 'vertex') {
+                    await generateSoapNoteWithVertex();
                 } else if (apiProvider === 'openai') {
                     await generateSoapNoteWithOpenAI();
                 } else {
@@ -4380,6 +4460,99 @@ ${appointmentSessionInfo}${treatmentGoalsContext}${selectedObjectivesContext}${i
                 }
             };
 
+            const generateSoapNoteWithVertex = async () => {
+                if (!selectedModel || !vertexProjectId || !vertexLocation || !vertexAccessToken) {
+                    alert('Please connect to Vertex AI with project, location, credential, and model first.');
+                    return;
+                }
+
+                const client = findClient(selectedClientId);
+                const appointment = findAppointment(client, selectedAppointmentId);
+                if (!client || !appointment || !hasAppointmentGenerationInput(appointment)) {
+                    alert('Please select a client and appointment, and enter session information and/or audit-proofing details.');
+                    return;
+                }
+
+                generateNoteBtn.disabled = true;
+                generateNoteBtn.textContent = 'Generating...';
+
+                const treatmentGoalsContext = getTreatmentGoalsContext(client);
+                const selectedObjectivesContext = getSelectedObjectivesContext(client);
+                const interventionContext = getInterventionContext(appointment);
+                const modalityLensContext = getClientSoapModalityContext(client, appointment);
+                const appointmentSessionInfo = appointment.sessionInfo || '';
+                const instructionsContext = getInstructionsContext(client, appointment);
+                const auditProofing = getAuditProofingData(appointment);
+                const auditProofingLines = [
+                    auditProofing.symptoms ? `  - Symptom Pattern / Severity Context: ${auditProofing.symptoms}` : null,
+                    auditProofing.functionalImpact ? `  - Functional Impact: ${auditProofing.functionalImpact}` : null,
+                    auditProofing.progressResponse ? `  - Progress / Response to Treatment: ${auditProofing.progressResponse}` : null,
+                    auditProofing.goalAlignment ? `  - Treatment Goal Alignment: ${auditProofing.goalAlignment}` : null,
+                    auditProofing.medicalNecessity ? `  - Medical Necessity Rationale: ${auditProofing.medicalNecessity}` : null
+                ].filter(Boolean);
+                const auditProofingContext = auditProofingLines.length > 0
+                    ? `\n- **Audit-Proofing:**\n${auditProofingLines.join('\n')}`
+                    : '';
+
+                const userPrompt = `
+- **Session Information (This Session):**
+${appointmentSessionInfo}${treatmentGoalsContext}${selectedObjectivesContext}${interventionContext}${auditProofingContext}${modalityLensContext}${instructionsContext}
+`;
+                const fullPrompt = `${systemPrompt}\n\n**User Input:**\n${userPrompt}`;
+
+                const payload = {
+                    contents: [{
+                        parts: [{ text: fullPrompt }]
+                    }],
+                    generationConfig: {
+                        responseMimeType: 'application/json',
+                    }
+                };
+
+                try {
+                    const usingApiKey = isLikelyGoogleApiKey(vertexAccessToken);
+                    const auth = getVertexAuthConfig(vertexAccessToken);
+                    const url = usingApiKey
+                        ? `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent${auth.query}`
+                        : `https://${vertexLocation}-aiplatform.googleapis.com/v1/projects/${vertexProjectId}/locations/${vertexLocation}/publishers/google/models/${selectedModel}:generateContent${auth.query}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...auth.headers
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        const error = new Error(`Vertex API error: ${response.status} - ${errorText}`);
+                        error.response = response;
+                        throw error;
+                    }
+
+                    const result = await response.json();
+                    if (!result || !result.candidates || !result.candidates[0]?.content?.parts?.[0]?.text) {
+                        throw new Error('The Vertex API returned an invalid or empty response.');
+                    }
+
+                    const content = result.candidates[0].content.parts[0].text;
+                    const soapData = JSON.parse(content);
+
+                    processAndStoreSoapData(soapData, appointment);
+
+                    markDirty();
+                    renderSoap();
+
+                } catch (error) {
+                    console.error('Vertex SOAP Note Generation Error:', error);
+                    alert(`Failed to generate SOAP note with Vertex AI. Check your token, project, location, model, and network connection.\nError: ${error.message}`);
+                } finally {
+                    generateNoteBtn.disabled = false;
+                    generateNoteBtn.textContent = 'Generate Note';
+                }
+            };
+
             const generateSoapNoteWithOpenWebUI = async () => {
                 if (!selectedModel) {
                     alert('Please connect to your server and select a model first.');
@@ -4521,6 +4694,8 @@ ${appointmentSessionInfo}${treatmentGoalsContext}${selectedObjectivesContext}${i
                     await connectToOpenWebUI();
                 } else if (apiProvider === 'gemini') {
                     await connectToGemini();
+                } else if (apiProvider === 'vertex') {
+                    await connectToVertex();
                 } else if (apiProvider === 'openai') {
                     await connectToOpenAI();
                 }
@@ -4556,6 +4731,32 @@ ${appointmentSessionInfo}${treatmentGoalsContext}${selectedObjectivesContext}${i
                         }
                         apiStatus.textContent = 'Verified ✓';
                         apiStatus.style.color = 'green';
+                    } else if (apiProvider === 'vertex') {
+                        if (!vertexProjectId || !vertexLocation || !vertexAccessToken || !selectedModel) {
+                            throw new Error('Vertex project/location/credential/model not configured.');
+                        }
+                        const usingApiKey = isLikelyGoogleApiKey(vertexAccessToken);
+                        const auth = getVertexAuthConfig(vertexAccessToken);
+                        const verifyUrl = usingApiKey
+                            ? `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent${auth.query}`
+                            : `https://${vertexLocation}-aiplatform.googleapis.com/v1/projects/${vertexProjectId}/locations/${vertexLocation}/publishers/google/models/${selectedModel}:generateContent${auth.query}`;
+                        const response = await fetch(verifyUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...auth.headers
+                            },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: 'Reply with OK' }] }],
+                                generationConfig: { temperature: 0 }
+                            })
+                        });
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`API test failed: ${response.status} - ${errorText}`);
+                        }
+                        apiStatus.textContent = 'Verified ✓';
+                        apiStatus.style.color = 'green';
                     } else if (apiProvider === 'openai') {
                         if (!openaiApiKey || !selectedModel) {
                             throw new Error('OpenAI API key or model not configured.');
@@ -4583,7 +4784,135 @@ ${appointmentSessionInfo}${treatmentGoalsContext}${selectedObjectivesContext}${i
                     console.error('API verification error:', error);
                     apiStatus.textContent = 'Verification Failed';
                     apiStatus.style.color = 'red';
-                    alert(`API verification failed: ${error.message}`);
+                    if (
+                        apiProvider === 'vertex' &&
+                        error &&
+                        typeof error.message === 'string' &&
+                        (error.message.toLowerCase().includes('load failed') || error.message.toLowerCase().includes('failed to fetch'))
+                    ) {
+                        alert(`API verification failed: ${error.message}\n\nThis usually means the browser could not complete the network request (often CORS/network policy). Try serving this app over http://localhost and verify outbound access to *.googleapis.com.`);
+                    } else {
+                        alert(`API verification failed: ${error.message}`);
+                    }
+                }
+            };
+
+            const connectToVertex = async () => {
+                const projectId = vertexProjectIdInput.value.trim();
+                const location = (vertexLocationInput.value.trim() || 'us-central1');
+                const token = vertexAccessTokenInput.value.trim();
+                const fallbackModels = ['gemini-2.0-flash-001', 'gemini-1.5-flash-002', 'gemini-1.5-pro-002'];
+
+                if (!projectId) {
+                    alert('Please provide a Vertex Project ID.');
+                    return;
+                }
+                if (!location) {
+                    alert('Please provide a Vertex location.');
+                    return;
+                }
+                if (!token) {
+                    alert('Please provide a Vertex credential (API key or OAuth token).');
+                    return;
+                }
+
+                apiStatus.textContent = 'Connecting...';
+                apiStatus.style.color = 'orange';
+                vertexModelInput.innerHTML = '<option>Loading models...</option>';
+                vertexModelInput.disabled = true;
+
+                try {
+                    let models = [...fallbackModels];
+                    let modelDiscoveryWarning = null;
+                    const usingApiKey = isLikelyGoogleApiKey(token);
+
+                    if (usingApiKey) {
+                        modelDiscoveryWarning = 'Connected in API key mode. Vertex aiplatform model discovery requires OAuth; using fallback Gemini models.';
+                    }
+
+                    if (!usingApiKey) {
+                    try {
+                        const auth = getVertexAuthConfig(token);
+                        const modelsUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models${auth.query}`;
+                        const response = await fetch(modelsUrl, {
+                            headers: { ...auth.headers }
+                        });
+
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`Failed to fetch models: ${response.status} - ${errorText}`);
+                        }
+
+                        const result = await response.json();
+                        const apiModels = (result.models || [])
+                            .map(m => (m.name || '').split('/').pop())
+                            .filter(Boolean)
+                            .filter(name => name.toLowerCase().includes('gemini'));
+
+                        if (apiModels.length > 0) {
+                            models = [...new Set([...apiModels, ...fallbackModels])];
+                        }
+                    } catch (discoveryError) {
+                        console.warn('Vertex model discovery failed; using fallback model list.', discoveryError);
+                        const message = (discoveryError && discoveryError.message) ? discoveryError.message : '';
+                        if (message.toLowerCase().includes('load failed') || message.toLowerCase().includes('failed to fetch')) {
+                            modelDiscoveryWarning = 'Connected using fallback models. Live model discovery failed (often browser CORS/network related).';
+                        } else {
+                            modelDiscoveryWarning = 'Connected using fallback models. Live model discovery failed.';
+                        }
+                    }
+                    }
+
+                    vertexModelInput.innerHTML = '';
+                    models.forEach(modelId => {
+                        const option = document.createElement('option');
+                        option.value = modelId;
+                        option.textContent = modelId;
+                        vertexModelInput.appendChild(option);
+                    });
+
+                    vertexProjectId = projectId;
+                    vertexLocation = location;
+                    vertexAccessToken = token;
+
+                    const savedModel = localStorage.getItem('vertexModel');
+                    if (savedModel && models.includes(savedModel)) {
+                        vertexModelInput.value = savedModel;
+                    } else if (models.includes('gemini-2.0-flash-001')) {
+                        vertexModelInput.value = 'gemini-2.0-flash-001';
+                    } else {
+                        vertexModelInput.value = models[0];
+                    }
+
+                    selectedModel = vertexModelInput.value;
+                    vertexModelInput.disabled = false;
+
+                    localStorage.setItem('apiProvider', 'vertex');
+                    localStorage.setItem('vertexProjectId', vertexProjectId);
+                    localStorage.setItem('vertexLocation', vertexLocation);
+                    localStorage.setItem('vertexAccessToken', vertexAccessToken);
+                    localStorage.setItem('vertexModel', selectedModel);
+
+                    apiStatus.textContent = modelDiscoveryWarning ? 'Connected (fallback models)' : 'Connected';
+                    apiStatus.style.color = modelDiscoveryWarning ? 'orange' : 'green';
+                    verifyApiBtn.classList.remove('hidden');
+
+                    if (modelDiscoveryWarning) {
+                        alert(`${modelDiscoveryWarning}\n\nYou can still choose a model and run Verify/Generate.`);
+                    }
+
+                } catch (error) {
+                    console.error('Vertex connection error:', error);
+                    apiStatus.textContent = 'Failed';
+                    apiStatus.style.color = 'red';
+                    vertexModelInput.innerHTML = '<option>Connection Failed</option>';
+                    vertexProjectId = null;
+                    vertexLocation = 'us-central1';
+                    vertexAccessToken = null;
+                    selectedModel = null;
+                    alert(`Failed to connect to Vertex AI. Check your project ID, location, token, and network connection.\nError: ${error.message}`);
+                } finally {
+                    fullRender();
                 }
             };
             
@@ -4924,6 +5253,9 @@ This error cannot be fixed within this application's code; it requires a configu
                         serverAddressInput.value = localStorage.getItem('serverAddress') || '';
                         apiKeyInput.value = localStorage.getItem('apiKey') || '';
                         geminiApiKeyInput.value = localStorage.getItem('geminiApiKey') || '';
+                        vertexProjectIdInput.value = localStorage.getItem('vertexProjectId') || '';
+                        vertexLocationInput.value = localStorage.getItem('vertexLocation') || 'us-central1';
+                        vertexAccessTokenInput.value = localStorage.getItem('vertexAccessToken') || '';
                         openaiApiKeyInput.value = localStorage.getItem('openaiApiKey') || '';
                         // We don't load the gemini model name here, it's set after connection
 
@@ -5030,8 +5362,12 @@ This error cannot be fixed within this application's code; it requires a configu
                     localStorage.removeItem('serverAddress');
                     localStorage.removeItem('apiKey');
                     localStorage.removeItem('geminiApiKey');
+                    localStorage.removeItem('vertexProjectId');
+                    localStorage.removeItem('vertexLocation');
+                    localStorage.removeItem('vertexAccessToken');
                     localStorage.removeItem('openaiApiKey');
                     localStorage.removeItem('geminiModel');
+                    localStorage.removeItem('vertexModel');
                     localStorage.removeItem('openaiModel');
                     localStorage.removeItem('apiProvider');
                     localStorage.removeItem('columnSizes');
@@ -5369,11 +5705,18 @@ This error cannot be fixed within this application's code; it requires a configu
                 fullRender();
             });
 
+            vertexModelInput.addEventListener('change', (e) => {
+                selectedModel = e.target.value;
+                localStorage.setItem('vertexModel', selectedModel);
+                fullRender();
+            });
+
             const toggleProviderSettings = () => {
                 const provider = apiProviderSelect.value;
                 apiProvider = provider;
                 openwebuiSettings.classList.add('hidden');
                 geminiSettings.classList.add('hidden');
+                vertexSettings.classList.add('hidden');
                 openaiSettings.classList.add('hidden');
                 modelSelectWrapper.classList.add('hidden'); // This is for OpenWebUI
 
@@ -5382,6 +5725,8 @@ This error cannot be fixed within this application's code; it requires a configu
                     modelSelectWrapper.classList.remove('hidden'); // Show the OpenWebUI model select
                 } else if (provider === 'gemini') {
                     geminiSettings.classList.remove('hidden');
+                } else if (provider === 'vertex') {
+                    vertexSettings.classList.remove('hidden');
                 } else if (provider === 'openai') {
                     openaiSettings.classList.remove('hidden');
                 }
@@ -5617,6 +5962,9 @@ This error cannot be fixed within this application's code; it requires a configu
                 const savedAddress = localStorage.getItem('serverAddress');
                 const savedApiKey = localStorage.getItem('apiKey');
                 const savedGeminiKey = localStorage.getItem('geminiApiKey');
+                const savedVertexProjectId = localStorage.getItem('vertexProjectId');
+                const savedVertexLocation = localStorage.getItem('vertexLocation');
+                const savedVertexAccessToken = localStorage.getItem('vertexAccessToken');
                 const savedOpenAIKey = localStorage.getItem('openaiApiKey');
                 
                 toggleProviderSettings(); // Set initial UI state
@@ -5628,6 +5976,11 @@ This error cannot be fixed within this application's code; it requires a configu
                 } else if (apiProvider === 'gemini' && savedGeminiKey) {
                     geminiApiKeyInput.value = savedGeminiKey;
                     connectToGemini();
+                } else if (apiProvider === 'vertex' && savedVertexProjectId && savedVertexAccessToken) {
+                    vertexProjectIdInput.value = savedVertexProjectId;
+                    vertexLocationInput.value = savedVertexLocation || 'us-central1';
+                    vertexAccessTokenInput.value = savedVertexAccessToken;
+                    connectToVertex();
                 } else if (apiProvider === 'openai' && savedOpenAIKey) {
                     openaiApiKeyInput.value = savedOpenAIKey;
                     connectToOpenAI();
