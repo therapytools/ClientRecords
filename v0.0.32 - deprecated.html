@@ -1485,6 +1485,8 @@
                 const clientItem = e.target.closest('.client-item');
                 if (clientItem) {
                     draggedClientId = clientItem.dataset.clientId;
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', draggedClientId);
                     // Add a class for visual feedback
                     setTimeout(() => clientItem.classList.add('dragging'), 0);
                 }
@@ -1498,8 +1500,13 @@
                 draggedClientId = null;
             });
 
+            clientListEl.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+            });
+
             clientListEl.addEventListener('dragover', (e) => {
                 e.preventDefault(); // Necessary to allow dropping
+                e.dataTransfer.dropEffect = 'move';
                 const targetItem = e.target.closest('.client-item');
                 if (targetItem && targetItem.dataset.clientId !== draggedClientId) {
                     // This is where you could add a visual indicator if desired
