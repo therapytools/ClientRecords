@@ -135,7 +135,6 @@
                 color: var(--text-color-inverted);
             }
         }
-        }
         
         .header h1 {
             font-size: 1.5rem;
@@ -1781,7 +1780,7 @@
 
     <div class="container" id="appContainer" style="display: none;">
         <div class="header">
-            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v1.0.12</span></h1>
+            <h1>Client Data Organizer <span style="font-size: 0.8rem; font-weight: normal; vertical-align: middle;">v1.0.13</span></h1>
             <div id="autoSaveIndicator" class="autosave-indicator" style="opacity: 0;">
                 <span id="saveStatus"></span>
             </div>
@@ -2749,6 +2748,9 @@
             let backupWritePending = false;
             const getGoogleAccessToken = async (serviceAccountJson) => {
                 try {
+                    if (!window?.__TAURI__?.core?.invoke) {
+                        throw new Error('Google service-account token generation requires the desktop app runtime. In browser mode, use an HTTPS proxy token endpoint.');
+                    }
                     const { invoke } = window.__TAURI__.core;
                     const token = await invoke('generate_google_token', { serviceAccountJson });
                     if (!token) {
@@ -2765,7 +2767,7 @@
                 'Acceptance', 'Career Counseling', 'CBT: Behavioral Activation', 'CBT: Cognitive Challenging', 'CBT: Cognitive Reframing',
                 'CBT: Cognitive Restructuring', 'CBT: Identifying/Challenging Cognitive Distortions', 'CBT: Mindfulness Training',
                 'Collaborative Problem-Solving', 'Collaborative Treatment Planning', 'Communication Skills Training',
-                'Conflict Resolution Skill Development', 'Decisional Balance', 'Diagnostic Assessment', 'DPerspective Taking',
+                'Conflict Resolution Skill Development', 'Decisional Balance', 'Diagnostic Assessment', 'Perspective Taking',
                 'EFCT – Choreographing Enactments', 'EFCT – De-Escalation', 'EFCT – Empathetic Conjecture', 'EFCT – Evocative Responding',
                 'EFCT – Facilitation of Emotional Engagement', 'EFCT – Heightening', 'EFCT – Reflection', 'EFCT – Restructuring Interactions',
                 'Emotional Processing', 'Exploration of Coping Patterns', 'Exploration of Core Beliefs', 'Exploration of Family Dynamics',
@@ -2832,7 +2834,28 @@
             const findNote = (client, id) => client?.notes?.find(n => n.id === id);
             const findIntakeSession = (client, id) => client?.intakeSessions?.find(i => i.id === id);
 
+            const canonicalizeInterventionName = (value) => {
+                const raw = String(value || '').trim();
+                if (!raw) return '';
+                if (/^dperspective\s+taking$/i.test(raw)) return 'Perspective Taking';
+                return raw;
+            };
+
             const normalizeClientData = () => {
+                if (!Array.isArray(data.interventionBank) || data.interventionBank.length === 0) {
+                    data.interventionBank = [...DEFAULT_INTERVENTION_BANK];
+                }
+
+                data.interventionBank = [...new Set(
+                    data.interventionBank
+                        .map(canonicalizeInterventionName)
+                        .filter(Boolean)
+                )].sort((a, b) => a.localeCompare(b));
+
+                const bankLookup = new Map(
+                    data.interventionBank.map(item => [normalizeInterventionText(item), item])
+                );
+
                 const allClients = [...(data.clients || []), ...(data.archivedClients || [])];
                 allClients.forEach(client => {
                     if (!Array.isArray(client.appointments)) client.appointments = [];
@@ -2850,6 +2873,12 @@
                     });
                     client.appointments.forEach(appt => {
                         if (!Array.isArray(appt.selectedInterventions)) appt.selectedInterventions = [];
+                        appt.selectedInterventions = [...new Set(
+                            appt.selectedInterventions
+                                .map(canonicalizeInterventionName)
+                                .map(item => bankLookup.get(normalizeInterventionText(item)) || null)
+                                .filter(Boolean)
+                        )];
                         if (typeof appt.sessionInstructions !== 'string') {
                             appt.sessionInstructions = typeof appt.customInstructions === 'string' ? appt.customInstructions : '';
                         }
@@ -2871,10 +2900,6 @@
                         client.goalGenerationLens.other = '';
                     }
                 });
-
-                if (!Array.isArray(data.interventionBank) || data.interventionBank.length === 0) {
-                    data.interventionBank = [...DEFAULT_INTERVENTION_BANK];
-                }
 
                 if (!deletedItems || typeof deletedItems !== 'object') {
                     deletedItems = { clients: [], appointments: [], notes: [] };
@@ -6799,8 +6824,169 @@ This error cannot be fixed within this application's code; it requires a configu
             };
 
             const isTauriRuntime = () => typeof window !== 'undefined' && !!window.__TAURI_INTERNALS__;
+            const supportsBrowserFileBackup = () => !isTauriRuntime() && typeof window !== 'undefined' && typeof window.showSaveFilePicker === 'function';
+
+            const BACKUP_SETTINGS_DB = 'cr_web_backup_settings';
+            const BACKUP_SETTINGS_STORE = 'settings';
+            const BACKUP_FILE_HANDLE_KEY = 'secondary_backup_handle';
+
+            let browserBackupFileHandle = null;
+            let browserBackupFileName = '';
+
+            const openBackupSettingsDb = () => new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) {
+                    reject(new Error('IndexedDB unavailable in this browser.'));
+                    return;
+                }
+
+                const request = indexedDB.open(BACKUP_SETTINGS_DB, 1);
+                request.onupgradeneeded = () => {
+                    const database = request.result;
+                    if (!database.objectStoreNames.contains(BACKUP_SETTINGS_STORE)) {
+                        database.createObjectStore(BACKUP_SETTINGS_STORE, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error || new Error('Failed to open backup settings database.'));
+            });
+
+            const readBackupSetting = async (id) => {
+                const database = await openBackupSettingsDb();
+                try {
+                    return await new Promise((resolve, reject) => {
+                        const tx = database.transaction(BACKUP_SETTINGS_STORE, 'readonly');
+                        const store = tx.objectStore(BACKUP_SETTINGS_STORE);
+                        const request = store.get(id);
+                        request.onsuccess = () => resolve(request.result || null);
+                        request.onerror = () => reject(request.error || new Error('Failed reading backup settings.'));
+                    });
+                } finally {
+                    database.close();
+                }
+            };
+
+            const writeBackupSetting = async (id, value) => {
+                const database = await openBackupSettingsDb();
+                try {
+                    await new Promise((resolve, reject) => {
+                        const tx = database.transaction(BACKUP_SETTINGS_STORE, 'readwrite');
+                        const store = tx.objectStore(BACKUP_SETTINGS_STORE);
+                        const request = store.put({ id, ...value });
+                        request.onsuccess = () => resolve();
+                        request.onerror = () => reject(request.error || new Error('Failed writing backup settings.'));
+                    });
+                } finally {
+                    database.close();
+                }
+            };
+
+            const deleteBackupSetting = async (id) => {
+                const database = await openBackupSettingsDb();
+                try {
+                    await new Promise((resolve, reject) => {
+                        const tx = database.transaction(BACKUP_SETTINGS_STORE, 'readwrite');
+                        const store = tx.objectStore(BACKUP_SETTINGS_STORE);
+                        const request = store.delete(id);
+                        request.onsuccess = () => resolve();
+                        request.onerror = () => reject(request.error || new Error('Failed deleting backup settings.'));
+                    });
+                } finally {
+                    database.close();
+                }
+            };
+
+            const ensureBrowserBackupPermission = async (handle) => {
+                if (!handle || typeof handle.queryPermission !== 'function') return true;
+
+                const query = await handle.queryPermission({ mode: 'readwrite' });
+                if (query === 'granted') return true;
+
+                if (typeof handle.requestPermission === 'function') {
+                    const request = await handle.requestPermission({ mode: 'readwrite' });
+                    return request === 'granted';
+                }
+
+                return false;
+            };
+
+            const writeBrowserBackupFile = async (jsonText) => {
+                if (!browserBackupFileHandle) {
+                    throw new Error('No browser backup file selected.');
+                }
+
+                const hasPermission = await ensureBrowserBackupPermission(browserBackupFileHandle);
+                if (!hasPermission) {
+                    throw new Error('Write permission denied for selected backup file. Re-select the file to grant permission.');
+                }
+
+                const writable = await browserBackupFileHandle.createWritable();
+                try {
+                    await writable.write(jsonText);
+                } finally {
+                    await writable.close();
+                }
+            };
+
+            const restoreBackupSettings = async () => {
+                if (isTauriRuntime()) {
+                    autoBackupPath = localStorage.getItem('autoBackupPath') || '';
+                    updateBackupMenuState();
+                    return;
+                }
+
+                if (!supportsBrowserFileBackup()) {
+                    updateBackupMenuState();
+                    return;
+                }
+
+                try {
+                    const record = await readBackupSetting(BACKUP_FILE_HANDLE_KEY);
+                    if (record?.handle) {
+                        browserBackupFileHandle = record.handle;
+                        browserBackupFileName = record.name || record.handle?.name || '';
+                        autoBackupPath = browserBackupFileName || 'browser file configured';
+                    }
+                } catch (error) {
+                    console.warn('Could not restore browser secondary backup handle:', error);
+                }
+
+                updateBackupMenuState();
+            };
 
             const updateBackupMenuState = () => {
+                if (!isTauriRuntime() && !supportsBrowserFileBackup()) {
+                    if (configureBackupBtn) {
+                        configureBackupBtn.textContent = 'Secondary Backup (unsupported in this browser)';
+                        configureBackupBtn.disabled = true;
+                        configureBackupBtn.style.opacity = '0.6';
+                        configureBackupBtn.style.cursor = 'not-allowed';
+                    }
+                    if (clearBackupBtn) {
+                        clearBackupBtn.disabled = true;
+                        clearBackupBtn.style.opacity = '0.6';
+                        clearBackupBtn.style.cursor = 'not-allowed';
+                    }
+                    return;
+                }
+
+                if (!isTauriRuntime()) {
+                    if (configureBackupBtn) {
+                        configureBackupBtn.textContent = autoBackupPath
+                            ? `Update Secondary Backup File (${autoBackupPath})`
+                            : 'Set Secondary Backup File';
+                        configureBackupBtn.disabled = false;
+                        configureBackupBtn.style.opacity = '1';
+                        configureBackupBtn.style.cursor = 'pointer';
+                    }
+                    if (clearBackupBtn) {
+                        const hasConfiguredBrowserFile = !!browserBackupFileHandle;
+                        clearBackupBtn.disabled = !hasConfiguredBrowserFile;
+                        clearBackupBtn.style.opacity = hasConfiguredBrowserFile ? '1' : '0.6';
+                        clearBackupBtn.style.cursor = hasConfiguredBrowserFile ? 'pointer' : 'not-allowed';
+                    }
+                    return;
+                }
+
                 if (configureBackupBtn) {
                     configureBackupBtn.textContent = autoBackupPath
                         ? `Update Secondary Backup Location (${autoBackupPath.split('/').pop() || 'configured'})`
@@ -6814,7 +7000,9 @@ This error cannot be fixed within this application's code; it requires a configu
             };
 
             const persistEncryptedAutoBackup = async () => {
-                if (!autoBackupPath || !isTauriRuntime() || !isDatabaseInitialized()) return;
+                if (!isDatabaseInitialized()) return;
+                if (isTauriRuntime() && !autoBackupPath) return;
+                if (!isTauriRuntime() && !browserBackupFileHandle) return;
 
                 if (backupWriteInProgress) {
                     backupWritePending = true;
@@ -6824,7 +7012,12 @@ This error cannot be fixed within this application's code; it requires a configu
                 backupWriteInProgress = true;
                 try {
                     const encryptedSqlPayload = await exportEncryptedSqlDump();
-                    await writeTextFile(autoBackupPath, JSON.stringify(encryptedSqlPayload, null, 2), { create: true });
+                    const payload = JSON.stringify(encryptedSqlPayload, null, 2);
+                    if (isTauriRuntime()) {
+                        await writeTextFile(autoBackupPath, payload, { create: true });
+                    } else {
+                        await writeBrowserBackupFile(payload);
+                    }
                 } catch (error) {
                     console.error('Secondary auto-backup write failed:', error);
                     updateSaveStatus(`Secondary backup failed: ${resolveErrorMessage(error)}`, false, 4000);
@@ -6840,18 +7033,45 @@ This error cannot be fixed within this application's code; it requires a configu
             };
 
             const configureSecondaryBackupLocation = async () => {
-                if (!isTauriRuntime()) {
-                    alert('Secondary auto-backup location selection is available in the desktop app runtime.');
-                    return;
-                }
-
                 if (!isDatabaseInitialized()) {
                     alert('Please log in first so encrypted backup can be initialized.');
                     return;
                 }
 
+                if (!isTauriRuntime() && !supportsBrowserFileBackup()) {
+                    alert('This browser does not support persistent file handles. Use Export to download backups.');
+                    return;
+                }
+
                 try {
                     const defaultFileName = `client-data-autobackup-${new Date().toISOString().split('T')[0]}.sql.enc.json`;
+
+                    if (!isTauriRuntime()) {
+                        const fileHandle = await window.showSaveFilePicker({
+                            suggestedName: defaultFileName,
+                            types: [
+                                {
+                                    description: 'Encrypted SQL Backup JSON',
+                                    accept: { 'application/json': ['.json'] }
+                                }
+                            ]
+                        });
+
+                        if (!fileHandle) return;
+
+                        browserBackupFileHandle = fileHandle;
+                        browserBackupFileName = fileHandle.name || defaultFileName;
+                        autoBackupPath = browserBackupFileName;
+                        await writeBackupSetting(BACKUP_FILE_HANDLE_KEY, {
+                            handle: fileHandle,
+                            name: browserBackupFileName
+                        });
+                        updateBackupMenuState();
+                        await persistEncryptedAutoBackup();
+                        updateSaveStatus('Secondary auto-backup file configured.', true, 3000);
+                        return;
+                    }
+
                     const selectedPath = await save({
                         title: 'Choose Secondary Auto-Backup Destination',
                         defaultPath: autoBackupPath || localStorage.getItem('autoBackupPath') || defaultFileName,
@@ -6882,9 +7102,23 @@ This error cannot be fixed within this application's code; it requires a configu
                 }
             };
 
-            const clearSecondaryBackupLocation = () => {
+            const clearSecondaryBackupLocation = async () => {
+                if (isTauriRuntime()) {
+                    autoBackupPath = '';
+                    localStorage.removeItem('autoBackupPath');
+                    updateBackupMenuState();
+                    updateSaveStatus('Secondary auto-backup cleared.', true, 2500);
+                    return;
+                }
+
+                browserBackupFileHandle = null;
+                browserBackupFileName = '';
                 autoBackupPath = '';
-                localStorage.removeItem('autoBackupPath');
+                try {
+                    await deleteBackupSetting(BACKUP_FILE_HANDLE_KEY);
+                } catch (error) {
+                    console.warn('Failed clearing browser backup handle:', error);
+                }
                 updateBackupMenuState();
                 updateSaveStatus('Secondary auto-backup cleared.', true, 2500);
             };
@@ -7104,10 +7338,12 @@ This error cannot be fixed within this application's code; it requires a configu
                 }
             });
             addInterventionBtn.addEventListener('click', () => {
-                const text = (newInterventionInput.value || '').trim();
+                const text = canonicalizeInterventionName((newInterventionInput.value || '').trim());
                 if (!text) return;
                 if (!Array.isArray(data.interventionBank)) data.interventionBank = [];
-                if (!data.interventionBank.includes(text)) {
+                const normalizedText = normalizeInterventionText(text);
+                const hasMatch = data.interventionBank.some(item => normalizeInterventionText(item) === normalizedText);
+                if (!hasMatch) {
                     data.interventionBank.push(text);
                     data.interventionBank.sort((a, b) => a.localeCompare(b));
                     newInterventionInput.value = '';
@@ -7145,7 +7381,9 @@ This error cannot be fixed within this application's code; it requires a configu
                 const client = findClient(selectedClientId);
                 const appointment = findAppointment(client, selectedAppointmentId);
                 if (!appointment) return;
-                const selected = Array.from(interventionPickerList.querySelectorAll('.picker-intervention:checked')).map(input => input.value);
+                const selected = [...new Set(Array.from(interventionPickerList.querySelectorAll('.picker-intervention:checked'))
+                    .map(input => canonicalizeInterventionName(input.value))
+                    .filter(Boolean))];
                 appointment.selectedInterventions = selected;
                 if (!appointment.soap) appointment.soap = { s: '', o: '', a: '', p: '' };
                 appointment.soap.interventions = selected.length > 0
@@ -7796,6 +8034,7 @@ This error cannot be fixed within this application's code; it requires a configu
             loadColumnSizes();
             loadCollapsedStates();
             loadTheme();
+            restoreBackupSettings();
             
             makeResizable(document.getElementById('resizer1'), document.getElementById('panelClients'), document.getElementById('panelAppointments'));
             makeResizable(document.getElementById('resizer2'), document.getElementById('panelAppointments'), document.getElementById('panelSession'));
@@ -8244,7 +8483,9 @@ This error cannot be fixed within this application's code; it requires a configu
             }
 
             status.style.color = '#27ae60';
-            status.textContent = 'SMTP test email sent successfully.';
+            status.textContent = isTauriRuntime()
+                ? 'SMTP test email sent successfully.'
+                : (getLastAuthError() || 'SMTP test simulated in web mode (no email sent).');
         });
 
         document.getElementById('cancelSmtpSettingsBtn').addEventListener('click', () => {
